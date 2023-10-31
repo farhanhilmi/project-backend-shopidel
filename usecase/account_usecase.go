@@ -5,26 +5,29 @@ import (
 	"errors"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto"
+	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
+	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
 )
 
-type accountUsecase struct {
-	accountRepo repository.AccountRepository
-}
-
 type AccountUsecase interface {
 	ActivateMyWallet(ctx context.Context, userId int, walletPin string) (*dto.AccountResponse, error)
+	CreateAccount(ctx context.Context, req dtousecase.CreateAccountRequest) (dtousecase.CreateAccountResponse, error)
+}
+
+type accountUsecase struct {
+	accountRepository repository.AccountRepository
 }
 
 type AccountUsecaseConfig struct {
-	AccountRepo repository.AccountRepository
+	AccountRepository repository.AccountRepository
 }
 
 func NewAccountUsecase(config AccountUsecaseConfig) AccountUsecase {
 	au := &accountUsecase{}
-	if config.AccountRepo != nil {
-		au.accountRepo = config.AccountRepo
+	if config.AccountRepository != nil {
+		au.accountRepository = config.AccountRepository
 	}
 
 	return au
@@ -35,7 +38,7 @@ func (u *accountUsecase) ActivateMyWallet(ctx context.Context, userId int, walle
 		return nil, util.ErrBadPIN
 	}
 
-	userAccount, err := u.accountRepo.FindById(ctx, userId)
+	userAccount, err := u.accountRepository.FindById(ctx, userId)
 	if errors.Is(err, util.ErrNoRecordFound) {
 		return nil, util.ErrNoRecordFound
 	}
@@ -46,7 +49,7 @@ func (u *accountUsecase) ActivateMyWallet(ctx context.Context, userId int, walle
 	if userAccount.WalletPin != "" {
 		return nil, util.ErrWalletAlreadySet
 	}
-	acc, err := u.accountRepo.ActivateWalletByID(ctx, userId, walletPin)
+	acc, err := u.accountRepository.ActivateWalletByID(ctx, userId, walletPin)
 	if errors.Is(err, util.ErrNoRecordFound) {
 		return nil, util.ErrNoRecordFound
 	}
@@ -60,4 +63,27 @@ func (u *accountUsecase) ActivateMyWallet(ctx context.Context, userId int, walle
 	}
 
 	return &account, nil
+}
+
+func (u *accountUsecase) CreateAccount(ctx context.Context, req dtousecase.CreateAccountRequest) (dtousecase.CreateAccountResponse, error) {
+	res := dtousecase.CreateAccountResponse{}
+
+	rReq := dtorepository.CreateAccountRequest{
+		Username: req.Username,
+		FullName: req.FullName,
+		Email:    req.Email,
+		Password: req.Password,
+	}
+
+	rRes, err := u.accountRepository.Create(ctx, rReq)
+
+	if err != nil {
+		return res, err
+	}
+
+	res.Email = rRes.Email
+	res.FullName = rRes.FullName
+	res.Username = rRes.Username
+
+	return res, nil
 }
