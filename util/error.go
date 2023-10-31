@@ -30,4 +30,7 @@ func New(code ErrorCode, message string) error {
 
 var (
 	ErrWrongCredentials = &CustomError{Message: "wrong email or password", Code: Unauthorized}
+	ErrNoRecordFound    = &CustomError{Message: "not found", Code: NotFound}
+	ErrBadPIN           = &CustomError{Message: "length minimum length is 6 and should be numeric", Code: BadRequest}
+	ErrInvalidInput     = &CustomError{Message: "invalid input", Code: BadRequest}
 )
