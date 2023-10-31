@@ -17,13 +17,34 @@ type AccountUsecase interface {
 	ActivateMyWallet(ctx context.Context, userId int, walletPin string) (*dto.AccountResponse, error)
 }
 
-func NewAuthenticationUsecase(accountRepo repository.AccountRepository) AccountUsecase {
-	return &accountUsecase{}
+type AccountUsecaseConfig struct {
+	AccountRepo repository.AccountRepository
+}
+
+func NewAccountUsecase(config AccountUsecaseConfig) AccountUsecase {
+	au := &accountUsecase{}
+	if config.AccountRepo != nil {
+		au.accountRepo = config.AccountRepo
+	}
+
+	return au
 }
 
 func (u *accountUsecase) ActivateMyWallet(ctx context.Context, userId int, walletPin string) (*dto.AccountResponse, error) {
 	if len(walletPin) != 6 {
 		return nil, util.ErrBadPIN
+	}
+
+	userAccount, err := u.accountRepo.FindById(ctx, userId)
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if userAccount.WalletPin != "" {
+		return nil, util.ErrWalletAlreadySet
 	}
 	acc, err := u.accountRepo.ActivateWalletByID(ctx, userId, walletPin)
 	if errors.Is(err, util.ErrNoRecordFound) {

@@ -5,12 +5,24 @@ import (
 	"strconv"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/config"
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
-func Connect() (*gorm.DB, error) {
+var db *gorm.DB
+
+func GetInstance() *gorm.DB {
+	if db == nil {
+		db = connect()
+		RunSeeder()
+	}
+
+	return db
+}
+
+func connect() *gorm.DB {
 	host := config.GetEnv("DB_HOST")
 	port := config.GetEnv("DB_PORT")
 	user := config.GetEnv("DB_USER")
@@ -26,8 +38,21 @@ func Connect() (*gorm.DB, error) {
 		TranslateError: true,
 	})
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return db, nil
+	return db
+}
+
+func MigrateDatabase(db *gorm.DB) error {
+	err := db.AutoMigrate(&model.Accounts{})
+	if err != nil {
+		return err
+	}
+
+	db.Exec(`
+	ALTER TABLE accounts ALTER COLUMN wallet_number
+		SET DEFAULT TO_CHAR(nextval('id'::regclass),'"420"fm0000000000');
+	`)
+	return nil
 }

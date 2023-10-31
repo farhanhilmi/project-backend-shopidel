@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"log"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
@@ -41,7 +42,8 @@ func (r *accountRepository) ActivateWalletByID(ctx context.Context, userId int, 
 }
 
 func (r *accountRepository) FindById(ctx context.Context, userId int) (model.Accounts, error) {
-	var account model.Accounts
+	account := model.Accounts{}
+	log.Println("UID", userId)
 	err := r.db.WithContext(ctx).Where("id = ?", userId).First(&account).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {

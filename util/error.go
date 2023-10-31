@@ -33,4 +33,5 @@ var (
 	ErrNoRecordFound    = &CustomError{Message: "not found", Code: NotFound}
 	ErrBadPIN           = &CustomError{Message: "length minimum length is 6 and should be numeric", Code: BadRequest}
 	ErrInvalidInput     = &CustomError{Message: "invalid input", Code: BadRequest}
+	ErrWalletAlreadySet = &CustomError{Message: "wallet already activated", Code: BadRequest}
 )
