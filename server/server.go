@@ -11,11 +11,29 @@ import (
 	"time"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/config"
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/repository"
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/server/http/handler"
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/server/http/middleware"
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/server/http/router"
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/usecase"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 func Start(gin *gin.Engine, db *gorm.DB) {
+	gin.Use(middleware.ErrorHandler())
+
+	accountRepo := repository.NewAccountRepository(db)
+
+	auc := usecase.AccountUsecaseConfig{
+		AccountRepo: accountRepo,
+	}
+
+	accountUsecase := usecase.NewAccountUsecase(auc)
+
+	accountHandler := handler.NewAccountHandler(accountUsecase)
+
+	router.NewAccountRouter(accountHandler, gin)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", config.GetEnv("PORT")),
