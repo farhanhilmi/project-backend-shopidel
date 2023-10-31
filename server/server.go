@@ -26,7 +26,7 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 	accountRepo := repository.NewAccountRepository(db)
 
 	auc := usecase.AccountUsecaseConfig{
-		AccountRepo: accountRepo,
+		AccountRepository: accountRepo,
 	}
 
 	accountUsecase := usecase.NewAccountUsecase(auc)
@@ -34,6 +34,8 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 	accountHandler := handler.NewAccountHandler(accountUsecase)
 
 	router.NewAccountRouter(accountHandler, gin)
+	router.NewPingRouter(gin)
+	router.NewAuthRouter(accountHandler, gin)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", config.GetEnv("PORT")),
