@@ -36,7 +36,7 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 	router.NewAccountRouter(accountHandler, gin)
 	router.NewPingRouter(gin)
 	router.NewAuthRouter(accountHandler, gin)
-
+	
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", config.GetEnv("PORT")),
 		Handler: gin,

@@ -7,8 +7,9 @@ import (
 )
 
 func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
-	group := gin.Group("accounts")
+	group := gin.Group("api/accounts")
 	group.Use(middleware.AuthenticateJWT())
 	group.POST("/activate-wallet", h.ActivateMyWallet)
+	group.GET("", h.GetProfile)
 	return gin
 }

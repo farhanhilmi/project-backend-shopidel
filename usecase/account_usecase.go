@@ -12,8 +12,9 @@ import (
 )
 
 type AccountUsecase interface {
-	ActivateMyWallet(ctx context.Context, userId int, walletPin string) (*dto.AccountResponse, error)
+	ActivateMyWallet(ctx context.Context, req dtousecase.GetAccountRequest, walletPin string) (*dto.AccountResponse, error)
 	CreateAccount(ctx context.Context, req dtousecase.CreateAccountRequest) (dtousecase.CreateAccountResponse, error)
+	GetProfile(ctx context.Context, req dtousecase.GetAccountRequest) (*dtousecase.GetAccountResponse, error)
 }
 
 type accountUsecase struct {
@@ -33,12 +34,44 @@ func NewAccountUsecase(config AccountUsecaseConfig) AccountUsecase {
 	return au
 }
 
-func (u *accountUsecase) ActivateMyWallet(ctx context.Context, userId int, walletPin string) (*dto.AccountResponse, error) {
+func (u *accountUsecase) GetProfile(ctx context.Context, req dtousecase.GetAccountRequest) (*dtousecase.GetAccountResponse, error) {
+	res := dtousecase.GetAccountResponse{}
+
+	rReq := dtorepository.GetAccountRequest{
+		UserId: req.UserId,
+	}
+
+	userAccount, err := u.accountRepository.FindById(ctx, rReq)
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	res.FullName = userAccount.FullName
+	res.Username = userAccount.Username
+	res.Email = userAccount.Email
+	res.PhoneNumber = userAccount.PhoneNumber
+	res.Gender = userAccount.Gender
+	res.Birthdate = userAccount.Birthdate
+	res.ProfilePicture = userAccount.ProfilePicture
+	res.WalletNumber = userAccount.WalletNumber
+	res.Balance = userAccount.Balance
+
+	return &res, nil
+}
+
+func (u *accountUsecase) ActivateMyWallet(ctx context.Context, req dtousecase.GetAccountRequest, walletPin string) (*dto.AccountResponse, error) {
 	if len(walletPin) != 6 {
 		return nil, util.ErrBadPIN
 	}
 
-	userAccount, err := u.accountRepository.FindById(ctx, userId)
+	rReq := dtorepository.GetAccountRequest{
+		UserId: req.UserId,
+	}
+
+	userAccount, err := u.accountRepository.FindById(ctx, rReq)
 	if errors.Is(err, util.ErrNoRecordFound) {
 		return nil, util.ErrNoRecordFound
 	}
@@ -49,7 +82,7 @@ func (u *accountUsecase) ActivateMyWallet(ctx context.Context, userId int, walle
 	if userAccount.WalletPin != "" {
 		return nil, util.ErrWalletAlreadySet
 	}
-	acc, err := u.accountRepository.ActivateWalletByID(ctx, userId, walletPin)
+	acc, err := u.accountRepository.ActivateWalletByID(ctx, req.UserId, walletPin)
 	if errors.Is(err, util.ErrNoRecordFound) {
 		return nil, util.ErrNoRecordFound
 	}
