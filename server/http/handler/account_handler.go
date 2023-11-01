@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto"
+	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtohttp "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/http"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/usecase"
@@ -30,8 +31,8 @@ func (h *AccountHandler) GetProfile(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	
-	c.JSON(http.StatusOK, dto.JSONResponse{Message: "successfully get profile detail", Data: data})
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "successfully get profile detail", Data: data})
 }
 
 func (h *AccountHandler) ActivateMyWallet(c *gin.Context) {
@@ -56,7 +57,7 @@ func (h *AccountHandler) ActivateMyWallet(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.JSONResponse{Message: "successfully setup PIN"})
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "successfully setup PIN"})
 }
 
 func (h *AccountHandler) CreateAccount(c *gin.Context) {
@@ -93,5 +94,5 @@ func (h *AccountHandler) CreateAccount(c *gin.Context) {
 		Email:    uRes.Email,
 	}
 
-	c.JSON(http.StatusOK, dto.JSONResponse{Data: res})
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
 }

@@ -3,25 +3,8 @@ package dto
 import (
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/shopspring/decimal"
 )
-
-type JSONResponse struct {
-	Data        any    `json:"data,omitempty"`
-	Message     string `json:"message,omitempty"`
-	AccessToken string `json:"access_token,omitempty"`
-}
-
-type ErrResponse struct {
-	Error string `json:"error"`
-}
-
-type ClaimsJWT struct {
-	UserId int    `json:"user_id"`
-	Role   string `json:"role"`
-	jwt.RegisteredClaims
-}
 
 type AccountResponse struct {
 	ID                      int             `json:"id,omitempty"`
