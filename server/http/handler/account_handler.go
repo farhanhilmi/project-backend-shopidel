@@ -22,6 +22,18 @@ func NewAccountHandler(accountUsecase usecase.AccountUsecase) *AccountHandler {
 	}
 }
 
+func (h *AccountHandler) GetProfile(c *gin.Context) {
+	userId := c.GetInt("userId")
+
+	data, err := h.accountUsecase.GetProfile(c.Request.Context(), userId)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	
+	c.JSON(http.StatusOK, dto.JSONResponse{Message: "successfully get profile detail", Data: data})
+}
+
 func (h *AccountHandler) ActivateMyWallet(c *gin.Context) {
 	var payload dto.ActivateWalletRequest
 
