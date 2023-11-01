@@ -7,6 +7,7 @@ import (
 )
 
 type CreateAccountRequest struct {
+	UserId   int
 	Username string
 	FullName string
 	Email    string

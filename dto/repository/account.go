@@ -32,6 +32,7 @@ type EditAccountRequest struct {
 
 type GetAccountRequest struct {
 	UserId int
+	Email  string
 }
 
 type GetAccountResponse struct {

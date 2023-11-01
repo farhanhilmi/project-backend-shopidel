@@ -1,16 +1,19 @@
 version: '3.8'
-name: 'e-wallet'
+name: 'group_project_backend'
 
 networks:
-  server:
+  database_server:
+    external: true
 
 services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile
-    ports:
-      - 8080:8080
-    restart: always
+      dockerfile: dockerfile
     env_file:
       - .env
+    ports:
+      - 8080:${PORT}
+    restart: always
+    networks:
+      - database_server

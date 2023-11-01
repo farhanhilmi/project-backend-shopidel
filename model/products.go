@@ -10,7 +10,7 @@ type Products struct {
 	ID                int             `gorm:"primaryKey;not null,autoIncrement;serial"`
 	Name              string          `gorm:"type:varchar;not null"`
 	Description       string          `gorm:"type:text;"`
-	CategoryID        int             `gorm:"foreignKey:CategoryID;type:big int;not null"`
+	CategoryID        int             `gorm:"foreignKey:CategoryID;type:bigint;not null"`
 	HazardousMaterial bool            `gorm:"type:bolean;not null"`
 	Weight            decimal.Decimal `gorm:"type:decimal;not null"`
 	Size              decimal.Decimal `gorm:"type:decimal;not null"`

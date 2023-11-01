@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
@@ -13,51 +14,80 @@ import (
 
 type AccountUsecase interface {
 	ActivateMyWallet(ctx context.Context, req dtousecase.GetAccountRequest, walletPin string) (*dto.AccountResponse, error)
-	CreateAccount(ctx context.Context, req dtousecase.CreateAccountRequest) (dtousecase.CreateAccountResponse, error)
+	CreateAccount(ctx context.Context, req dtousecase.CreateAccountRequest) (*dtousecase.CreateAccountResponse, error)
 	ChangeMyWalletPIN(ctx context.Context, walletReq dtousecase.UpdateWalletPINRequest) (*dtousecase.UpdateWalletPINResponse, error)
 	CheckPasswordCorrect(ctx context.Context, accountReq dtousecase.AccountRequest) (*dtousecase.CheckPasswordResponse, error)
 	GetProfile(ctx context.Context, req dtousecase.GetAccountRequest) (*dtousecase.GetAccountResponse, error)
 	EditProfile(ctx context.Context, req dtousecase.EditAccountRequest) (*dtousecase.EditAccountResponse, error)
+	GetWallet(ctx context.Context, req dtousecase.AccountRequest) (*dtousecase.WalletResponse, error)
 }
 
 type accountUsecase struct {
-	accountRepository repository.AccountRepository
+	accountRepository   repository.AccountRepository
+	usedEmailRepository repository.UsedEmailRepository
 }
 
 type AccountUsecaseConfig struct {
-	AccountRepository repository.AccountRepository
+	AccountRepository   repository.AccountRepository
+	UsedEmailRepository repository.UsedEmailRepository
 }
 
 func NewAccountUsecase(config AccountUsecaseConfig) AccountUsecase {
 	au := &accountUsecase{}
 	if config.AccountRepository != nil {
 		au.accountRepository = config.AccountRepository
+		au.usedEmailRepository = config.UsedEmailRepository
 	}
 
 	return au
 }
 
-func (u *accountUsecase) CreateAccount(ctx context.Context, req dtousecase.CreateAccountRequest) (dtousecase.CreateAccountResponse, error) {
+func (u *accountUsecase) CreateAccount(ctx context.Context, req dtousecase.CreateAccountRequest) (*dtousecase.CreateAccountResponse, error) {
 	res := dtousecase.CreateAccountResponse{}
+
+	userAccount, err := u.accountRepository.FindByEmail(ctx, dtorepository.GetAccountRequest{Email: req.Email})
+	if err != nil && !errors.Is(err, util.ErrNoRecordFound) {
+		return nil, err
+	}
+
+	if strings.EqualFold(userAccount.Email, req.Email) {
+		return nil, util.ErrEmailAlreadyExist
+	}
+
+	if strings.Contains(strings.ToLower(req.Username), strings.ToLower(req.Password)) {
+		return nil, util.ErrPasswordContainUsername
+	}
+
+	usedEmail, err := u.usedEmailRepository.FindByEmail(ctx, dtorepository.UsedEmailRequest{Email: req.Email})
+	if err != nil && !errors.Is(err, util.ErrNoRecordFound) {
+		return nil, err
+	}
+	if usedEmail.Email == req.Email {
+		return nil, util.ErrCantUseThisEmail
+	}
+
+	hashedPassword, err := util.HashPassword(req.Password)
+	if err != nil {
+		return nil, err
+	}
 
 	rReq := dtorepository.CreateAccountRequest{
 		Username: req.Username,
 		FullName: req.FullName,
 		Email:    req.Email,
-		Password: req.Password,
+		Password: hashedPassword,
 	}
 
 	rRes, err := u.accountRepository.Create(ctx, rReq)
-
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 
 	res.Email = rRes.Email
 	res.FullName = rRes.FullName
 	res.Username = rRes.Username
 
-	return res, nil
+	return &res, nil
 }
 
 func (u *accountUsecase) EditProfile(ctx context.Context, req dtousecase.EditAccountRequest) (*dtousecase.EditAccountResponse, error) {
@@ -154,6 +184,27 @@ func (u *accountUsecase) ActivateMyWallet(ctx context.Context, req dtousecase.Ge
 	}
 
 	return &account, nil
+}
+
+func (u *accountUsecase) GetWallet(ctx context.Context, req dtousecase.AccountRequest) (*dtousecase.WalletResponse, error) {
+	userAccount, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{UserId: req.ID})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	IsActive := true
+	if userAccount.WalletPin == "" {
+		IsActive = false
+	}
+
+	return &dtousecase.WalletResponse{
+		Balance:      userAccount.Balance,
+		WalletNumber: userAccount.WalletNumber,
+		IsActive:     IsActive,
+	}, nil
 }
 
 func (u *accountUsecase) ChangeMyWalletPIN(ctx context.Context, walletReq dtousecase.UpdateWalletPINRequest) (*dtousecase.UpdateWalletPINResponse, error) {

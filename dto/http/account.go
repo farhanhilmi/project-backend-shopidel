@@ -9,7 +9,7 @@ import (
 type CreateAccountRequest struct {
 	Username string `json:"username" binding:"required"`
 	FullName string `json:"full_name" binding:"required"`
-	Email    string `json:"email" binding:"required"`
+	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 }
 
@@ -63,4 +63,8 @@ type EditAccountResponse struct {
 	Gender         string    `json:"gender"`
 	Birthdate      time.Time `json:"birthdate"`
 	ProfilePicture string    `json:"profile_picture"`
+}
+
+type CheckPasswordResponse struct {
+	IsCorrect bool `json:"isCorrect"`
 }

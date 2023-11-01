@@ -1,5 +1,7 @@
 package dtohttp
 
+import "github.com/shopspring/decimal"
+
 type ActivateWalletRequest struct {
 	PIN string `json:"wallet_pin" binding:"max=6,min=6,required"`
 }
@@ -12,4 +14,10 @@ type ChangeWalletPINRequest struct {
 
 type ChangeWalletPINResponse struct {
 	WalletNewPIN string `json:"wallet_new_pin"`
+}
+
+type WalletResponse struct {
+	Balance      decimal.Decimal `json:"balance"`
+	WalletNumber string          `json:"wallet_number"`
+	IsActive     bool            `json:"isActive"`
 }
