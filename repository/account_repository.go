@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"log"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -19,6 +18,7 @@ type AccountRepository interface {
 	ActivateWalletByID(ctx context.Context, userId int, walletPin string) (model.Accounts, error)
 	FindById(ctx context.Context, userId int) (model.Accounts, error)
 	Create(ctx context.Context, req dtorepository.CreateAccountRequest) (dtorepository.CreateAccountResponse, error)
+	UpdateWalletPINByID(ctx context.Context, req dtorepository.UpdateWalletPINRequest) (dtorepository.UpdateWalletPINResponse, error)
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
@@ -43,9 +43,27 @@ func (r *accountRepository) ActivateWalletByID(ctx context.Context, userId int, 
 	return account, nil
 }
 
+func (r *accountRepository) UpdateWalletPINByID(ctx context.Context, req dtorepository.UpdateWalletPINRequest) (dtorepository.UpdateWalletPINResponse, error) {
+	account := model.Accounts{}
+
+	err := r.db.WithContext(ctx).Clauses(clause.Locking{
+		Strength: "UPDATE",
+		Table: clause.Table{
+			Name: clause.CurrentTable,
+		}}).Model(&account).Where("id = ?", req.UserID).Update("wallet_pin", req.WalletNewPIN).Error
+
+	if err != nil {
+		return dtorepository.UpdateWalletPINResponse{}, err
+	}
+
+	return dtorepository.UpdateWalletPINResponse{
+		UserID:       account.ID,
+		WalletNewPIN: account.WalletPin,
+	}, nil
+}
+
 func (r *accountRepository) FindById(ctx context.Context, userId int) (model.Accounts, error) {
 	account := model.Accounts{}
-	log.Println("UID", userId)
 	err := r.db.WithContext(ctx).Where("id = ?", userId).First(&account).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {

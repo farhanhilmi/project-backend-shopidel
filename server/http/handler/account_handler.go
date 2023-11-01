@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto"
+	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtohttp "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/http"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/usecase"
@@ -44,7 +45,56 @@ func (h *AccountHandler) ActivateMyWallet(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.JSONResponse{Message: "successfully setup PIN"})
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "successfully setup PIN"})
+}
+
+func (h *AccountHandler) ChangeWalletPIN(c *gin.Context) {
+	var payload dtohttp.ChangeWalletPINRequest
+
+	err := c.ShouldBindJSON(&payload)
+
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.UpdateWalletPINRequest{
+		UserID:       c.GetInt("userId"),
+		WalletNewPIN: strings.TrimSpace(payload.WalletNewPIN),
+		WalletPIN:    strings.TrimSpace(payload.WalletPIN),
+	}
+
+	_, err = h.accountUsecase.ChangeMyWalletPIN(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "successfully update wallet PIN"})
+}
+
+func (h *AccountHandler) CheckISPasswordCorrect(c *gin.Context) {
+	var payload dtohttp.CheckPasswordRequest
+
+	err := c.ShouldBindJSON(&payload)
+
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.AccountRequest{
+		ID:       c.GetInt("userId"),
+		Password: strings.TrimSpace(payload.Password),
+	}
+
+	result, err := h.accountUsecase.CheckPasswordCorrect(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: result})
 }
 
 func (h *AccountHandler) CreateAccount(c *gin.Context) {
@@ -81,5 +131,5 @@ func (h *AccountHandler) CreateAccount(c *gin.Context) {
 		Email:    uRes.Email,
 	}
 
-	c.JSON(http.StatusOK, dto.JSONResponse{Data: res})
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
 }
