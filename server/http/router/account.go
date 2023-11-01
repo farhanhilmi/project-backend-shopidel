@@ -12,5 +12,6 @@ func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 	group.POST("/wallets/activate", middleware.CheckContentType(), h.ActivateMyWallet)
 	group.PUT("/wallets/change-pin", middleware.CheckContentType(), h.ChangeWalletPIN)
 	group.POST("/check-password", middleware.CheckContentType(), h.CheckISPasswordCorrect)
+	group.GET("", h.GetProfile)
 	return gin
 }

@@ -16,7 +16,7 @@ type accountRepository struct {
 }
 type AccountRepository interface {
 	ActivateWalletByID(ctx context.Context, userId int, walletPin string) (model.Accounts, error)
-	FindById(ctx context.Context, userId int) (model.Accounts, error)
+	FindById(ctx context.Context, req dtorepository.GetAccountRequest) (dtorepository.GetAccountResponse, error)
 	Create(ctx context.Context, req dtorepository.CreateAccountRequest) (dtorepository.CreateAccountResponse, error)
 	UpdateWalletPINByID(ctx context.Context, req dtorepository.UpdateWalletPINRequest) (dtorepository.UpdateWalletPINResponse, error)
 }
@@ -62,18 +62,27 @@ func (r *accountRepository) UpdateWalletPINByID(ctx context.Context, req dtorepo
 	}, nil
 }
 
-func (r *accountRepository) FindById(ctx context.Context, userId int) (model.Accounts, error) {
+func (r *accountRepository) FindById(ctx context.Context, req dtorepository.GetAccountRequest) (dtorepository.GetAccountResponse, error) {
 	account := model.Accounts{}
-	err := r.db.WithContext(ctx).Where("id = ?", userId).First(&account).Error
+	res := dtorepository.GetAccountResponse{}
+
+	err := r.db.WithContext(ctx).Where("id = ?", req.UserId).First(&account).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return model.Accounts{}, util.ErrNoRecordFound
+		return res, util.ErrNoRecordFound
 	}
 
-	if err != nil {
-		return model.Accounts{}, err
-	}
-	return account, nil
+	res.FullName = account.FullName
+	res.Username = account.Username
+	res.Email = account.Email
+	res.PhoneNumber = account.PhoneNumber
+	res.Gender = account.Gender
+	res.Birthdate = account.Birthdate
+	res.ProfilePicture = account.ProfilePicture
+	res.WalletNumber = account.WalletNumber
+	res.Balance = account.Balance
+
+	return res, err
 }
 
 func (r *accountRepository) Create(ctx context.Context, req dtorepository.CreateAccountRequest) (dtorepository.CreateAccountResponse, error) {

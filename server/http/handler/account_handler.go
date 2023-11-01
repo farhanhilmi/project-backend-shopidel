@@ -23,6 +23,41 @@ func NewAccountHandler(accountUsecase usecase.AccountUsecase) *AccountHandler {
 	}
 }
 
+func (h *AccountHandler) GetProfile(c *gin.Context) {
+	var req dtohttp.GetAccountRequest
+	req.UserId = c.GetInt("userId")
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.GetAccountRequest{
+		UserId: req.UserId,
+	}
+
+	uRes, err := h.accountUsecase.GetProfile(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res := dtohttp.GetAccountResponse{
+		ID:             uRes.ID,
+		FullName:       uRes.FullName,
+		Username:       uRes.Username,
+		Email:          uRes.Email,
+		PhoneNumber:    uRes.PhoneNumber,
+		Gender:         uRes.Gender,
+		Birthdate:      uRes.Birthdate,
+		ProfilePicture: uRes.ProfilePicture,
+		WalletNumber:   uRes.WalletNumber,
+		Balance:        uRes.Balance,
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "successfully get profile detail", Data: res})
+}
+
 func (h *AccountHandler) ActivateMyWallet(c *gin.Context) {
 	var payload dto.ActivateWalletRequest
 
@@ -34,12 +69,15 @@ func (h *AccountHandler) ActivateMyWallet(c *gin.Context) {
 	}
 
 	userId := c.GetInt("userId")
+	uReq := dtousecase.GetAccountRequest{
+		UserId: userId,
+	}
 
 	payload = dto.ActivateWalletRequest{
 		PIN: strings.TrimSpace(payload.PIN),
 	}
 
-	_, err = h.accountUsecase.ActivateMyWallet(c.Request.Context(), userId, payload.PIN)
+	_, err = h.accountUsecase.ActivateMyWallet(c.Request.Context(), uReq, payload.PIN)
 	if err != nil {
 		c.Error(err)
 		return
