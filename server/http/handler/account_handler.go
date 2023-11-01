@@ -185,5 +185,5 @@ func (h *AccountHandler) CreateAccount(c *gin.Context) {
 		Email:    uRes.Email,
 	}
 
-	c.JSON(http.StatusCreated, dtogeneral.JSONResponse{Data: res})
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
 }
