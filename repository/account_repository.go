@@ -81,6 +81,11 @@ func (r *accountRepository) FindById(ctx context.Context, req dtorepository.GetA
 	res.ProfilePicture = account.ProfilePicture
 	res.WalletNumber = account.WalletNumber
 	res.Balance = account.Balance
+	res.Password = account.Password
+	res.WalletPin = account.WalletPin
+	res.ID = account.ID
+	res.ForgetPasswordExpiredAt = account.ForgetPasswordExpiredAt
+	res.ForgetPasswordToken = account.ForgetPasswordToken
 
 	return res, err
 }

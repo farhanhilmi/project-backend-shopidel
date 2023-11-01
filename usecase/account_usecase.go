@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"log"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
@@ -104,9 +105,11 @@ func (u *accountUsecase) ActivateMyWallet(ctx context.Context, req dtousecase.Ge
 		return nil, err
 	}
 
+	log.Println("EDE", userAccount.WalletPin)
 	if userAccount.WalletPin != "" {
 		return nil, util.ErrWalletAlreadySet
 	}
+
 	acc, err := u.accountRepository.ActivateWalletByID(ctx, req.UserId, walletPin)
 	if errors.Is(err, util.ErrNoRecordFound) {
 		return nil, util.ErrNoRecordFound
