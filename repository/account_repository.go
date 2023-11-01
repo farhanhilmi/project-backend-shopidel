@@ -19,6 +19,7 @@ type AccountRepository interface {
 	FindById(ctx context.Context, req dtorepository.GetAccountRequest) (dtorepository.GetAccountResponse, error)
 	Create(ctx context.Context, req dtorepository.CreateAccountRequest) (dtorepository.CreateAccountResponse, error)
 	UpdateWalletPINByID(ctx context.Context, req dtorepository.UpdateWalletPINRequest) (dtorepository.UpdateWalletPINResponse, error)
+	FindByEmail(ctx context.Context, req dtorepository.GetAccountRequest) (dtorepository.GetAccountResponse, error)
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
@@ -67,6 +68,34 @@ func (r *accountRepository) FindById(ctx context.Context, req dtorepository.GetA
 	res := dtorepository.GetAccountResponse{}
 
 	err := r.db.WithContext(ctx).Where("id = ?", req.UserId).First(&account).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+
+	res.FullName = account.FullName
+	res.Username = account.Username
+	res.Email = account.Email
+	res.PhoneNumber = account.PhoneNumber
+	res.Gender = account.Gender
+	res.Birthdate = account.Birthdate
+	res.ProfilePicture = account.ProfilePicture
+	res.WalletNumber = account.WalletNumber
+	res.Balance = account.Balance
+	res.Password = account.Password
+	res.WalletPin = account.WalletPin
+	res.ID = account.ID
+	res.ForgetPasswordExpiredAt = account.ForgetPasswordExpiredAt
+	res.ForgetPasswordToken = account.ForgetPasswordToken
+
+	return res, err
+}
+
+func (r *accountRepository) FindByEmail(ctx context.Context, req dtorepository.GetAccountRequest) (dtorepository.GetAccountResponse, error) {
+	account := model.Accounts{}
+	res := dtorepository.GetAccountResponse{}
+
+	err := r.db.WithContext(ctx).Where("email = ?", req.Email).First(&account).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound
