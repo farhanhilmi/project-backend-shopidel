@@ -23,6 +23,7 @@ type EditAccountRequest struct {
 	UserId         int
 	FullName       string
 	Username       string
+	UsedEmail 	   string
 	Email          string
 	PhoneNumber    string
 	Gender         string

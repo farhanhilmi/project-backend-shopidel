@@ -13,6 +13,7 @@ import (
 
 type accountRepository struct {
 	db *gorm.DB
+	usedEmailRepo usedEmailRepository 
 }
 type AccountRepository interface {
 	ActivateWalletByID(ctx context.Context, userId int, walletPin string) (model.Accounts, error)
@@ -32,10 +33,14 @@ func NewAccountRepository(db *gorm.DB) AccountRepository {
 func (r *accountRepository) UpdateAccount(ctx context.Context, req dtorepository.EditAccountRequest) (*dtorepository.EditAccountResponse, error) {
 	res := &dtorepository.EditAccountResponse{}
 
+	tx := r.db.Begin()
+	
+
 	a := model.Accounts{}
-	err := r.db.WithContext(ctx).Where("id = ?", req.UserId).First(&a).Error
+	err := tx.WithContext(ctx).Where("id = ?", req.UserId).First(&a).Error
 
 	if err != nil {
+		tx.Rollback()
 		return res, err
 	}
 
@@ -47,11 +52,25 @@ func (r *accountRepository) UpdateAccount(ctx context.Context, req dtorepository
 	a.Birthdate = req.Birthdate
 	a.ProfilePicture = req.ProfilePicture
 
-	err = r.db.Save(&a).Error
+	err = tx.WithContext(ctx).Save(&a).Error
 
 	if err != nil {
+		tx.Rollback()
 		return res, err
 	}
+
+	ueReq := dtorepository.UsedEmailRequest{
+		AccountID: req.UserId,
+		Email: req.UsedEmail,
+	}
+
+	_, err = r.usedEmailRepo.CreateEmail(ctx, tx, ueReq)
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	tx.Commit()
 
 	res.ID = a.ID
 	res.FullName = a.FullName

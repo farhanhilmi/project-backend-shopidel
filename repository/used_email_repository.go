@@ -13,8 +13,10 @@ import (
 type usedEmailRepository struct {
 	db *gorm.DB
 }
+
 type UsedEmailRepository interface {
 	FindByEmail(ctx context.Context, req dtorepository.UsedEmailRequest) (dtorepository.UsedEmailResponse, error)
+	CreateEmail(ctx context.Context, tx *gorm.DB, req dtorepository.UsedEmailRequest) (dtorepository.UsedEmailResponse, error)
 }
 
 func NewUsedEmailRepository(db *gorm.DB) UsedEmailRepository {
@@ -39,6 +41,25 @@ func (r *usedEmailRepository) FindByEmail(ctx context.Context, req dtorepository
 	res.DeletedAt = usedEmail.DeletedAt
 	res.UpdatedAt = usedEmail.UpdatedAt
 	res.AccountID = usedEmail.AccountID
+
+	return res, err
+}
+
+func (r *usedEmailRepository) CreateEmail(ctx context.Context, tx *gorm.DB, req dtorepository.UsedEmailRequest) (dtorepository.UsedEmailResponse, error) {
+	res := dtorepository.UsedEmailResponse{}
+	
+	usedEmail := model.UsedEmail{
+		AccountID: req.AccountID,
+		Email: req.Email,
+	}
+
+	err := tx.WithContext(ctx).Model(&usedEmail).Create(&usedEmail).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+
+	res.AccountID = usedEmail.AccountID
+	res.Email = usedEmail.Email
 
 	return res, err
 }

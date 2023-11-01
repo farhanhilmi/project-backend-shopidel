@@ -41,4 +41,5 @@ var (
 	ErrEmailAlreadyExist       = &CustomError{Message: "email already registered", Code: BadRequest}
 	ErrCantUseThisEmail        = &CustomError{Message: "you cannot use this email", Code: BadRequest}
 	ErrPasswordContainUsername = &CustomError{Message: "password cannot contains username as part of it", Code: BadRequest}
+	ErrSameEmail               = &CustomError{Message: "you already used this email", Code: BadRequest}
 )
