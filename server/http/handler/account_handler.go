@@ -2,9 +2,13 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto"
+	dtohttp "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/http"
+	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/usecase"
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,13 +22,64 @@ func NewAccountHandler(accountUsecase usecase.AccountUsecase) *AccountHandler {
 	}
 }
 
-func (h *AccountHandler) GetDetail(c *gin.Context) {
-	detailProfile, err := h.accountUsecase.GetDetail(c)
+func (h *AccountHandler) ActivateMyWallet(c *gin.Context) {
+	var payload dto.ActivateWalletRequest
+
+	err := c.ShouldBindJSON(&payload)
+
 	if err != nil {
-		c.Error(err)
+		c.Error(util.ErrInvalidInput)
+		return
 	}
 
-	c.JSON(http.StatusOK, dto.JSONResponse{Message: "success", Data: detailProfile})
+	userId := c.GetInt("userId")
+
+	payload = dto.ActivateWalletRequest{
+		PIN: strings.TrimSpace(payload.PIN),
+	}
+
+	_, err = h.accountUsecase.ActivateMyWallet(c.Request.Context(), userId, payload.PIN)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.JSONResponse{Message: "successfully setup PIN"})
 }
 
+func (h *AccountHandler) CreateAccount(c *gin.Context) {
+	var req dtohttp.CreateAccountRequest
 
+	err := c.ShouldBindJSON(&req)
+
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	req.Email = strings.TrimSpace(req.Email)
+	req.FullName = strings.TrimSpace(req.FullName)
+	req.Username = strings.TrimSpace(req.Username)
+
+	uReq := dtousecase.CreateAccountRequest{
+		Username: strings.TrimSpace(req.Username),
+		FullName: strings.TrimSpace(req.FullName),
+		Email:    strings.TrimSpace(req.Email),
+		Password: req.Password,
+	}
+
+	uRes, err := h.accountUsecase.CreateAccount(c.Request.Context(), uReq)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res := dtohttp.CreateAccountResponse{
+		Username: uRes.Username,
+		FullName: uRes.FullName,
+		Email:    uRes.Email,
+	}
+
+	c.JSON(http.StatusOK, dto.JSONResponse{Data: res})
+}

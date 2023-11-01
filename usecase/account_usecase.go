@@ -2,30 +2,88 @@ package usecase
 
 import (
 	"context"
+	"errors"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto"
+	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
+	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/repository"
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
 )
 
-type accountUsecase struct {
-	accountRepo repository.AccountRepository
-}
-
 type AccountUsecase interface {
-	GetDetail(ctx context.Context) (*dto.AccountResponse, error)
+	ActivateMyWallet(ctx context.Context, userId int, walletPin string) (*dto.AccountResponse, error)
+	CreateAccount(ctx context.Context, req dtousecase.CreateAccountRequest) (dtousecase.CreateAccountResponse, error)
 }
 
-func NewAuthenticationUsecase(accountRepo repository.AccountRepository) AccountUsecase {
-	return &accountUsecase{
-		accountRepo: accountRepo,
+type accountUsecase struct {
+	accountRepository repository.AccountRepository
+}
+
+type AccountUsecaseConfig struct {
+	AccountRepository repository.AccountRepository
+}
+
+func NewAccountUsecase(config AccountUsecaseConfig) AccountUsecase {
+	au := &accountUsecase{}
+	if config.AccountRepository != nil {
+		au.accountRepository = config.AccountRepository
 	}
+
+	return au
 }
 
-func (u *accountUsecase) GetDetail(ctx context.Context) (*dto.AccountResponse, error) {
-	accountDetail, err := u.accountRepo.GetDetail(ctx)
+func (u *accountUsecase) ActivateMyWallet(ctx context.Context, userId int, walletPin string) (*dto.AccountResponse, error) {
+	if len(walletPin) != 6 {
+		return nil, util.ErrBadPIN
+	}
+
+	userAccount, err := u.accountRepository.FindById(ctx, userId)
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
 	if err != nil {
-		return &dto.AccountResponse{}, err
+		return nil, err
 	}
 
-	return accountDetail, nil
+	if userAccount.WalletPin != "" {
+		return nil, util.ErrWalletAlreadySet
+	}
+	acc, err := u.accountRepository.ActivateWalletByID(ctx, userId, walletPin)
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	account := dto.AccountResponse{
+		ID:           acc.ID,
+		WalletNumber: acc.WalletNumber,
+	}
+
+	return &account, nil
+}
+
+func (u *accountUsecase) CreateAccount(ctx context.Context, req dtousecase.CreateAccountRequest) (dtousecase.CreateAccountResponse, error) {
+	res := dtousecase.CreateAccountResponse{}
+
+	rReq := dtorepository.CreateAccountRequest{
+		Username: req.Username,
+		FullName: req.FullName,
+		Email:    req.Email,
+		Password: req.Password,
+	}
+
+	rRes, err := u.accountRepository.Create(ctx, rReq)
+
+	if err != nil {
+		return res, err
+	}
+
+	res.Email = rRes.Email
+	res.FullName = rRes.FullName
+	res.Username = rRes.Username
+
+	return res, nil
 }
