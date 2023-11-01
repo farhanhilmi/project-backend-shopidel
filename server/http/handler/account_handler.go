@@ -145,15 +145,11 @@ func (h *AccountHandler) CreateAccount(c *gin.Context) {
 		return
 	}
 
-	req.Email = strings.TrimSpace(req.Email)
-	req.FullName = strings.TrimSpace(req.FullName)
-	req.Username = strings.TrimSpace(req.Username)
-
 	uReq := dtousecase.CreateAccountRequest{
 		Username: strings.TrimSpace(req.Username),
 		FullName: strings.TrimSpace(req.FullName),
 		Email:    strings.TrimSpace(req.Email),
-		Password: req.Password,
+		Password: strings.TrimSpace(req.Password),
 	}
 
 	uRes, err := h.accountUsecase.CreateAccount(c.Request.Context(), uReq)

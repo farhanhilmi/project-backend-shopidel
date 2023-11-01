@@ -39,6 +39,13 @@ func createTable() {
 		panic(err)
 	}
 
+	err = db.AutoMigrate(
+		&model.UsedEmail{},
+	)
+	if err != nil {
+		panic(err)
+	}
+
 	fmt.Println("successfully migrate tables")
 }
 
