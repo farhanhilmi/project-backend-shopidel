@@ -93,6 +93,14 @@ func (u *accountUsecase) CreateAccount(ctx context.Context, req dtousecase.Creat
 func (u *accountUsecase) EditProfile(ctx context.Context, req dtousecase.EditAccountRequest) (*dtousecase.EditAccountResponse, error) {
 	res := dtousecase.EditAccountResponse{}
 
+	usedEmail, err := u.usedEmailRepository.FindByEmail(ctx, dtorepository.UsedEmailRequest{Email: req.Email})
+	if err != nil && !errors.Is(err, util.ErrNoRecordFound) {
+		return nil, err
+	}
+	if usedEmail.Email == req.Email {
+		return nil, util.ErrCantUseThisEmail
+	}
+
 	rReq := dtorepository.EditAccountRequest {
 		UserId: req.UserId,
 		FullName: req.FullName,
