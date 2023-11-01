@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/config"
-	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto"
+	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -17,7 +17,7 @@ func GenerateJWT(userId int) (string, error) {
 		return "", err
 	}
 
-	claims := dto.ClaimsJWT{
+	claims := dtogeneral.ClaimsJWT{
 		UserId: userId,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Hour * time.Duration(tokenDuration))},
@@ -32,7 +32,7 @@ func GenerateJWT(userId int) (string, error) {
 }
 
 func ValidateToken(tokenStr string) (*jwt.Token, error) {
-	return jwt.ParseWithClaims(tokenStr, &dto.ClaimsJWT{}, func(t *jwt.Token) (interface{}, error) {
+	return jwt.ParseWithClaims(tokenStr, &dtogeneral.ClaimsJWT{}, func(t *jwt.Token) (interface{}, error) {
 		_, ok := t.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])

@@ -1,7 +1,7 @@
 package router
 
 import (
-	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto"
+	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,5 +11,5 @@ func NewPingRouter(gin *gin.Engine) *gin.Engine {
 }
 
 func ping(c *gin.Context) {
-	c.JSON(200, dto.JSONResponse{Data: "pong"})
+	c.JSON(200, dtogeneral.JSONResponse{Data: "pong"})
 }

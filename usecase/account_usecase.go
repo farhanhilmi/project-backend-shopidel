@@ -12,8 +12,11 @@ import (
 )
 
 type AccountUsecase interface {
-	ActivateMyWallet(ctx context.Context, userId int, walletPin string) (*dto.AccountResponse, error)
+	ActivateMyWallet(ctx context.Context, req dtousecase.GetAccountRequest, walletPin string) (*dto.AccountResponse, error)
 	CreateAccount(ctx context.Context, req dtousecase.CreateAccountRequest) (dtousecase.CreateAccountResponse, error)
+	ChangeMyWalletPIN(ctx context.Context, walletReq dtousecase.UpdateWalletPINRequest) (*dtousecase.UpdateWalletPINResponse, error)
+	CheckPasswordCorrect(ctx context.Context, accountReq dtousecase.AccountRequest) (*dtousecase.CheckPasswordResponse, error)
+	GetProfile(ctx context.Context, req dtousecase.GetAccountRequest) (*dtousecase.GetAccountResponse, error)
 }
 
 type accountUsecase struct {
@@ -31,38 +34,6 @@ func NewAccountUsecase(config AccountUsecaseConfig) AccountUsecase {
 	}
 
 	return au
-}
-
-func (u *accountUsecase) ActivateMyWallet(ctx context.Context, userId int, walletPin string) (*dto.AccountResponse, error) {
-	if len(walletPin) != 6 {
-		return nil, util.ErrBadPIN
-	}
-
-	userAccount, err := u.accountRepository.FindById(ctx, userId)
-	if errors.Is(err, util.ErrNoRecordFound) {
-		return nil, util.ErrNoRecordFound
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	if userAccount.WalletPin != "" {
-		return nil, util.ErrWalletAlreadySet
-	}
-	acc, err := u.accountRepository.ActivateWalletByID(ctx, userId, walletPin)
-	if errors.Is(err, util.ErrNoRecordFound) {
-		return nil, util.ErrNoRecordFound
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	account := dto.AccountResponse{
-		ID:           acc.ID,
-		WalletNumber: acc.WalletNumber,
-	}
-
-	return &account, nil
 }
 
 func (u *accountUsecase) CreateAccount(ctx context.Context, req dtousecase.CreateAccountRequest) (dtousecase.CreateAccountResponse, error) {
@@ -86,4 +57,129 @@ func (u *accountUsecase) CreateAccount(ctx context.Context, req dtousecase.Creat
 	res.Username = rRes.Username
 
 	return res, nil
+}
+
+func (u *accountUsecase) GetProfile(ctx context.Context, req dtousecase.GetAccountRequest) (*dtousecase.GetAccountResponse, error) {
+	res := dtousecase.GetAccountResponse{}
+
+	rReq := dtorepository.GetAccountRequest{
+		UserId: req.UserId,
+	}
+
+	userAccount, err := u.accountRepository.FindById(ctx, rReq)
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	res.FullName = userAccount.FullName
+	res.Username = userAccount.Username
+	res.Email = userAccount.Email
+	res.PhoneNumber = userAccount.PhoneNumber
+	res.Gender = userAccount.Gender
+	res.Birthdate = userAccount.Birthdate
+	res.ProfilePicture = userAccount.ProfilePicture
+	res.WalletNumber = userAccount.WalletNumber
+	res.Balance = userAccount.Balance
+
+	return &res, nil
+}
+
+func (u *accountUsecase) ActivateMyWallet(ctx context.Context, req dtousecase.GetAccountRequest, walletPin string) (*dto.AccountResponse, error) {
+	if len(walletPin) != 6 {
+		return nil, util.ErrBadPIN
+	}
+
+	rReq := dtorepository.GetAccountRequest{
+		UserId: req.UserId,
+	}
+
+	userAccount, err := u.accountRepository.FindById(ctx, rReq)
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if userAccount.WalletPin != "" {
+		return nil, util.ErrWalletAlreadySet
+	}
+
+	acc, err := u.accountRepository.ActivateWalletByID(ctx, req.UserId, walletPin)
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	account := dto.AccountResponse{
+		ID:           acc.ID,
+		WalletNumber: acc.WalletNumber,
+	}
+
+	return &account, nil
+}
+
+func (u *accountUsecase) ChangeMyWalletPIN(ctx context.Context, walletReq dtousecase.UpdateWalletPINRequest) (*dtousecase.UpdateWalletPINResponse, error) {
+	userAccount, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{UserId: walletReq.UserID})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if userAccount.WalletPin == "" {
+		return nil, util.ErrWalletNotSet
+	}
+
+	if len(walletReq.WalletNewPIN) != 6 {
+		return nil, util.ErrBadPIN
+	}
+
+	if userAccount.WalletPin != walletReq.WalletPIN {
+		return nil, util.ErrWalletPINNotMatch
+	}
+
+	if len(walletReq.WalletNewPIN) != 6 {
+		return nil, util.ErrBadPIN
+	}
+
+	if userAccount.WalletPin == walletReq.WalletNewPIN {
+		return nil, util.ErrSameWalletPIN
+	}
+
+	acc, err := u.accountRepository.UpdateWalletPINByID(ctx, dtorepository.UpdateWalletPINRequest{
+		UserID:       walletReq.UserID,
+		WalletNewPIN: walletReq.WalletNewPIN,
+	})
+
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &dtousecase.UpdateWalletPINResponse{
+		WalletNewPIN: acc.WalletNewPIN,
+	}, nil
+}
+
+func (u *accountUsecase) CheckPasswordCorrect(ctx context.Context, accountReq dtousecase.AccountRequest) (*dtousecase.CheckPasswordResponse, error) {
+	userAccount, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{UserId: accountReq.ID})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &dtousecase.CheckPasswordResponse{
+		IsCorrect: util.CheckPasswordHash(accountReq.Password, userAccount.Password),
+	}, nil
 }

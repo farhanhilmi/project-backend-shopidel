@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"log"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -17,8 +16,9 @@ type accountRepository struct {
 }
 type AccountRepository interface {
 	ActivateWalletByID(ctx context.Context, userId int, walletPin string) (model.Accounts, error)
-	FindById(ctx context.Context, userId int) (model.Accounts, error)
+	FindById(ctx context.Context, req dtorepository.GetAccountRequest) (dtorepository.GetAccountResponse, error)
 	Create(ctx context.Context, req dtorepository.CreateAccountRequest) (dtorepository.CreateAccountResponse, error)
+	UpdateWalletPINByID(ctx context.Context, req dtorepository.UpdateWalletPINRequest) (dtorepository.UpdateWalletPINResponse, error)
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
@@ -43,19 +43,51 @@ func (r *accountRepository) ActivateWalletByID(ctx context.Context, userId int, 
 	return account, nil
 }
 
-func (r *accountRepository) FindById(ctx context.Context, userId int) (model.Accounts, error) {
+func (r *accountRepository) UpdateWalletPINByID(ctx context.Context, req dtorepository.UpdateWalletPINRequest) (dtorepository.UpdateWalletPINResponse, error) {
 	account := model.Accounts{}
-	log.Println("UID", userId)
-	err := r.db.WithContext(ctx).Where("id = ?", userId).First(&account).Error
 
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return model.Accounts{}, util.ErrNoRecordFound
-	}
+	err := r.db.WithContext(ctx).Clauses(clause.Locking{
+		Strength: "UPDATE",
+		Table: clause.Table{
+			Name: clause.CurrentTable,
+		}}).Model(&account).Where("id = ?", req.UserID).Update("wallet_pin", req.WalletNewPIN).Error
 
 	if err != nil {
-		return model.Accounts{}, err
+		return dtorepository.UpdateWalletPINResponse{}, err
 	}
-	return account, nil
+
+	return dtorepository.UpdateWalletPINResponse{
+		UserID:       account.ID,
+		WalletNewPIN: account.WalletPin,
+	}, nil
+}
+
+func (r *accountRepository) FindById(ctx context.Context, req dtorepository.GetAccountRequest) (dtorepository.GetAccountResponse, error) {
+	account := model.Accounts{}
+	res := dtorepository.GetAccountResponse{}
+
+	err := r.db.WithContext(ctx).Where("id = ?", req.UserId).First(&account).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+
+	res.FullName = account.FullName
+	res.Username = account.Username
+	res.Email = account.Email
+	res.PhoneNumber = account.PhoneNumber
+	res.Gender = account.Gender
+	res.Birthdate = account.Birthdate
+	res.ProfilePicture = account.ProfilePicture
+	res.WalletNumber = account.WalletNumber
+	res.Balance = account.Balance
+	res.Password = account.Password
+	res.WalletPin = account.WalletPin
+	res.ID = account.ID
+	res.ForgetPasswordExpiredAt = account.ForgetPasswordExpiredAt
+	res.ForgetPasswordToken = account.ForgetPasswordToken
+
+	return res, err
 }
 
 func (r *accountRepository) Create(ctx context.Context, req dtorepository.CreateAccountRequest) (dtorepository.CreateAccountResponse, error) {
