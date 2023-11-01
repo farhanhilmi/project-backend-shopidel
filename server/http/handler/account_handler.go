@@ -132,7 +132,7 @@ func (h *AccountHandler) CheckISPasswordCorrect(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: result})
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: dtohttp.CheckPasswordResponse{IsCorrect: result.IsCorrect}})
 }
 
 func (h *AccountHandler) GetWallet(c *gin.Context) {
@@ -146,7 +146,13 @@ func (h *AccountHandler) GetWallet(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: result})
+	resWallet := dtohttp.WalletResponse{
+		Balance:      result.Balance,
+		WalletNumber: result.WalletNumber,
+		IsActive:     result.IsActive,
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: resWallet})
 }
 
 func (h *AccountHandler) CreateAccount(c *gin.Context) {

@@ -43,3 +43,7 @@ type GetAccountResponse struct {
 	ForgetPasswordToken     string          `json:"forget_password_token,omitempty"`
 	ForgetPasswordExpiredAt time.Time       `json:"forget_password_expired_at,omitempty"`
 }
+
+type CheckPasswordResponse struct {
+	IsCorrect bool `json:"isCorrect"`
+}
