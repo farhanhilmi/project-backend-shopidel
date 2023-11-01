@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 
 	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
@@ -16,7 +15,6 @@ func ErrorHandler() gin.HandlerFunc {
 		c.Next()
 
 		err := c.Errors.Last()
-		log.Println("ERR", err)
 		if err != nil {
 			if errors.Is(err, context.DeadlineExceeded) {
 				c.AbortWithStatusJSON(http.StatusBadGateway, dtogeneral.ErrResponse{Error: "request timeout"})

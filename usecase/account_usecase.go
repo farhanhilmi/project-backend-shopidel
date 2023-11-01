@@ -17,6 +17,7 @@ type AccountUsecase interface {
 	ChangeMyWalletPIN(ctx context.Context, walletReq dtousecase.UpdateWalletPINRequest) (*dtousecase.UpdateWalletPINResponse, error)
 	CheckPasswordCorrect(ctx context.Context, accountReq dtousecase.AccountRequest) (*dtousecase.CheckPasswordResponse, error)
 	GetProfile(ctx context.Context, req dtousecase.GetAccountRequest) (*dtousecase.GetAccountResponse, error)
+	EditProfile(ctx context.Context, req dtousecase.EditAccountRequest) (*dtousecase.EditAccountResponse, error)
 }
 
 type accountUsecase struct {
@@ -57,6 +58,37 @@ func (u *accountUsecase) CreateAccount(ctx context.Context, req dtousecase.Creat
 	res.Username = rRes.Username
 
 	return res, nil
+}
+
+func (u *accountUsecase) EditProfile(ctx context.Context, req dtousecase.EditAccountRequest) (*dtousecase.EditAccountResponse, error) {
+	res := dtousecase.EditAccountResponse{}
+
+	rReq := dtorepository.EditAccountRequest {
+		UserId: req.UserId,
+		FullName: req.FullName,
+		Username: req.Username,
+		Email: req.Email,
+		PhoneNumber: req.PhoneNumber,
+		Gender: req.Gender,
+		Birthdate: req.Birthdate,
+		ProfilePicture: req.ProfilePicture,
+	}
+
+	userAccount, err := u.accountRepository.UpdateAccount(ctx, rReq)
+	if err != nil {
+		return &res, err
+	}
+
+	res.ID = userAccount.ID
+	res.FullName = userAccount.FullName
+	res.Username = userAccount.Username
+	res.Email = userAccount.Email
+	res.PhoneNumber = userAccount.PhoneNumber
+	res.Gender = userAccount.Gender
+	res.Birthdate = userAccount.Birthdate
+	res.ProfilePicture = userAccount.ProfilePicture
+
+	return &res, nil
 }
 
 func (u *accountUsecase) GetProfile(ctx context.Context, req dtousecase.GetAccountRequest) (*dtousecase.GetAccountResponse, error) {

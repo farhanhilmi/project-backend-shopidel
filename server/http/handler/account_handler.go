@@ -23,6 +23,47 @@ func NewAccountHandler(accountUsecase usecase.AccountUsecase) *AccountHandler {
 	}
 }
 
+func (h *AccountHandler) EditProfile(c *gin.Context) {
+	var req dtohttp.EditAccountRequest
+	
+	err := c.ShouldBindJSON(&req)
+
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.EditAccountRequest {
+		UserId: c.GetInt("userId"),
+		FullName: req.FullName,
+		Username: req.Username,
+		Email: req.Email,
+		PhoneNumber: req.PhoneNumber,
+		Gender: req.Gender,
+		Birthdate: req.Birthdate,
+		ProfilePicture: req.ProfilePicture, 
+	}
+
+	uRes, err := h.accountUsecase.EditProfile(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res := dtohttp.EditAccountResponse {
+		ID: uRes.ID,
+		FullName: uRes.FullName,
+		Username: uRes.Username,
+		Email: uRes.Email,
+		PhoneNumber: uRes.PhoneNumber,
+		Gender: uRes.Gender,
+		Birthdate: uRes.Birthdate,
+		ProfilePicture: uRes.ProfilePicture, 
+	}
+	
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "successfully edited profile", Data: res})
+}
+
 func (h *AccountHandler) GetProfile(c *gin.Context) {
 	var req dtohttp.GetAccountRequest
 	req.UserId = c.GetInt("userId")
