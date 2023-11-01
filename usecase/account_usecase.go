@@ -18,6 +18,7 @@ type AccountUsecase interface {
 	ChangeMyWalletPIN(ctx context.Context, walletReq dtousecase.UpdateWalletPINRequest) (*dtousecase.UpdateWalletPINResponse, error)
 	CheckPasswordCorrect(ctx context.Context, accountReq dtousecase.AccountRequest) (*dtousecase.CheckPasswordResponse, error)
 	GetProfile(ctx context.Context, req dtousecase.GetAccountRequest) (*dtousecase.GetAccountResponse, error)
+	GetWallet(ctx context.Context, req dtousecase.AccountRequest) (*dtousecase.WalletResponse, error)
 }
 
 type accountUsecase struct {
@@ -151,6 +152,27 @@ func (u *accountUsecase) ActivateMyWallet(ctx context.Context, req dtousecase.Ge
 	}
 
 	return &account, nil
+}
+
+func (u *accountUsecase) GetWallet(ctx context.Context, req dtousecase.AccountRequest) (*dtousecase.WalletResponse, error) {
+	userAccount, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{UserId: req.ID})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	IsActive := true
+	if userAccount.WalletPin == "" {
+		IsActive = false
+	}
+
+	return &dtousecase.WalletResponse{
+		Balance:      userAccount.Balance,
+		WalletNumber: userAccount.WalletNumber,
+		IsActive:     IsActive,
+	}, nil
 }
 
 func (u *accountUsecase) ChangeMyWalletPIN(ctx context.Context, walletReq dtousecase.UpdateWalletPINRequest) (*dtousecase.UpdateWalletPINResponse, error) {

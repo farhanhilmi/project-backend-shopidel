@@ -1,5 +1,7 @@
 package dtousecase
 
+import "github.com/shopspring/decimal"
+
 type UpdateWalletPINRequest struct {
 	UserID       int
 	WalletPIN    string
@@ -8,4 +10,10 @@ type UpdateWalletPINRequest struct {
 
 type UpdateWalletPINResponse struct {
 	WalletNewPIN string
+}
+
+type WalletResponse struct {
+	Balance      decimal.Decimal
+	WalletNumber string
+	IsActive     bool
 }

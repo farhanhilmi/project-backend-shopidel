@@ -135,6 +135,20 @@ func (h *AccountHandler) CheckISPasswordCorrect(c *gin.Context) {
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: result})
 }
 
+func (h *AccountHandler) GetWallet(c *gin.Context) {
+	uReq := dtousecase.AccountRequest{
+		ID: c.GetInt("userId"),
+	}
+
+	result, err := h.accountUsecase.GetWallet(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: result})
+}
+
 func (h *AccountHandler) CreateAccount(c *gin.Context) {
 	var req dtohttp.CreateAccountRequest
 
@@ -165,5 +179,5 @@ func (h *AccountHandler) CreateAccount(c *gin.Context) {
 		Email:    uRes.Email,
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
+	c.JSON(http.StatusCreated, dtogeneral.JSONResponse{Data: res})
 }
