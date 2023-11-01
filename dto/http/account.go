@@ -19,6 +19,10 @@ type CreateAccountResponse struct {
 	Email    string `json:"email"`
 }
 
+type CheckPasswordRequest struct {
+	Password string `json:"password"`
+}
+
 type GetAccountRequest struct {
 	UserId int `json:"id"`
 }

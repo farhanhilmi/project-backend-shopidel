@@ -32,7 +32,7 @@ func (h *AccountHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	uReq := dtousecase.GetAccountRequest {
+	uReq := dtousecase.GetAccountRequest{
 		UserId: req.UserId,
 	}
 
@@ -42,18 +42,17 @@ func (h *AccountHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	res := dtohttp.GetAccountResponse {
-		ID: uRes.ID,
-		FullName: uRes.FullName,
-		Username: uRes.Username,
-		Email: uRes.Email,
-		PhoneNumber: uRes.PhoneNumber,
-		Gender: uRes.Gender,
-		Birthdate: uRes.Birthdate,
+	res := dtohttp.GetAccountResponse{
+		ID:             uRes.ID,
+		FullName:       uRes.FullName,
+		Username:       uRes.Username,
+		Email:          uRes.Email,
+		PhoneNumber:    uRes.PhoneNumber,
+		Gender:         uRes.Gender,
+		Birthdate:      uRes.Birthdate,
 		ProfilePicture: uRes.ProfilePicture,
-		WalletNumber: uRes.WalletNumber,
-		Balance: uRes.Balance,
-
+		WalletNumber:   uRes.WalletNumber,
+		Balance:        uRes.Balance,
 	}
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "successfully get profile detail", Data: res})
@@ -70,7 +69,7 @@ func (h *AccountHandler) ActivateMyWallet(c *gin.Context) {
 	}
 
 	userId := c.GetInt("userId")
-	uReq := dtousecase.GetAccountRequest {
+	uReq := dtousecase.GetAccountRequest{
 		UserId: userId,
 	}
 
@@ -85,6 +84,55 @@ func (h *AccountHandler) ActivateMyWallet(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "successfully setup PIN"})
+}
+
+func (h *AccountHandler) ChangeWalletPIN(c *gin.Context) {
+	var payload dtohttp.ChangeWalletPINRequest
+
+	err := c.ShouldBindJSON(&payload)
+
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.UpdateWalletPINRequest{
+		UserID:       c.GetInt("userId"),
+		WalletNewPIN: strings.TrimSpace(payload.WalletNewPIN),
+		WalletPIN:    strings.TrimSpace(payload.WalletPIN),
+	}
+
+	_, err = h.accountUsecase.ChangeMyWalletPIN(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "successfully update wallet PIN"})
+}
+
+func (h *AccountHandler) CheckISPasswordCorrect(c *gin.Context) {
+	var payload dtohttp.CheckPasswordRequest
+
+	err := c.ShouldBindJSON(&payload)
+
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.AccountRequest{
+		ID:       c.GetInt("userId"),
+		Password: strings.TrimSpace(payload.Password),
+	}
+
+	result, err := h.accountUsecase.CheckPasswordCorrect(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: result})
 }
 
 func (h *AccountHandler) CreateAccount(c *gin.Context) {

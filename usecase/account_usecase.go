@@ -14,6 +14,8 @@ import (
 type AccountUsecase interface {
 	ActivateMyWallet(ctx context.Context, req dtousecase.GetAccountRequest, walletPin string) (*dto.AccountResponse, error)
 	CreateAccount(ctx context.Context, req dtousecase.CreateAccountRequest) (dtousecase.CreateAccountResponse, error)
+	ChangeMyWalletPIN(ctx context.Context, walletReq dtousecase.UpdateWalletPINRequest) (*dtousecase.UpdateWalletPINResponse, error)
+	CheckPasswordCorrect(ctx context.Context, accountReq dtousecase.AccountRequest) (*dtousecase.CheckPasswordResponse, error)
 	GetProfile(ctx context.Context, req dtousecase.GetAccountRequest) (*dtousecase.GetAccountResponse, error)
 }
 
@@ -32,6 +34,29 @@ func NewAccountUsecase(config AccountUsecaseConfig) AccountUsecase {
 	}
 
 	return au
+}
+
+func (u *accountUsecase) CreateAccount(ctx context.Context, req dtousecase.CreateAccountRequest) (dtousecase.CreateAccountResponse, error) {
+	res := dtousecase.CreateAccountResponse{}
+
+	rReq := dtorepository.CreateAccountRequest{
+		Username: req.Username,
+		FullName: req.FullName,
+		Email:    req.Email,
+		Password: req.Password,
+	}
+
+	rRes, err := u.accountRepository.Create(ctx, rReq)
+
+	if err != nil {
+		return res, err
+	}
+
+	res.Email = rRes.Email
+	res.FullName = rRes.FullName
+	res.Username = rRes.Username
+
+	return res, nil
 }
 
 func (u *accountUsecase) GetProfile(ctx context.Context, req dtousecase.GetAccountRequest) (*dtousecase.GetAccountResponse, error) {
@@ -82,6 +107,7 @@ func (u *accountUsecase) ActivateMyWallet(ctx context.Context, req dtousecase.Ge
 	if userAccount.WalletPin != "" {
 		return nil, util.ErrWalletAlreadySet
 	}
+
 	acc, err := u.accountRepository.ActivateWalletByID(ctx, req.UserId, walletPin)
 	if errors.Is(err, util.ErrNoRecordFound) {
 		return nil, util.ErrNoRecordFound
@@ -98,25 +124,62 @@ func (u *accountUsecase) ActivateMyWallet(ctx context.Context, req dtousecase.Ge
 	return &account, nil
 }
 
-func (u *accountUsecase) CreateAccount(ctx context.Context, req dtousecase.CreateAccountRequest) (dtousecase.CreateAccountResponse, error) {
-	res := dtousecase.CreateAccountResponse{}
-
-	rReq := dtorepository.CreateAccountRequest{
-		Username: req.Username,
-		FullName: req.FullName,
-		Email:    req.Email,
-		Password: req.Password,
+func (u *accountUsecase) ChangeMyWalletPIN(ctx context.Context, walletReq dtousecase.UpdateWalletPINRequest) (*dtousecase.UpdateWalletPINResponse, error) {
+	userAccount, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{UserId: walletReq.UserID})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
 	}
-
-	rRes, err := u.accountRepository.Create(ctx, rReq)
-
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 
-	res.Email = rRes.Email
-	res.FullName = rRes.FullName
-	res.Username = rRes.Username
+	if userAccount.WalletPin == "" {
+		return nil, util.ErrWalletNotSet
+	}
 
-	return res, nil
+	if len(walletReq.WalletNewPIN) != 6 {
+		return nil, util.ErrBadPIN
+	}
+
+	if userAccount.WalletPin != walletReq.WalletPIN {
+		return nil, util.ErrWalletPINNotMatch
+	}
+
+	if len(walletReq.WalletNewPIN) != 6 {
+		return nil, util.ErrBadPIN
+	}
+
+	if userAccount.WalletPin == walletReq.WalletNewPIN {
+		return nil, util.ErrSameWalletPIN
+	}
+
+	acc, err := u.accountRepository.UpdateWalletPINByID(ctx, dtorepository.UpdateWalletPINRequest{
+		UserID:       walletReq.UserID,
+		WalletNewPIN: walletReq.WalletNewPIN,
+	})
+
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &dtousecase.UpdateWalletPINResponse{
+		WalletNewPIN: acc.WalletNewPIN,
+	}, nil
+}
+
+func (u *accountUsecase) CheckPasswordCorrect(ctx context.Context, accountReq dtousecase.AccountRequest) (*dtousecase.CheckPasswordResponse, error) {
+	userAccount, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{UserId: accountReq.ID})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &dtousecase.CheckPasswordResponse{
+		IsCorrect: util.CheckPasswordHash(accountReq.Password, userAccount.Password),
+	}, nil
 }
