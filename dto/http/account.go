@@ -37,6 +37,11 @@ type GetAccountRequest struct {
 	UserId int `json:"id"`
 }
 
+type LoginRequest struct {
+	Email string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
 type GetAccountResponse struct {
 	ID                      int             `json:"id"`
 	FullName                string          `json:"full_name,omitempty"`

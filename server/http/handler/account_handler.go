@@ -23,6 +23,33 @@ func NewAccountHandler(accountUsecase usecase.AccountUsecase) *AccountHandler {
 	}
 }
 
+func (h *AccountHandler) Login(c *gin.Context) {
+	var req dtohttp.LoginRequest
+	
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.LoginRequest {
+		Email: req.Email,
+		Password: req.Password,
+	}
+
+	uRes, err := h.accountUsecase.Login(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res := dtogeneral.JSONResponse {
+		AccessToken: uRes.AccessToken,
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Login success", Data: res})
+}
+
 func (h *AccountHandler) EditProfile(c *gin.Context) {
 	var req dtohttp.EditAccountRequest
 	
