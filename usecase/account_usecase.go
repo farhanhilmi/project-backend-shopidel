@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
@@ -21,6 +22,7 @@ type AccountUsecase interface {
 	EditProfile(ctx context.Context, req dtousecase.EditAccountRequest) (*dtousecase.EditAccountResponse, error)
 	GetWallet(ctx context.Context, req dtousecase.AccountRequest) (*dtousecase.WalletResponse, error)
 	Login(ctx context.Context, req dtousecase.LoginRequest) (*dtousecase.LoginResponse, error)
+	TopUpBalanceWallet(ctx context.Context, walletReq dtousecase.TopUpBalanceWalletRequest) (*dtousecase.TopUpBalanceWalletResponse, error)
 }
 
 type accountUsecase struct {
@@ -133,15 +135,15 @@ func (u *accountUsecase) EditProfile(ctx context.Context, req dtousecase.EditAcc
 		return nil, util.ErrCantUseThisEmail
 	}
 
-	rReq := dtorepository.EditAccountRequest {
-		UserId: req.UserId,
-		FullName: req.FullName,
-		Username: req.Username,
-		UsedEmail: oldAccount.Email,
-		Email: req.Email,
-		PhoneNumber: req.PhoneNumber,
-		Gender: req.Gender,
-		Birthdate: req.Birthdate,
+	rReq := dtorepository.EditAccountRequest{
+		UserId:         req.UserId,
+		FullName:       req.FullName,
+		Username:       req.Username,
+		UsedEmail:      oldAccount.Email,
+		Email:          req.Email,
+		PhoneNumber:    req.PhoneNumber,
+		Gender:         req.Gender,
+		Birthdate:      req.Birthdate,
 		ProfilePicture: req.ProfilePicture,
 	}
 
@@ -291,6 +293,41 @@ func (u *accountUsecase) ChangeMyWalletPIN(ctx context.Context, walletReq dtouse
 
 	return &dtousecase.UpdateWalletPINResponse{
 		WalletNewPIN: acc.WalletNewPIN,
+	}, nil
+}
+
+func (u *accountUsecase) TopUpBalanceWallet(ctx context.Context, walletReq dtousecase.TopUpBalanceWalletRequest) (*dtousecase.TopUpBalanceWalletResponse, error) {
+	userAccount, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{UserId: walletReq.UserID})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if userAccount.WalletPin == "" {
+		return nil, util.ErrWalletNotSet
+	}
+
+	if walletReq.Amount.LessThan(constant.TopupAmountMin) || walletReq.Amount.GreaterThan(constant.TopupAmountMax) {
+		return nil, util.ErrInvalidAmountRange
+	}
+
+	acc, err := u.accountRepository.TopUpWalletBalanceByID(ctx, dtorepository.TopUpWalletRequest{
+		UserID: walletReq.UserID,
+		Amount: walletReq.Amount,
+	})
+
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &dtousecase.TopUpBalanceWalletResponse{
+		WalletNumber: acc.WalletNumber,
+		Balance:      acc.Balance,
 	}, nil
 }
 

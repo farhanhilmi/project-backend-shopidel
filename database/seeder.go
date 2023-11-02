@@ -20,7 +20,7 @@ func RunSeeder() {
 
 func dropTable() {
 	sql := `
-		drop table if exists accounts;
+		drop table if exists accounts, used_emails, my_wallet_transaction_histories;
 	`
 
 	err := db.Exec(sql).Error
@@ -34,14 +34,10 @@ func dropTable() {
 func createTable() {
 	err := db.AutoMigrate(
 		&model.Accounts{},
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(
 		&model.UsedEmail{},
+		&model.MyWalletTransactionHistories{},
 	)
+
 	if err != nil {
 		panic(err)
 	}
