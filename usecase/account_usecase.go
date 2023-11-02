@@ -5,7 +5,7 @@ import (
 	"errors"
 	"strings"
 
-	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/contant"
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
@@ -286,7 +286,7 @@ func (u *accountUsecase) TopUpBalanceWallet(ctx context.Context, walletReq dtous
 		return nil, util.ErrWalletNotSet
 	}
 
-	if walletReq.Amount.LessThan(contant.TopupAmountMin) || walletReq.Amount.GreaterThan(contant.TopupAmountMax) {
+	if walletReq.Amount.LessThan(constant.TopupAmountMin) || walletReq.Amount.GreaterThan(constant.TopupAmountMax) {
 		return nil, util.ErrInvalidAmountRange
 	}
 

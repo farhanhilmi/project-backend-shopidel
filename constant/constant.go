@@ -1,4 +1,4 @@
-package contant
+package constant
 
 import "github.com/shopspring/decimal"
 
