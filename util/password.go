@@ -1,6 +1,11 @@
 package util
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"regexp"
+	"strings"
+
+	"golang.org/x/crypto/bcrypt"
+)
 
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
@@ -10,4 +15,12 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func ValidatePassword(password string) bool {
+	regex := `^[A-Za-z]{8,}$`
+
+	re := regexp.MustCompile(regex)
+
+	return re.MatchString(password) && strings.ContainsAny(password, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") && strings.ContainsAny(password, "abcdefghijklmnopqrstuvwxyz")
 }
