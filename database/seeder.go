@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/config"
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
 	"github.com/shopspring/decimal"
 )
@@ -20,7 +21,7 @@ func RunSeeder() {
 
 func dropTable() {
 	sql := `
-		drop table if exists accounts, used_emails, my_wallet_transaction_histories;
+		drop table if exists accounts, used_emails, my_wallet_transaction_histories, product_orders, couriers;
 	`
 
 	err := db.Exec(sql).Error
@@ -36,6 +37,8 @@ func createTable() {
 		&model.Accounts{},
 		&model.UsedEmail{},
 		&model.MyWalletTransactionHistories{},
+		&model.Couriers{},
+		&model.ProductOrders{},
 	)
 
 	if err != nil {
@@ -76,6 +79,40 @@ func seeding() {
 		Birthdate:      time.Date(1990, 10, 10, 0, 0, 0, 0, time.UTC),
 		ProfilePicture: "https://cdn4.iconfinder.com/data/icons/web-ui-color/128/Account-512.png",
 		Balance:        decimal.NewFromInt(0),
+	}).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Create(&model.Couriers{
+		Name:        "jne",
+		Description: "layanan JNE courier",
+	}).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Create(&model.Couriers{
+		Name:        "tiki",
+		Description: "layanan TIKI courier",
+	}).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Create(&model.ProductOrders{
+		CourierID:     1,
+		DeliveryFee:   decimal.NewFromInt(15000),
+		Province:      "Jawa Barat",
+		District:      "Kabupaten Bandung",
+		SubDistrict:   "Bojongsoang",
+		Kelurahan:     "Sukapura",
+		ZipCode:       "40851",
+		AddressDetail: "Jl Telekomunikasi No 1 Bojongsoang",
+		Status:        constant.StatusWaitingSellerConfirmation,
 	}).Error
 
 	if err != nil {

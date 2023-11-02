@@ -32,3 +32,16 @@ type Category struct {
 	UpdatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	DeletedAt time.Time `gorm:"type:timestamp;default:null"`
 }
+
+type ProductVariantSelectionCombinations struct {
+	ID                         int             `gorm:"primaryKey;not null,autoIncrement;serial"`
+	ProductID                  int             `gorm:"foreignKey:ProductID;type:bigint;not null"`
+	ProductVariantSelectionID1 int             `gorm:"foreignKey:ProductVariantSelectionID1;type:bigint;not null"`
+	ProductVariantSelectionID2 int             `gorm:"foreignKey:ProductVariantSelectionID2;type:bigint"`
+	Price                      decimal.Decimal `gorm:"type:decimal;not null"`
+	Stock                      int             `gorm:"type:int"`
+	PictureURL                 string          `gorm:"type:varchar"`
+	CreatedAt                  time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
+	UpdatedAt                  time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
+	DeletedAt                  time.Time       `gorm:"type:timestamp;default:null"`
+}
