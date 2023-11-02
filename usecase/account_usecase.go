@@ -21,6 +21,7 @@ type AccountUsecase interface {
 	GetProfile(ctx context.Context, req dtousecase.GetAccountRequest) (*dtousecase.GetAccountResponse, error)
 	EditProfile(ctx context.Context, req dtousecase.EditAccountRequest) (*dtousecase.EditAccountResponse, error)
 	GetWallet(ctx context.Context, req dtousecase.AccountRequest) (*dtousecase.WalletResponse, error)
+	Login(ctx context.Context, req dtousecase.LoginRequest) (*dtousecase.LoginResponse, error)
 	TopUpBalanceWallet(ctx context.Context, walletReq dtousecase.TopUpBalanceWalletRequest) (*dtousecase.TopUpBalanceWalletResponse, error)
 }
 
@@ -42,6 +43,28 @@ func NewAccountUsecase(config AccountUsecaseConfig) AccountUsecase {
 	}
 
 	return au
+}
+
+func (u *accountUsecase) Login(ctx context.Context, req dtousecase.LoginRequest) (*dtousecase.LoginResponse, error) {
+	res := dtousecase.LoginResponse{}
+
+	userAccount, err := u.accountRepository.FindByEmail(ctx, dtorepository.GetAccountRequest{Email: req.Email})
+	if err != nil && !errors.Is(err, util.ErrNoRecordFound) {
+		return nil, err
+	}
+
+	if valid := util.CheckPasswordHash(req.Password, userAccount.Password); !valid {
+		return nil, util.ErrInvalidPassword
+	}
+
+	token, err := util.GenerateJWT(userAccount.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	res.AccessToken = token
+
+	return &res, nil
 }
 
 func (u *accountUsecase) CreateAccount(ctx context.Context, req dtousecase.CreateAccountRequest) (*dtousecase.CreateAccountResponse, error) {
