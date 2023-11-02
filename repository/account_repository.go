@@ -12,8 +12,8 @@ import (
 )
 
 type accountRepository struct {
-	db *gorm.DB
-	usedEmailRepo usedEmailRepository 
+	db            *gorm.DB
+	usedEmailRepo usedEmailRepository
 }
 type AccountRepository interface {
 	ActivateWalletByID(ctx context.Context, userId int, walletPin string) (model.Accounts, error)
@@ -22,6 +22,7 @@ type AccountRepository interface {
 	UpdateWalletPINByID(ctx context.Context, req dtorepository.UpdateWalletPINRequest) (dtorepository.UpdateWalletPINResponse, error)
 	UpdateAccount(ctx context.Context, req dtorepository.EditAccountRequest) (*dtorepository.EditAccountResponse, error)
 	FindByEmail(ctx context.Context, req dtorepository.GetAccountRequest) (dtorepository.GetAccountResponse, error)
+	TopUpWalletBalanceByID(ctx context.Context, req dtorepository.TopUpWalletRequest) (dtorepository.WalletResponse, error)
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
@@ -34,7 +35,6 @@ func (r *accountRepository) UpdateAccount(ctx context.Context, req dtorepository
 	res := &dtorepository.EditAccountResponse{}
 
 	tx := r.db.Begin()
-	
 
 	a := model.Accounts{}
 	err := tx.WithContext(ctx).Where("id = ?", req.UserId).First(&a).Error
@@ -61,7 +61,7 @@ func (r *accountRepository) UpdateAccount(ctx context.Context, req dtorepository
 
 	ueReq := dtorepository.UsedEmailRequest{
 		AccountID: req.UserId,
-		Email: req.UsedEmail,
+		Email:     req.UsedEmail,
 	}
 
 	_, err = r.usedEmailRepo.CreateEmail(ctx, tx, ueReq)
@@ -116,6 +116,26 @@ func (r *accountRepository) UpdateWalletPINByID(ctx context.Context, req dtorepo
 	return dtorepository.UpdateWalletPINResponse{
 		UserID:       account.ID,
 		WalletNewPIN: account.WalletPin,
+	}, nil
+}
+
+func (r *accountRepository) TopUpWalletBalanceByID(ctx context.Context, req dtorepository.TopUpWalletRequest) (dtorepository.WalletResponse, error) {
+	account := model.Accounts{}
+
+	err := r.db.WithContext(ctx).Clauses(clause.Locking{
+		Strength: "UPDATE",
+		Table: clause.Table{
+			Name: clause.CurrentTable,
+		}}).Model(&account).Where("id = ?", req.UserID).Update("balance", gorm.Expr("balance + ?", req.Amount)).Error
+
+	if err != nil {
+		return dtorepository.WalletResponse{}, err
+	}
+
+	return dtorepository.WalletResponse{
+		UserID:       account.ID,
+		WalletNumber: account.WalletNumber,
+		Balance:      account.Balance,
 	}, nil
 }
 
