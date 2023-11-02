@@ -1,6 +1,8 @@
 package dtorepository
 
-import "github.com/shopspring/decimal"
+import (
+	"github.com/shopspring/decimal"
+)
 
 type UpdateWalletPINRequest struct {
 	UserID       int
@@ -21,4 +23,19 @@ type WalletResponse struct {
 type TopUpWalletRequest struct {
 	UserID int
 	Amount decimal.Decimal
+}
+
+type MyWalletTransactionHistoriesRequest struct {
+	AccountID      int
+	Type           string
+	Amount         decimal.Decimal
+	ProductOrderID int
+}
+
+type MyWalletTransactionHistoriesResponse struct {
+	ID             int
+	AccountID      int
+	Type           string
+	Amount         decimal.Decimal
+	ProductOrderID int
 }
