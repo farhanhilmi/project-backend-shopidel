@@ -17,3 +17,13 @@ type WalletResponse struct {
 	WalletNumber string
 	IsActive     bool
 }
+
+type TopUpBalanceWalletRequest struct {
+	UserID int
+	Amount decimal.Decimal
+}
+
+type TopUpBalanceWalletResponse struct {
+	WalletNumber string
+	Balance      decimal.Decimal
+}

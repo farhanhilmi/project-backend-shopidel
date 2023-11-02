@@ -21,3 +21,7 @@ type WalletResponse struct {
 	WalletNumber string          `json:"wallet_number"`
 	IsActive     bool            `json:"isActive"`
 }
+
+type TopUpBalanceWalletRequest struct {
+	Amount decimal.Decimal `json:"amount" binding:"required"`
+}
