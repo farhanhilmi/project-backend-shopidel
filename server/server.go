@@ -36,7 +36,12 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 
 	accountHandler := handler.NewAccountHandler(accountUsecase)
 
-	gin.Use(cors.Default())
+	configCors := cors.DefaultConfig()
+	configCors.AllowAllOrigins = true
+	configCors.AllowCredentials = true
+	configCors.AddAllowHeaders("authorization")
+
+	gin.Use(cors.New(configCors))
 	router.NewAccountRouter(accountHandler, gin)
 	router.NewPingRouter(gin)
 	router.NewAuthRouter(accountHandler, gin)

@@ -57,7 +57,13 @@ func (u *accountUsecase) Login(ctx context.Context, req dtousecase.LoginRequest)
 		return nil, util.ErrInvalidPassword
 	}
 
-	token, err := util.GenerateJWT(userAccount.ID)
+	role := "buyer"
+
+	if userAccount.ShopName != "" {
+		role = "seller"
+	}
+
+	token, err := util.GenerateJWT(userAccount.ID, role)
 	if err != nil {
 		return nil, err
 	}

@@ -11,7 +11,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-func GenerateJWT(userId int) (string, error) {
+func GenerateJWT(userId int, role string) (string, error) {
 	tokenDuration, err := strconv.Atoi(config.GetEnv("JWT_DURATION"))
 	if err != nil {
 		return "", err
@@ -19,6 +19,7 @@ func GenerateJWT(userId int) (string, error) {
 
 	claims := dtogeneral.ClaimsJWT{
 		UserId: userId,
+		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Hour * time.Duration(tokenDuration))},
 			Issuer:    config.GetEnv("JWT_ISSUER"),
