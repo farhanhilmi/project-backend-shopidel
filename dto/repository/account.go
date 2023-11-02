@@ -19,6 +19,18 @@ type CreateAccountResponse struct {
 	Email    string
 }
 
+type EditAccountRequest struct {
+	UserId         int
+	FullName       string
+	Username       string
+	UsedEmail 	   string
+	Email          string
+	PhoneNumber    string
+	Gender         string
+	Birthdate      time.Time
+	ProfilePicture string
+}
+
 type GetAccountRequest struct {
 	UserId int
 	Email  string
@@ -40,4 +52,15 @@ type GetAccountResponse struct {
 	Balance                 decimal.Decimal
 	ForgetPasswordToken     string
 	ForgetPasswordExpiredAt time.Time
+}
+
+type EditAccountResponse struct {
+	ID             int    
+	FullName       string    
+	Username       string    
+	Email          string    
+	PhoneNumber    string    
+	Gender         string    
+	Birthdate      time.Time 
+	ProfilePicture string    
 }

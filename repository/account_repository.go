@@ -13,12 +13,14 @@ import (
 
 type accountRepository struct {
 	db *gorm.DB
+	usedEmailRepo usedEmailRepository 
 }
 type AccountRepository interface {
 	ActivateWalletByID(ctx context.Context, userId int, walletPin string) (model.Accounts, error)
 	FindById(ctx context.Context, req dtorepository.GetAccountRequest) (dtorepository.GetAccountResponse, error)
 	Create(ctx context.Context, req dtorepository.CreateAccountRequest) (dtorepository.CreateAccountResponse, error)
 	UpdateWalletPINByID(ctx context.Context, req dtorepository.UpdateWalletPINRequest) (dtorepository.UpdateWalletPINResponse, error)
+	UpdateAccount(ctx context.Context, req dtorepository.EditAccountRequest) (*dtorepository.EditAccountResponse, error)
 	FindByEmail(ctx context.Context, req dtorepository.GetAccountRequest) (dtorepository.GetAccountResponse, error)
 }
 
@@ -26,6 +28,60 @@ func NewAccountRepository(db *gorm.DB) AccountRepository {
 	return &accountRepository{
 		db: db,
 	}
+}
+
+func (r *accountRepository) UpdateAccount(ctx context.Context, req dtorepository.EditAccountRequest) (*dtorepository.EditAccountResponse, error) {
+	res := &dtorepository.EditAccountResponse{}
+
+	tx := r.db.Begin()
+	
+
+	a := model.Accounts{}
+	err := tx.WithContext(ctx).Where("id = ?", req.UserId).First(&a).Error
+
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	a.FullName = req.FullName
+	a.Username = req.Username
+	a.Email = req.Email
+	a.PhoneNumber = req.PhoneNumber
+	a.Gender = req.Gender
+	a.Birthdate = req.Birthdate
+	a.ProfilePicture = req.ProfilePicture
+
+	err = tx.WithContext(ctx).Save(&a).Error
+
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	ueReq := dtorepository.UsedEmailRequest{
+		AccountID: req.UserId,
+		Email: req.UsedEmail,
+	}
+
+	_, err = r.usedEmailRepo.CreateEmail(ctx, tx, ueReq)
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	tx.Commit()
+
+	res.ID = a.ID
+	res.FullName = a.FullName
+	res.Username = a.Username
+	res.Email = a.Email
+	res.PhoneNumber = a.PhoneNumber
+	res.Gender = a.Gender
+	res.Birthdate = a.Birthdate
+	res.ProfilePicture = a.ProfilePicture
+
+	return res, nil
 }
 
 func (r *accountRepository) ActivateWalletByID(ctx context.Context, userId int, walletPin string) (model.Accounts, error) {

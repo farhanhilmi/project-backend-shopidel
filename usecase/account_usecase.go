@@ -18,6 +18,7 @@ type AccountUsecase interface {
 	ChangeMyWalletPIN(ctx context.Context, walletReq dtousecase.UpdateWalletPINRequest) (*dtousecase.UpdateWalletPINResponse, error)
 	CheckPasswordCorrect(ctx context.Context, accountReq dtousecase.AccountRequest) (*dtousecase.CheckPasswordResponse, error)
 	GetProfile(ctx context.Context, req dtousecase.GetAccountRequest) (*dtousecase.GetAccountResponse, error)
+	EditProfile(ctx context.Context, req dtousecase.EditAccountRequest) (*dtousecase.EditAccountResponse, error)
 	GetWallet(ctx context.Context, req dtousecase.AccountRequest) (*dtousecase.WalletResponse, error)
 }
 
@@ -85,6 +86,55 @@ func (u *accountUsecase) CreateAccount(ctx context.Context, req dtousecase.Creat
 	res.Email = rRes.Email
 	res.FullName = rRes.FullName
 	res.Username = rRes.Username
+
+	return &res, nil
+}
+
+func (u *accountUsecase) EditProfile(ctx context.Context, req dtousecase.EditAccountRequest) (*dtousecase.EditAccountResponse, error) {
+	res := dtousecase.EditAccountResponse{}
+
+	oldAccount, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{UserId: req.UserId})
+	if err != nil {
+		return &res, err
+	}
+
+	if strings.EqualFold(oldAccount.Email, req.Email) {
+		return &res, util.ErrSameEmail
+	}
+
+	usedEmail, err := u.usedEmailRepository.FindByEmail(ctx, dtorepository.UsedEmailRequest{Email: req.Email})
+	if err != nil && !errors.Is(err, util.ErrNoRecordFound) {
+		return nil, err
+	}
+	if usedEmail.Email == req.Email {
+		return nil, util.ErrCantUseThisEmail
+	}
+
+	rReq := dtorepository.EditAccountRequest {
+		UserId: req.UserId,
+		FullName: req.FullName,
+		Username: req.Username,
+		UsedEmail: oldAccount.Email,
+		Email: req.Email,
+		PhoneNumber: req.PhoneNumber,
+		Gender: req.Gender,
+		Birthdate: req.Birthdate,
+		ProfilePicture: req.ProfilePicture,
+	}
+
+	userAccount, err := u.accountRepository.UpdateAccount(ctx, rReq)
+	if err != nil {
+		return &res, err
+	}
+
+	res.ID = userAccount.ID
+	res.FullName = userAccount.FullName
+	res.Username = userAccount.Username
+	res.Email = userAccount.Email
+	res.PhoneNumber = userAccount.PhoneNumber
+	res.Gender = userAccount.Gender
+	res.Birthdate = userAccount.Birthdate
+	res.ProfilePicture = userAccount.ProfilePicture
 
 	return &res, nil
 }
