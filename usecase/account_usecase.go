@@ -47,6 +47,10 @@ func NewAccountUsecase(config AccountUsecaseConfig) AccountUsecase {
 func (u *accountUsecase) CreateAccount(ctx context.Context, req dtousecase.CreateAccountRequest) (*dtousecase.CreateAccountResponse, error) {
 	res := dtousecase.CreateAccountResponse{}
 
+	if !util.ValidatePassword(req.Password) {
+		return nil, util.ErrWeakPassword
+	}
+
 	userAccount, err := u.accountRepository.FindByEmail(ctx, dtorepository.GetAccountRequest{Email: req.Email})
 	if err != nil && !errors.Is(err, util.ErrNoRecordFound) {
 		return nil, err
@@ -54,6 +58,15 @@ func (u *accountUsecase) CreateAccount(ctx context.Context, req dtousecase.Creat
 
 	if strings.EqualFold(userAccount.Email, req.Email) {
 		return nil, util.ErrEmailAlreadyExist
+	}
+
+	uAcc, err := u.accountRepository.FindByUsername(ctx, dtorepository.GetAccountRequest{Username: req.Username})
+	if err != nil && !errors.Is(err, util.ErrNoRecordFound) {
+		return nil, err
+	}
+
+	if strings.EqualFold(uAcc.Username, req.Username) {
+		return nil, util.ErrUsernameAlreadyExist
 	}
 
 	if strings.Contains(strings.ToLower(req.Username), strings.ToLower(req.Password)) {

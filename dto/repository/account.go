@@ -23,7 +23,7 @@ type EditAccountRequest struct {
 	UserId         int
 	FullName       string
 	Username       string
-	UsedEmail 	   string
+	UsedEmail      string
 	Email          string
 	PhoneNumber    string
 	Gender         string
@@ -32,8 +32,9 @@ type EditAccountRequest struct {
 }
 
 type GetAccountRequest struct {
-	UserId int
-	Email  string
+	UserId   int
+	Email    string
+	Username string
 }
 
 type GetAccountResponse struct {
@@ -55,12 +56,12 @@ type GetAccountResponse struct {
 }
 
 type EditAccountResponse struct {
-	ID             int    
-	FullName       string    
-	Username       string    
-	Email          string    
-	PhoneNumber    string    
-	Gender         string    
-	Birthdate      time.Time 
-	ProfilePicture string    
+	ID             int
+	FullName       string
+	Username       string
+	Email          string
+	PhoneNumber    string
+	Gender         string
+	Birthdate      time.Time
+	ProfilePicture string
 }

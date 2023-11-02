@@ -39,8 +39,10 @@ var (
 	ErrInvalidPassword         = &CustomError{Message: "invalid password", Code: Unauthorized}
 	ErrSameWalletPIN           = &CustomError{Message: "your new wallet PIN must not be the same as your current PIN"}
 	ErrEmailAlreadyExist       = &CustomError{Message: "email already registered", Code: BadRequest}
+	ErrUsernameAlreadyExist    = &CustomError{Message: "username already registered", Code: BadRequest}
 	ErrCantUseThisEmail        = &CustomError{Message: "you cannot use this email", Code: BadRequest}
 	ErrPasswordContainUsername = &CustomError{Message: "password cannot contains username as part of it", Code: BadRequest}
 	ErrSameEmail               = &CustomError{Message: "you already used this email", Code: BadRequest}
 	ErrInvalidAmountRange      = &CustomError{Message: "amount should be between 50000 and 10000000", Code: BadRequest}
+	ErrWeakPassword            = &CustomError{Message: "password should have at least one uppercase, one lowercase with minimum length is 8", Code: BadRequest}
 )
