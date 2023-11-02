@@ -70,8 +70,14 @@ type AccountRequest struct {
 type CheckPasswordResponse struct {
 	IsCorrect bool
 }
+
 type GetAccountRequest struct {
 	UserId int
+}
+
+type LoginRequest struct {
+	Email    string
+	Password string
 }
 
 type GetAccountResponse struct {
@@ -91,14 +97,17 @@ type GetAccountResponse struct {
 	ForgetPasswordExpiredAt time.Time
 }
 
-
 type EditAccountResponse struct {
-	ID             int    
-	FullName       string    
-	Username       string    
-	Email          string    
-	PhoneNumber    string    
-	Gender         string    
-	Birthdate      time.Time 
-	ProfilePicture string    
+	ID             int
+	FullName       string
+	Username       string
+	Email          string
+	PhoneNumber    string
+	Gender         string
+	Birthdate      time.Time
+	ProfilePicture string
+}
+
+type LoginResponse struct {
+	AccessToken string
 }
