@@ -20,7 +20,7 @@ func RunSeeder() {
 
 func dropTable() {
 	sql := `
-		drop table if exists accounts;
+		drop table if exists accounts, product_variant_selection_combinations,product_variant_selections, product_variants, products,categories;
 	`
 
 	err := db.Exec(sql).Error
@@ -34,13 +34,14 @@ func dropTable() {
 func createTable() {
 	err := db.AutoMigrate(
 		&model.Accounts{},
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(
 		&model.UsedEmail{},
+		&model.Category{},
+		&model.Products{},
+		&model.ProductImages{},
+		&model.ProductVideos{},
+		&model.ProductVariants{},
+		&model.ProductVariantSelections{},
+		&model.ProductVariantSelectionCombinations{},
 	)
 	if err != nil {
 		panic(err)
@@ -81,6 +82,184 @@ func seeding() {
 		ProfilePicture: "https://cdn4.iconfinder.com/data/icons/web-ui-color/128/Account-512.png",
 		Balance:        decimal.NewFromInt(0),
 	}).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	categories := []*model.Category{
+		{
+			Name:  "Elektronik",
+			Level: 1,
+		},
+		{
+			Name:   "TV & Aksesoris",
+			Level:  2,
+			Parent: 1,
+		},
+		{
+			Name:   "TV",
+			Level:  3,
+			Parent: 2,
+		},
+		{
+			Name:   "Kelistrikan",
+			Level:  2,
+			Parent: 1,
+		},
+		{
+			Name:   "Saklar",
+			Level:  3,
+			Parent: 2,
+		},
+	}
+
+	err = db.Create(categories).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	products := []*model.Products{
+		{
+			Name:              "Schneider Electric Leona Saklar Lampu - 2 Gang 2 Arah - LNA0600321",
+			Description:       "Desain stylish dan minimalis untuk semua desain rumah Leona memiliki karakter berbentuk melingkar di setiap ujungnya. Desain yang tak lekang waktu dan sesuai untuk segala jenis rumah, serta memiliki berbagai varian untuk berbagai jenis kebutuhan, mulai dari saklar lampu, stop kontak schuko, tv, telepon dan data, hingga peredup lampu (dimmer). 2 Cara Pemasangan, sistem pencakar atau sekrup Saklar lampu dan stop kontak Leona hadir dengan 2 pilihan cara pemasangan. Dengan sistem pencakar dan sekrup yang memungkinkan untuk proyek renovasi maupun rumah baru. Sistem pencakar yang terlindungi, menjamin kekuatan dan daya cengkeram pada inbowdoost. Harga yang terjangkau dan kualitas terbaik Saklar lampu dan stop kontak Leona terbuat dari bahan polycarbonate berkualitas dan lebih aman karena lebih tahan panas, serta diperkuat dengan frame modul dari bahan logam yang menjamin kualitas, kekuatan dan tahan lebih lama.",
+			CategoryID:        5,
+			HazardousMaterial: false,
+			Weight:            decimal.NewFromInt(22),
+			Size:              decimal.NewFromInt(30),
+			IsNew:             true,
+			InternalSKU:       "OAKO OEKFOEF",
+			ViewCount:         0,
+			IsActive:          true,
+		},
+		{
+			Name:              "COOCAA 40 inch Smart TV - Digital TV - Dolby Audio - Youtube - Mirroring - Flick Free - Boundless -Browser - WIFI",
+			Description:       "Ada 2 jenis remote, yaitu remote SILVER dengan angka dan remote HITAM tanpa angka. Kedua remote memiliki fungsi yang SAMA. Remote TV akan dikirim secara ACAK. Hanya mendapatkan 1 remote di setiap pembeliaan TV Coocaa. Segala pengajuan return dan refund di aplikasi WAJIB menyertakan video UNBOXING yang full dan lengkap TANPA dipotong-potong atau dijeda. Jika durasi video terlalu panjang dan tidak dapat dikirimkan secara utuh melalui WA, mohon upload video unboxing ke link GDRIVE terlebih dahulu, lalu kirimkan link ke WA customer service kami.",
+			CategoryID:        3,
+			HazardousMaterial: false,
+			Weight:            decimal.NewFromInt(22),
+			Size:              decimal.NewFromInt(30),
+			IsNew:             true,
+			InternalSKU:       "OAKO",
+			ViewCount:         0,
+			IsActive:          true,
+		},
+	}
+
+	err = db.Create(products).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	productImages := []*model.ProductImages{
+		{
+			ProductID: 1,
+			URL:       "https://down-id.img.susercontent.com/file/1e16d71744f0b71db776f915facb6df9",
+		},
+		{
+			ProductID: 2,
+			URL:       "https://down-id.img.susercontent.com/file/id-11134207-7r991-lnif9zpjj4au82",
+		},
+		{
+			ProductID: 2,
+			URL:       "https://down-id.img.susercontent.com/file/2a4e6f610e903fe5dcce459b76a9081f",
+		},
+	}
+
+	err = db.Create(productImages).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	productVideos := []*model.ProductVideos{
+		{
+			ProductID: 2,
+			URL:       "https://www.youtube.com/embed/tR05rgXCFdk?si=jhsuqvYv8cBhPiu3",
+		},
+	}
+
+	err = db.Create(productVideos).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	productVariants := []*model.ProductVariants{
+		{
+			ProductID: 1,
+			Name:      "Color",
+		},
+		{
+			ProductID: 1,
+			Name:      "Bahan",
+		},
+		{
+			ProductID: 2,
+			Name:      "default",
+		},
+	}
+
+	err = db.Create(productVariants).Error
+	if err != nil {
+		panic(err)
+	}
+
+	productVariantSelections := []*model.ProductVariantSelections{
+		{
+			ProductVariantID: 1,
+			Name:             "Merah",
+		},
+		{
+			ProductVariantID: 1,
+			Name:             "Biru",
+		},
+		{
+			ProductVariantID: 2,
+			Name:             "Metal",
+		},
+		{
+			ProductVariantID: 3,
+			Name:             "default",
+		},
+	}
+
+	err = db.Create(productVariantSelections).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	productVariantSelectionCombinations := []*model.ProductVariantSelectionCombinations{
+		{
+			ProductID:                  1,
+			ProductVariantSelectionID1: 1,
+			ProductVariantSelectionID2: 3,
+			Price:                      decimal.NewFromInt(2000000),
+			Stock:                      2,
+			PictureURL:                 "https://down-id.img.susercontent.com/file/id-11134207-7r98p-lnb0pqj257k6b4",
+		},
+		{
+			ProductID:                  1,
+			ProductVariantSelectionID1: 2,
+			ProductVariantSelectionID2: 3,
+			Price:                      decimal.NewFromInt(2500000),
+			Stock:                      5,
+			PictureURL:                 "https://down-id.img.susercontent.com/file/68171f9daf6be781832415086d2c18e2",
+		},
+		{
+			ProductID:                  2,
+			ProductVariantSelectionID1: 4,
+			ProductVariantSelectionID2: 4,
+			Price:                      decimal.NewFromInt(5000000),
+			Stock:                      10,
+			PictureURL:                 "https://down-id.img.susercontent.com/file/68171f9daf6be781832415086d2c18e2",
+		},
+	}
+
+	err = db.Create(productVariantSelectionCombinations).Error
 
 	if err != nil {
 		panic(err)
