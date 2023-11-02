@@ -12,8 +12,9 @@ import (
 )
 
 type accountRepository struct {
-	db            *gorm.DB
-	usedEmailRepo usedEmailRepository
+	db                         *gorm.DB
+	usedEmailRepo              usedEmailRepository
+	walletTransactionHistories walletTransactionHistoryRepository
 }
 type AccountRepository interface {
 	ActivateWalletByID(ctx context.Context, userId int, walletPin string) (model.Accounts, error)
@@ -121,16 +122,31 @@ func (r *accountRepository) UpdateWalletPINByID(ctx context.Context, req dtorepo
 
 func (r *accountRepository) TopUpWalletBalanceByID(ctx context.Context, req dtorepository.TopUpWalletRequest) (dtorepository.WalletResponse, error) {
 	account := model.Accounts{}
+	tx := r.db.Begin()
 
-	err := r.db.WithContext(ctx).Clauses(clause.Locking{
+	err := tx.WithContext(ctx).Clauses(clause.Locking{
 		Strength: "UPDATE",
 		Table: clause.Table{
 			Name: clause.CurrentTable,
 		}}).Model(&account).Where("id = ?", req.UserID).Update("balance", gorm.Expr("balance + ?", req.Amount)).Error
 
 	if err != nil {
+		tx.Rollback()
 		return dtorepository.WalletResponse{}, err
 	}
+
+	_, err = r.walletTransactionHistories.CreateWithTx(ctx, tx, dtorepository.MyWalletTransactionHistoriesRequest{
+		AccountID: req.UserID,
+		Amount:    req.Amount,
+		Type:      "TOP UP",
+	})
+
+	if err != nil {
+		tx.Rollback()
+		return dtorepository.WalletResponse{}, err
+	}
+
+	tx.Commit()
 
 	return dtorepository.WalletResponse{
 		UserID:       account.ID,

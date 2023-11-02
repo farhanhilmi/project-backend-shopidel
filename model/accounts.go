@@ -35,3 +35,14 @@ type UsedEmail struct {
 	UpdatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	DeletedAt time.Time `gorm:"type:timestamp;default:null"`
 }
+
+type MyWalletTransactionHistories struct {
+	ID             int             `gorm:"primaryKey;not null,autoIncrement;serial"`
+	AccountID      int             `gorm:"foreignKey:AccountID;type:bigint;not null"`
+	Type           string          `gorm:"type:varchar"`
+	Amount         decimal.Decimal `gorm:"type:decimal"`
+	ProductOrderID int             `gorm:"foreignKey:AccountID;type:bigint;default:null"`
+	CreatedAt      time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
+	UpdatedAt      time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
+	DeletedAt      time.Time       `gorm:"type:timestamp;default:null"`
+}
