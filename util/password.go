@@ -1,7 +1,6 @@
 package util
 
 import (
-	"regexp"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -18,9 +17,5 @@ func CheckPasswordHash(password, hash string) bool {
 }
 
 func ValidatePassword(password string) bool {
-	regex := `^[A-Za-z]{8,}$`
-
-	re := regexp.MustCompile(regex)
-
-	return re.MatchString(password) && strings.ContainsAny(password, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") && strings.ContainsAny(password, "abcdefghijklmnopqrstuvwxyz")
+	return strings.ContainsAny(password, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") && strings.ContainsAny(password, "abcdefghijklmnopqrstuvwxyz")
 }
