@@ -11,6 +11,7 @@ import (
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 type AccountHandler struct {
@@ -26,9 +27,9 @@ func NewAccountHandler(accountUsecase usecase.AccountUsecase) *AccountHandler {
 func (h *AccountHandler) Login(c *gin.Context) {
 	var req dtohttp.LoginRequest
 	
-	err := c.ShouldBindJSON(&req)
-	if err != nil {
-		c.Error(util.ErrInvalidInput)
+	v := validator.New()
+	if err := v.Struct(req); err != nil {
+		c.Error(err)
 		return
 	}
 
