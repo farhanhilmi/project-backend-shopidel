@@ -18,6 +18,7 @@ type ProductOrders struct {
 	ZipCode       string          `gorm:"type:varchar"`
 	AddressDetail string          `gorm:"type:text"`
 	Status        string          `gorm:"type:varchar"`
+	Notes         string          `gorm:"type:varchar"`
 	CreatedAt     time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	UpdatedAt     time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	DeletedAt     time.Time       `gorm:"type:timestamp;default:null"`

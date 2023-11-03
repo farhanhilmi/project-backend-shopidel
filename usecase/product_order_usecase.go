@@ -12,6 +12,7 @@ import (
 )
 
 type ProductOrderUsecase interface {
+	CancelOrderBySeller(ctx context.Context, req dtousecase.ProductOrderRequest) (*dtousecase.ProductOrderResponse, error)
 }
 
 type productOrderUsecase struct {
@@ -32,9 +33,8 @@ func NewProductOrderUsecase(config ProductOrderUsecaseConfig) ProductOrderUsecas
 }
 
 func (u *productOrderUsecase) CancelOrderBySeller(ctx context.Context, req dtousecase.ProductOrderRequest) (*dtousecase.ProductOrderResponse, error) {
-	order, err := u.productOrderRepository.FindByIDAndAccountID(ctx, dtorepository.ProductOrderRequest{
-		ID:        req.ID,
-		AccountID: req.AccountID,
+	order, err := u.productOrderRepository.FindByID(ctx, dtorepository.ProductOrderRequest{
+		ID: req.ID,
 	})
 	if errors.Is(err, util.ErrNoRecordFound) {
 		return nil, util.ErrNoRecordFound
@@ -43,14 +43,17 @@ func (u *productOrderUsecase) CancelOrderBySeller(ctx context.Context, req dtous
 		return nil, err
 	}
 
+	// TODO: check is the order belong to this seller
+
 	if order.Status != constant.StatusWaitingSellerConfirmation {
 		return nil, util.ErrOrderStatusNotWaiting
 	}
 
 	data, err := u.productOrderRepository.UpdateOrderStatusByIDAndAccountID(ctx, dtorepository.ProductOrderRequest{
-		ID:        req.ID,
-		AccountID: req.AccountID,
-		Status:    "Canceled",
+		ID:       req.ID,
+		SellerID: req.SellerID,
+		Status:   constant.StatusCanceled,
+		Notes:    req.Notes,
 	})
 
 	if err != nil {
@@ -60,5 +63,6 @@ func (u *productOrderUsecase) CancelOrderBySeller(ctx context.Context, req dtous
 	return &dtousecase.ProductOrderResponse{
 		ID:     data.ID,
 		Status: data.Status,
+		Notes:  data.Notes,
 	}, nil
 }

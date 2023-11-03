@@ -1,4 +1,4 @@
-package dtorepository
+package dtohttp
 
 import (
 	"time"
@@ -6,13 +6,10 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type ProductOrderRequest struct {
-	ID        int
-	AccountID int
-	SellerID  int
-	CourierID int
-	Status    string
-	Notes     string
+type CanceledOrderRequest struct {
+	ProductID int    `json:"product_id"`
+	AccountID int    `json:"account_id"`
+	Notes     string `json:"notes" binding:"required"`
 }
 
 type ProductOrderResponse struct {
