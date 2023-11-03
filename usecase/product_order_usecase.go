@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
@@ -38,6 +39,7 @@ func (u *productOrderUsecase) CancelOrderBySeller(ctx context.Context, req dtous
 	order, err := u.productOrderRepository.FindByIDAndSellerID(ctx, dtorepository.ProductOrderRequest{
 		ID:       req.ID,
 		SellerID: req.SellerID,
+		Status:   constant.StatusWaitingSellerConfirmation,
 	})
 	if errors.Is(err, util.ErrNoRecordFound) {
 		return nil, util.ErrNoRecordFound
@@ -46,9 +48,17 @@ func (u *productOrderUsecase) CancelOrderBySeller(ctx context.Context, req dtous
 		return nil, err
 	}
 
+	if len(order) < 1 {
+		return nil, util.ErrOrderNotFound
+	}
+
 	refundedAmount := decimal.NewFromInt(0)
 	for _, v := range order {
-		refundedAmount.Add(v.IndividualPrice)
+		qty, err := decimal.NewFromString(fmt.Sprintf("%v", v.Quantity))
+		if err != nil {
+			return nil, err
+		}
+		refundedAmount = refundedAmount.Add(v.IndividualPrice.Mul(qty))
 	}
 
 	// TODO: add product stock when seller cancel the order
@@ -59,6 +69,7 @@ func (u *productOrderUsecase) CancelOrderBySeller(ctx context.Context, req dtous
 		Status:      constant.StatusCanceled,
 		Notes:       req.Notes,
 		TotalAmount: refundedAmount,
+		AccountID:   order[0].AccountID,
 	})
 
 	if err != nil {

@@ -21,7 +21,7 @@ func RunSeeder() {
 
 func dropTable() {
 	sql := `
-		drop table if exists accounts, category, products, used_emails, my_wallet_transaction_histories, product_orders, couriers, product_order_details, product_variant_selections, product_variants, product_variant_selection_combinations;
+		drop table if exists accounts, category, products, used_emails, my_wallet_transaction_histories, product_orders, couriers, product_order_details, product_variant_selections, product_variants, product_variant_selection_combinations,sale_wallet_transaction_histories;
 	`
 
 	err := db.Exec(sql).Error
@@ -37,6 +37,7 @@ func createTable() {
 		&model.Accounts{},
 		&model.UsedEmail{},
 		&model.MyWalletTransactionHistories{},
+		&model.SaleWalletTransactionHistories{},
 		&model.Couriers{},
 		&model.Category{},
 		&model.Products{},
@@ -70,6 +71,7 @@ func seeding() {
 		ProfilePicture: "https://cdn4.iconfinder.com/data/icons/web-ui-color/128/Account-512.png",
 		Balance:        decimal.NewFromInt(0),
 		WalletPin:      "123456",
+		SallerBalance:  decimal.NewFromInt(90000),
 	}).Error
 
 	if err != nil {
@@ -325,6 +327,17 @@ func seeding() {
 		ProductVariantSelectionCombinationID: 3,
 		Quantity:                             1,
 		IndividualPrice:                      decimal.NewFromInt(50000),
+	}).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Create(&model.SaleWalletTransactionHistories{
+		ProductOrderID: 1,
+		AccountID:      1,
+		Type:           constant.SaleMoneyIncomeType,
+		Amount:         decimal.NewFromInt(90000),
 	}).Error
 
 	if err != nil {

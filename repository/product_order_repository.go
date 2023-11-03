@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"log"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -13,7 +14,7 @@ import (
 
 type productOrdersRepository struct {
 	db                *gorm.DB
-	accountRepository AccountRepository
+	accountRepository accountRepository
 }
 
 type ProductOrdersRepository interface {
@@ -72,6 +73,8 @@ func (r *productOrdersRepository) FindByIDAndSellerID(ctx context.Context, req d
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return order, util.ErrNoRecordFound
 	}
+
+	log.Println("ORDER", order)
 
 	return order, err
 }
@@ -147,6 +150,12 @@ func (r *productOrdersRepository) UpdateOrderStatusByIDAndAccountID(ctx context.
 	}
 
 	_, err = r.accountRepository.RefundBalance(ctx, tx, dtorepository.MyWalletRequest{UserID: req.AccountID, Balance: req.TotalAmount})
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	_, err = r.accountRepository.DecreaseBalanceSellerWithTx(ctx, tx, dtorepository.MyWalletRequest{UserID: req.SellerID, Balance: req.TotalAmount})
 	if err != nil {
 		tx.Rollback()
 		return res, err

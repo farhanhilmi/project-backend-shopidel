@@ -47,6 +47,7 @@ type ProductOrderDetails struct {
 type ProductOrderSeller struct {
 	ID              int
 	ProductID       int
+	AccountID       int
 	SellerID        int
 	IndividualPrice decimal.Decimal
 	Quantity        int

@@ -9,4 +9,6 @@ var (
 	StatusCanceled                  = "Canceled"
 	StatusProcessedOrder            = "Processed"
 	SellerRole                      = "seller"
+	SaleMoneyIncomeType             = "Income"
+	SaleRefundCancelType            = "Refund"
 )
