@@ -58,7 +58,6 @@ func (u *accountUsecase) Login(ctx context.Context, req dtousecase.LoginRequest)
 	}
 
 	role := "buyer"
-
 	if userAccount.ShopName != "" {
 		role = "seller"
 	}
@@ -335,6 +334,7 @@ func (u *accountUsecase) TopUpBalanceWallet(ctx context.Context, walletReq dtous
 	acc, err := u.accountRepository.TopUpWalletBalanceByID(ctx, dtorepository.TopUpWalletRequest{
 		UserID: walletReq.UserID,
 		Amount: walletReq.Amount,
+		Type:   "TOP UP",
 	})
 
 	if errors.Is(err, util.ErrNoRecordFound) {

@@ -15,6 +15,7 @@ import (
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/server/http/handler"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/server/http/middleware"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/server/http/router"
+	router_seller "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/server/http/router/seller"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/usecase"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -26,6 +27,11 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 
 	accountRepo := repository.NewAccountRepository(db)
 	usedEmailRepo := repository.NewUsedEmailRepository(db)
+	productOrderRepo := repository.NewProductOrdersRepository(db)
+
+	pouc := usecase.ProductOrderUsecaseConfig{
+		ProductOrderRepository: productOrderRepo,
+	}
 
 	auc := usecase.AccountUsecaseConfig{
 		AccountRepository:   accountRepo,
@@ -33,8 +39,10 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 	}
 
 	accountUsecase := usecase.NewAccountUsecase(auc)
+	productOrderUsecase := usecase.NewProductOrderUsecase(pouc)
 
 	accountHandler := handler.NewAccountHandler(accountUsecase)
+	productOrderHandler := handler.NewProductOrderHandler(productOrderUsecase)
 
 	configCors := cors.DefaultConfig()
 	configCors.AllowAllOrigins = true
@@ -42,9 +50,10 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 
 	gin.Use(cors.New(configCors))
 
-	router.NewAccountRouter(accountHandler, gin)
 	router.NewPingRouter(gin)
+	router.NewAccountRouter(accountHandler, gin)
 	router.NewAuthRouter(accountHandler, gin)
+	router_seller.NewProductOrderRouter(productOrderHandler, gin)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", config.GetEnv("PORT")),

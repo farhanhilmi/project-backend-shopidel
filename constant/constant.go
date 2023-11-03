@@ -7,4 +7,5 @@ var (
 	TopupAmountMax                  = decimal.NewFromInt(10000000)
 	StatusWaitingSellerConfirmation = "Waiting Seller Confirmation"
 	StatusCanceled                  = "Canceled"
+	StatusProcessedOrder            = "Processed"
 )

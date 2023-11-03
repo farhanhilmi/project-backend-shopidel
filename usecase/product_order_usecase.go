@@ -9,10 +9,12 @@ import (
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
+	"github.com/shopspring/decimal"
 )
 
 type ProductOrderUsecase interface {
 	CancelOrderBySeller(ctx context.Context, req dtousecase.ProductOrderRequest) (*dtousecase.ProductOrderResponse, error)
+	ProcessedOrder(ctx context.Context, req dtousecase.ProductOrderRequest) (*dtousecase.ProductOrderResponse, error)
 }
 
 type productOrderUsecase struct {
@@ -33,8 +35,9 @@ func NewProductOrderUsecase(config ProductOrderUsecaseConfig) ProductOrderUsecas
 }
 
 func (u *productOrderUsecase) CancelOrderBySeller(ctx context.Context, req dtousecase.ProductOrderRequest) (*dtousecase.ProductOrderResponse, error) {
-	order, err := u.productOrderRepository.FindByID(ctx, dtorepository.ProductOrderRequest{
-		ID: req.ID,
+	order, err := u.productOrderRepository.FindByIDAndSellerID(ctx, dtorepository.ProductOrderRequest{
+		ID:       req.ID,
+		SellerID: req.SellerID,
 	})
 	if errors.Is(err, util.ErrNoRecordFound) {
 		return nil, util.ErrNoRecordFound
@@ -43,17 +46,19 @@ func (u *productOrderUsecase) CancelOrderBySeller(ctx context.Context, req dtous
 		return nil, err
 	}
 
-	// TODO: check is the order belong to this seller
-
-	if order.Status != constant.StatusWaitingSellerConfirmation {
-		return nil, util.ErrOrderStatusNotWaiting
+	refundedAmount := decimal.NewFromInt(0)
+	for _, v := range order {
+		refundedAmount.Add(v.IndividualPrice)
 	}
 
+	// TODO: add product stock when seller cancel the order
+
 	data, err := u.productOrderRepository.UpdateOrderStatusByIDAndAccountID(ctx, dtorepository.ProductOrderRequest{
-		ID:       req.ID,
-		SellerID: req.SellerID,
-		Status:   constant.StatusCanceled,
-		Notes:    req.Notes,
+		ID:          req.ID,
+		SellerID:    req.SellerID,
+		Status:      constant.StatusCanceled,
+		Notes:       req.Notes,
+		TotalAmount: refundedAmount,
 	})
 
 	if err != nil {
@@ -64,5 +69,44 @@ func (u *productOrderUsecase) CancelOrderBySeller(ctx context.Context, req dtous
 		ID:     data.ID,
 		Status: data.Status,
 		Notes:  data.Notes,
+	}, nil
+}
+
+func (u *productOrderUsecase) ProcessedOrder(ctx context.Context, req dtousecase.ProductOrderRequest) (*dtousecase.ProductOrderResponse, error) {
+	order, err := u.productOrderRepository.FindByIDAndSellerID(ctx, dtorepository.ProductOrderRequest{
+		ID:       req.ID,
+		SellerID: req.SellerID,
+		Status:   constant.StatusWaitingSellerConfirmation,
+	})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if len(order) < 1 {
+		return nil, util.ErrOrderNotFound
+	}
+
+	totalAmount := decimal.NewFromInt(0)
+	for _, v := range order {
+		totalAmount.Add(v.IndividualPrice)
+	}
+
+	data, err := u.productOrderRepository.ProcessedOrder(ctx, dtorepository.ProductOrderRequest{
+		ID:          req.ID,
+		SellerID:    req.SellerID,
+		Status:      constant.StatusProcessedOrder,
+		TotalAmount: totalAmount,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &dtousecase.ProductOrderResponse{
+		ID:     data.ID,
+		Status: data.Status,
 	}, nil
 }

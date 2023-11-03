@@ -7,12 +7,13 @@ import (
 )
 
 type ProductOrderRequest struct {
-	ID        int
-	AccountID int
-	SellerID  int
-	CourierID int
-	Status    string
-	Notes     string
+	ID          int
+	AccountID   int
+	SellerID    int
+	CourierID   int
+	Status      string
+	Notes       string
+	TotalAmount decimal.Decimal
 }
 
 type ProductOrderResponse struct {

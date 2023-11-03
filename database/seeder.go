@@ -21,7 +21,7 @@ func RunSeeder() {
 
 func dropTable() {
 	sql := `
-		drop table if exists accounts, used_emails, my_wallet_transaction_histories, product_orders, couriers, product_order_details;
+		drop table if exists accounts, category, products, used_emails, my_wallet_transaction_histories, product_orders, couriers, product_order_details, product_variant_selections, product_variants, product_variant_selection_combinations;
 	`
 
 	err := db.Exec(sql).Error
@@ -152,7 +152,7 @@ func seeding() {
 			InternalSKU:       "OAKO",
 			ViewCount:         0,
 			IsActive:          true,
-			SellerID:          2,
+			SellerID:          1,
 		},
 	}
 
@@ -324,7 +324,7 @@ func seeding() {
 		ProductOrderID:                       1,
 		ProductVariantSelectionCombinationID: 3,
 		Quantity:                             1,
-		IndividualPrice:                      decimal.NewFromInt(20000),
+		IndividualPrice:                      decimal.NewFromInt(50000),
 	}).Error
 
 	if err != nil {

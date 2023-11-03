@@ -52,8 +52,34 @@ func (h *ProductOrderHandler) CanceledOrderBySeller(c *gin.Context) {
 	res := dtohttp.ProductOrderResponse{
 		ID:     uReq.ID,
 		Notes:  uRes.Notes,
-		Status: uReq.Status,
+		Status: uRes.Status,
 	}
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Succesfully cancel order", Data: res})
+}
+
+func (h *ProductOrderHandler) ProcessedOrderBySeller(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("orderId"))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	uReq := dtousecase.ProductOrderRequest{
+		ID:       id,
+		SellerID: c.GetInt("userId"),
+	}
+
+	uRes, err := h.productOrderUsecase.ProcessedOrder(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res := dtohttp.ProductOrderReceiveResponse{
+		ID:     id,
+		Status: uRes.Status,
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Succesfully processed order", Data: res})
 }
