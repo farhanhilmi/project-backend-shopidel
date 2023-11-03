@@ -8,4 +8,5 @@ var (
 	StatusWaitingSellerConfirmation = "Waiting Seller Confirmation"
 	StatusCanceled                  = "Canceled"
 	StatusProcessedOrder            = "Processed"
+	SellerRole                      = "seller"
 )
