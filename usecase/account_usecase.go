@@ -127,6 +127,15 @@ func (u *accountUsecase) EditProfile(ctx context.Context, req dtousecase.EditAcc
 		return &res, util.ErrSameEmail
 	}
 
+	if strings.EqualFold(oldAccount.Username, req.Username) {
+		return &res, util.ErrSameUsername
+	}
+
+	if strings.EqualFold(oldAccount.PhoneNumber, req.PhoneNumber) {
+		return &res, util.ErrSamePhoneNumber
+	}
+
+
 	usedEmail, err := u.usedEmailRepository.FindByEmail(ctx, dtorepository.UsedEmailRequest{Email: req.Email})
 	if err != nil && !errors.Is(err, util.ErrNoRecordFound) {
 		return nil, err

@@ -43,4 +43,6 @@ var (
 	ErrPasswordContainUsername = &CustomError{Message: "password cannot contains username as part of it", Code: BadRequest}
 	ErrSameEmail               = &CustomError{Message: "you already used this email", Code: BadRequest}
 	ErrInvalidAmountRange      = &CustomError{Message: "amount should be between 50000 and 10000000", Code: BadRequest}
+	ErrSamePhoneNumber         = &CustomError{Message: "you already used this phone number", Code: BadRequest}
+	ErrSameUsername            = &CustomError{Message: "you alrady use this username", Code: BadRequest}
 )
