@@ -55,6 +55,33 @@ func (r *productOrdersRepository) FindByID(ctx context.Context, req dtorepositor
 	return res, err
 }
 
+func (r *productOrdersRepository) FindByIDAndSellerID(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderSeller, error) {
+	order := model.ProductOrderSeller{}
+	res := dtorepository.ProductOrderSeller{}
+
+	err := r.db.WithContext(ctx).Raw(`
+	select po.id, p.id as product_id, p.seller_id, pod.individual_price, pod.quantity, po.status
+		from product_order_details pod
+		left join product_variant_selection_combinations pvsc on pod.product_variant_selection_combination_id = pvsc.id 
+		left join products p on p.id = pvsc.product_id 
+		left join product_orders po on po.id = pod.product_order_id 
+	where pod.product_order_id = ? and p.seller_id = ?;
+	`, req.ID, req.SellerID).Scan(&order).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+
+	res.ID = order.ID
+	res.Status = order.Status
+	res.IndividualPrice = order.IndividualPrice
+	res.Quantity = order.Quantity
+	res.ProductID = order.ProductID
+	res.SellerID = order.SellerID
+
+	return res, err
+}
+
 func (r *productOrdersRepository) FindByIDAndAccountID(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error) {
 	order := model.ProductOrders{}
 	res := dtorepository.ProductOrderResponse{}

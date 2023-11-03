@@ -43,3 +43,12 @@ type ProductOrderDetails struct {
 	UpdatedAt                            time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	DeletedAt                            time.Time       `gorm:"type:timestamp;default:null"`
 }
+
+type ProductOrderSeller struct {
+	ID              int
+	ProductID       int
+	SellerID        int
+	IndividualPrice decimal.Decimal
+	Quantity        int
+	Status          string
+}

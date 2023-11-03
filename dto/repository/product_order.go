@@ -32,3 +32,12 @@ type ProductOrderResponse struct {
 	UpdatedAt     time.Time
 	DeletedAt     time.Time
 }
+
+type ProductOrderSeller struct {
+	ID              int
+	ProductID       int
+	SellerID        int
+	IndividualPrice decimal.Decimal
+	Quantity        int
+	Status          string
+}

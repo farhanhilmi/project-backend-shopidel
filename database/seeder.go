@@ -21,7 +21,7 @@ func RunSeeder() {
 
 func dropTable() {
 	sql := `
-		drop table if exists accounts, used_emails, my_wallet_transaction_histories, product_orders, couriers;
+		drop table if exists accounts, used_emails, my_wallet_transaction_histories, product_orders, couriers, product_order_details;
 	`
 
 	err := db.Exec(sql).Error
@@ -313,6 +313,17 @@ func seeding() {
 		ProductOrderID:                       1,
 		ProductVariantSelectionCombinationID: 1,
 		Quantity:                             2,
+		IndividualPrice:                      decimal.NewFromInt(20000),
+	}).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Create(&model.ProductOrderDetails{
+		ProductOrderID:                       1,
+		ProductVariantSelectionCombinationID: 3,
+		Quantity:                             1,
 		IndividualPrice:                      decimal.NewFromInt(20000),
 	}).Error
 
