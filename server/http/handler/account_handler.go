@@ -25,15 +25,15 @@ func NewAccountHandler(accountUsecase usecase.AccountUsecase) *AccountHandler {
 
 func (h *AccountHandler) Login(c *gin.Context) {
 	var req dtohttp.LoginRequest
-	
+
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		c.Error(util.ErrInvalidInput)
 		return
 	}
 
-	uReq := dtousecase.LoginRequest {
-		Email: req.Email,
+	uReq := dtousecase.LoginRequest{
+		Email:    req.Email,
 		Password: req.Password,
 	}
 
@@ -43,7 +43,7 @@ func (h *AccountHandler) Login(c *gin.Context) {
 		return
 	}
 
-	res := dtogeneral.JSONResponse {
+	res := dtogeneral.JSONResponse{
 		AccessToken: uRes.AccessToken,
 	}
 
@@ -167,7 +167,6 @@ func (h *AccountHandler) ChangeWalletPIN(c *gin.Context) {
 	uReq := dtousecase.UpdateWalletPINRequest{
 		UserID:       c.GetInt("userId"),
 		WalletNewPIN: strings.TrimSpace(payload.WalletNewPIN),
-		WalletPIN:    strings.TrimSpace(payload.WalletPIN),
 	}
 
 	_, err = h.accountUsecase.ChangeMyWalletPIN(c.Request.Context(), uReq)
