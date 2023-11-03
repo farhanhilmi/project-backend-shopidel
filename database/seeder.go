@@ -55,7 +55,7 @@ func seeding() {
 		WalletNumber:   "7770000000001",
 		Gender:         "male",
 		Birthdate:      time.Date(2000, 10, 10, 0, 0, 0, 0, time.UTC),
-		ProfilePicture: "https://cdn4.iconfinder.com/data/icons/web-ui-color/128/Account-512.png",
+		ProfilePicture: "",
 		Balance:        decimal.NewFromInt(0),
 		WalletPin:      "123456",
 	}).Error
@@ -74,7 +74,7 @@ func seeding() {
 		WalletNumber:   "7770000000002",
 		Gender:         "male",
 		Birthdate:      time.Date(1990, 10, 10, 0, 0, 0, 0, time.UTC),
-		ProfilePicture: "https://cdn4.iconfinder.com/data/icons/web-ui-color/128/Account-512.png",
+		ProfilePicture: "",
 		Balance:        decimal.NewFromInt(0),
 	}).Error
 

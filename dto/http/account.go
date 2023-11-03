@@ -38,7 +38,7 @@ type GetAccountRequest struct {
 }
 
 type LoginRequest struct {
-	Email string `json:"email" validate:"required"`
+	Email    string `json:"email" validate:"required"`
 	Password string `json:"password" validate:"required"`
 }
 
@@ -51,7 +51,7 @@ type GetAccountResponse struct {
 	ShopName                string          `json:"shop_name,omitempty"`
 	Gender                  string          `json:"gender,omitempty"`
 	Birthdate               time.Time       `json:"birthdate,omitempty"`
-	ProfilePicture          string          `json:"profile_picture,omitempty"`
+	ProfilePicture          string          `json:"profile_picture"`
 	WalletNumber            string          `json:"wallet_number,omitempty"`
 	WalletPin               string          `json:"wallet_pin,omitempty"`
 	Balance                 decimal.Decimal `json:"balance,omitempty"`
@@ -60,7 +60,7 @@ type GetAccountResponse struct {
 }
 
 type EditAccountResponse struct {
-	ID             int    `json:"id"`
+	ID             int       `json:"id"`
 	FullName       string    `json:"full_name"`
 	Username       string    `json:"username"`
 	Email          string    `json:"email"`
