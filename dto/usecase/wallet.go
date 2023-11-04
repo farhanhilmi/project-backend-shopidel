@@ -4,7 +4,6 @@ import "github.com/shopspring/decimal"
 
 type UpdateWalletPINRequest struct {
 	UserID       int
-	WalletPIN    string
 	WalletNewPIN string
 }
 

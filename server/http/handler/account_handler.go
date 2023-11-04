@@ -167,7 +167,6 @@ func (h *AccountHandler) ChangeWalletPIN(c *gin.Context) {
 	uReq := dtousecase.UpdateWalletPINRequest{
 		UserID:       c.GetInt("userId"),
 		WalletNewPIN: strings.TrimSpace(payload.WalletNewPIN),
-		WalletPIN:    strings.TrimSpace(payload.WalletPIN),
 	}
 
 	_, err = h.accountUsecase.ChangeMyWalletPIN(c.Request.Context(), uReq)

@@ -285,10 +285,6 @@ func (u *accountUsecase) ChangeMyWalletPIN(ctx context.Context, walletReq dtouse
 		return nil, util.ErrBadPIN
 	}
 
-	if userAccount.WalletPin != walletReq.WalletPIN {
-		return nil, util.ErrWalletPINNotMatch
-	}
-
 	if len(walletReq.WalletNewPIN) != 6 {
 		return nil, util.ErrBadPIN
 	}
