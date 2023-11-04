@@ -8,6 +8,7 @@ import (
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
 	"github.com/shopspring/decimal"
@@ -52,24 +53,31 @@ func (u *productOrderUsecase) CancelOrderBySeller(ctx context.Context, req dtous
 		return nil, util.ErrOrderNotFound
 	}
 
+	increseProductsStock := []model.ProductCombinationVariant{}
 	refundedAmount := decimal.NewFromInt(0)
+
 	for _, v := range order {
+		product := model.ProductCombinationVariant{}
+		product.ID = v.ProductVariantSelectionCombinationID
+		product.Stock = v.ProductStock + v.Quantity
+
 		qty, err := decimal.NewFromString(fmt.Sprintf("%v", v.Quantity))
 		if err != nil {
 			return nil, err
 		}
+
+		increseProductsStock = append(increseProductsStock, product)
 		refundedAmount = refundedAmount.Add(v.IndividualPrice.Mul(qty))
 	}
 
-	// TODO: add product stock when seller cancel the order
-
-	data, err := u.productOrderRepository.UpdateOrderStatusByIDAndAccountID(ctx, dtorepository.ProductOrderRequest{
+	data, err := u.productOrderRepository.UpdateOrderStatusByIDAndAccountID(ctx, dtorepository.ReceiveOrderRequest{
 		ID:          req.ID,
 		SellerID:    req.SellerID,
 		Status:      constant.StatusCanceled,
 		Notes:       req.Notes,
 		TotalAmount: refundedAmount,
 		AccountID:   order[0].AccountID,
+		Products:    increseProductsStock,
 	})
 
 	if err != nil {
@@ -79,7 +87,7 @@ func (u *productOrderUsecase) CancelOrderBySeller(ctx context.Context, req dtous
 	return &dtousecase.ProductOrderResponse{
 		ID:     data.ID,
 		Status: data.Status,
-		Notes:  data.Notes,
+		Notes:  req.Notes,
 	}, nil
 }
 

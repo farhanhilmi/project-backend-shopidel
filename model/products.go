@@ -87,3 +87,8 @@ type ProductVideos struct {
 	UpdatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	DeletedAt time.Time `gorm:"type:timestamp;default:null"`
 }
+
+type ProductCombinationVariant struct {
+	ID    int `gorm:"serial"`
+	Stock int `gorm:"type:int;not null"`
+}

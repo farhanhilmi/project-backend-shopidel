@@ -49,7 +49,7 @@ func (h *ProductOrderHandler) CanceledOrderBySeller(c *gin.Context) {
 		return
 	}
 
-	res := dtohttp.ProductOrderResponse{
+	res := dtohttp.ProductOrderReceiveResponse{
 		ID:     uReq.ID,
 		Notes:  uRes.Notes,
 		Status: uRes.Status,

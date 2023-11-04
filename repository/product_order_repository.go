@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"log"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -13,14 +12,15 @@ import (
 )
 
 type productOrdersRepository struct {
-	db                *gorm.DB
-	accountRepository accountRepository
+	db                                  *gorm.DB
+	accountRepository                   accountRepository
+	productVariantCombinationRepository productVariantCombinationRepository
 }
 
 type ProductOrdersRepository interface {
 	FindByIDAndAccountID(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error)
 	FindByStatusAndAccountID(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error)
-	UpdateOrderStatusByIDAndAccountID(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error)
+	UpdateOrderStatusByIDAndAccountID(ctx context.Context, req dtorepository.ReceiveOrderRequest) (dtorepository.ProductOrderResponse, error)
 	FindByIDAndSellerID(ctx context.Context, req dtorepository.ProductOrderRequest) ([]model.ProductOrderSeller, error)
 	ProcessedOrder(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error)
 }
@@ -62,7 +62,7 @@ func (r *productOrdersRepository) FindByIDAndSellerID(ctx context.Context, req d
 	order := []model.ProductOrderSeller{}
 
 	err := r.db.WithContext(ctx).Raw(`
-	select po.id, po.account_id, p.id as product_id, p.seller_id, pod.individual_price, pod.quantity, po.status
+	select po.id, po.account_id, p.id as product_id, p.seller_id, pod.individual_price, pod.quantity, po.status, pvsc.id as product_variant_selection_combination_id, pvsc.stock as product_stock
 		from product_order_details pod
 		left join product_variant_selection_combinations pvsc on pod.product_variant_selection_combination_id = pvsc.id 
 		left join products p on p.id = pvsc.product_id 
@@ -73,8 +73,6 @@ func (r *productOrdersRepository) FindByIDAndSellerID(ctx context.Context, req d
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return order, util.ErrNoRecordFound
 	}
-
-	log.Println("ORDER", order)
 
 	return order, err
 }
@@ -133,7 +131,7 @@ func (r *productOrdersRepository) FindByStatusAndAccountID(ctx context.Context, 
 	return res, err
 }
 
-func (r *productOrdersRepository) UpdateOrderStatusByIDAndAccountID(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error) {
+func (r *productOrdersRepository) UpdateOrderStatusByIDAndAccountID(ctx context.Context, req dtorepository.ReceiveOrderRequest) (dtorepository.ProductOrderResponse, error) {
 	order := model.ProductOrders{}
 	res := dtorepository.ProductOrderResponse{}
 	tx := r.db.Begin()
@@ -150,6 +148,12 @@ func (r *productOrdersRepository) UpdateOrderStatusByIDAndAccountID(ctx context.
 	}
 
 	_, err = r.accountRepository.RefundBalance(ctx, tx, dtorepository.MyWalletRequest{UserID: req.AccountID, Balance: req.TotalAmount})
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	_, err = r.productVariantCombinationRepository.IncreaseStockWithTx(ctx, tx, req.Products)
 	if err != nil {
 		tx.Rollback()
 		return res, err
