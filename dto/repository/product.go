@@ -1,35 +1,68 @@
 package dtorepository
 
-import (
-	"time"
-
-	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
-	"github.com/shopspring/decimal"
-)
+import "github.com/shopspring/decimal"
 
 type ProductRequest struct {
-	ProductID  int
-	Name       string
-	CategoryID int
-	IsActive   bool
+	ProductID int
 }
 
 type ProductResponse struct {
-	ID                int
-	Name              string
-	Description       string
-	CategoryID        int
-	Category          model.Category
-	ProductImages     model.ProductImages
-	ProductVideos     model.ProductVideos
-	HazardousMaterial bool
-	Weight            decimal.Decimal
-	Size              decimal.Decimal
-	IsNew             bool
-	InternalSKU       string
-	ViewCount         int
-	IsActive          bool
-	CreatedAt         time.Time
-	UpdatedAt         time.Time
-	DeletedAt         time.Time
+	ID          int
+	Name        string
+	Description string
+}
+
+type ProductLowestHighestPriceRequest struct {
+	ProductId int
+}
+
+type ProductLowestHighestPriceResponse struct {
+	LowestPrice  decimal.Decimal
+	HighestPrice decimal.Decimal
+}
+
+type ProductTotalSoldRequest struct {
+	ProductId int
+}
+
+type ProductTotalSoldResponse struct {
+	TotalSold int
+}
+
+type ProductAverageStarsRequest struct {
+	ProductId int
+}
+
+type ProductAverageStarsResponse struct {
+	AverageStars decimal.Decimal
+}
+
+type ProductVariantRequest struct {
+	ProductId  int
+	VariantId1 int
+	VariantId2 int
+}
+
+type ProductSelection struct {
+	Id          int
+	Name        string
+	IsAvailable bool
+}
+
+type FindProductVariantRequest struct {
+	ProductId int
+}
+
+type FindProductVariantResponse struct {
+	Variants []ProductVariant
+}
+
+type ProductVariant struct {
+	VariantId      int
+	SelectionId1   int
+	SelectionId2   int
+	SelectionName1 string
+	SelectionName2 string
+	Price          decimal.Decimal
+	Stock          int
 }

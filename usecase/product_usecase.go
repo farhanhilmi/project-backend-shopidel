@@ -3,16 +3,15 @@ package usecase
 import (
 	"context"
 	"errors"
-	"log"
+	"fmt"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/repository"
-	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
 )
 
 type ProductUsecase interface {
-	GetProduct(ctx context.Context, req dtousecase.ProductRequest) (*dtousecase.ProductResponse, error)
+	GetProductDetail(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductDetailResponse, error)
 }
 
 type productUsecase struct {
@@ -32,32 +31,67 @@ func NewProductUsecase(config ProductUsecaseConfig) ProductUsecase {
 	return au
 }
 
-func (u *productUsecase) GetProduct(ctx context.Context, req dtousecase.ProductRequest) (*dtousecase.ProductResponse, error) {
-	res := dtousecase.ProductResponse{}
+func (u *productUsecase) GetProductDetail(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductDetailResponse, error) {
+	res := &dtousecase.GetProductDetailResponse{}
 
-	product, err := u.productRepository.FindByID(ctx, dtorepository.ProductRequest{ProductID: req.ProductID})
-	if errors.Is(err, util.ErrNoRecordFound) {
-		return nil, util.ErrNoRecordFound
+	rReq := dtorepository.ProductRequest{
+		ProductID: req.ProductId,
 	}
+	rRes, err := u.productRepository.First(ctx, rReq)
 	if err != nil {
-		return nil, err
+		return res, err
 	}
-	log.Println("PRODUCT", product)
+	if rRes.ID == 0 {
+		return res, errors.New("product not found")
+	}
 
-	res.ID = product.ID
-	res.Category = product.Category
-	res.Description = product.Description
-	res.HazardousMaterial = product.HazardousMaterial
-	res.InternalSKU = product.InternalSKU
-	res.IsActive = product.IsActive
-	res.IsNew = product.IsNew
-	res.Size = product.Size
-	res.ViewCount = product.ViewCount
-	res.Name = product.Name
-	res.Weight = product.Weight
-	res.CreatedAt = product.CreatedAt
-	res.DeletedAt = product.DeletedAt
-	res.UpdatedAt = product.UpdatedAt
+	rReq2 := dtorepository.FindProductVariantRequest{
+		ProductId: rRes.ID,
+	}
+	rRes2, err := u.productRepository.FindProductVariant(ctx, rReq2)
+	if err != nil {
+		return res, err
+	}
 
-	return &res, nil
+	variants, err := u.convertProductVariants(ctx, rRes.Name, rRes2)
+	if err != nil {
+		return res, err
+	}
+
+	res.Id = rRes.ID
+	res.ProductName = rRes.Name
+	res.Description = rRes.Description
+	res.Variants = variants
+
+	return res, nil
+}
+
+func (u *productUsecase) convertProductVariants(ctx context.Context, productName string, req dtorepository.FindProductVariantResponse) ([]dtousecase.ProductVariant, error) {
+	res := []dtousecase.ProductVariant{}
+	fmt.Println(req)
+	for _, data := range req.Variants {
+		pv := dtousecase.ProductVariant{}
+		pv.VariantId = data.VariantId
+		pv.Price = data.Price
+		pv.Stock = data.Stock
+
+		if data.SelectionName1 == "default_reserved_keyword" {
+			pv.VariantName = productName
+		} else {
+			pv.VariantName = productName + " - " + data.SelectionName1
+
+			if data.SelectionId2 != 0 {
+				pv.VariantName = pv.VariantName + ", " + data.SelectionName2
+			}
+
+			pv.Selections = append(pv.Selections, dtousecase.ProductSelection{SelectionName: data.SelectionName1})
+			if data.SelectionId2 != 0 {
+				pv.Selections = append(pv.Selections, dtousecase.ProductSelection{SelectionName: data.SelectionName2})
+			}
+		}
+
+		res = append(res, pv)
+	}
+	fmt.Println(res)
+	return res, nil
 }
