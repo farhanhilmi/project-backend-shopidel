@@ -6,7 +6,8 @@ import (
 )
 
 func NewAuthRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
-	group := gin.Group("api/auth")
+	group := gin.Group("auth")
 	group.POST("/register", h.CreateAccount)
+	group.POST("/login", h.Login)
 	return gin
 }

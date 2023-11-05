@@ -11,7 +11,7 @@ func CheckContentType() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		contentType := c.GetHeader("Content-Type")
 		if contentType != "application/json" {
-			c.AbortWithStatusJSON(http.StatusBadRequest, dtogeneral.ErrResponse{Error: "Invalid content type, expecting application/json"})
+			c.AbortWithStatusJSON(http.StatusBadRequest, dtogeneral.JSONResponse{Message: "Invalid content type, expecting application/json"})
 			return
 		}
 		c.Next()

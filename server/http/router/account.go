@@ -7,15 +7,17 @@ import (
 )
 
 func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
-	group := gin.Group("api/accounts")
+	group := gin.Group("accounts")
 	group.Use(middleware.AuthenticateJWT())
 
-	group.POST("/wallets/activate", middleware.CheckContentType(), h.ActivateMyWallet)
-	group.PUT("/wallets/change-pin", middleware.CheckContentType(), h.ChangeWalletPIN)
-	group.GET("/wallets", middleware.CheckContentType(), h.GetWallet)
+	group.POST("/wallets/activate", h.ActivateMyWallet)
+	group.PUT("/wallets/change-pin", h.ChangeWalletPIN)
+	group.GET("/wallets", h.GetWallet)
+	group.POST("/wallets/topup", h.TopUpBalanceWallet)
 
-	group.POST("/check-password", middleware.CheckContentType(), h.CheckISPasswordCorrect)
+	group.POST("/check-password", h.CheckISPasswordCorrect)
 
 	group.GET("", h.GetProfile)
+	group.PUT("", h.EditProfile)
 	return gin
 }

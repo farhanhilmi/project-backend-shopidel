@@ -16,6 +16,7 @@ import (
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/server/http/middleware"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/server/http/router"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/usecase"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -40,6 +41,12 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 
 	accountHandler := handler.NewAccountHandler(accountUsecase)
 	productHandler := handler.NewProductHandler(productUsecase)
+
+	configCors := cors.DefaultConfig()
+	configCors.AllowAllOrigins = true
+	configCors.AddAllowHeaders("authorization")
+
+	gin.Use(cors.New(configCors))
 
 	router.NewAccountRouter(accountHandler, gin)
 	router.NewPingRouter(gin)

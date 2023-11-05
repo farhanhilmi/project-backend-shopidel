@@ -30,7 +30,8 @@ func dropTable() {
 			product_variants, 
 			product_videos,
 			products,
-			used_emails;
+			used_emails,
+			MyWalletTransactionHistories;
 	`
 
 	err := db.Exec(sql).Error
@@ -52,7 +53,9 @@ func createTable() {
 		&model.ProductVariants{},
 		&model.ProductVariantSelections{},
 		&model.ProductVariantSelectionCombinations{},
+		&model.MyWalletTransactionHistories{},
 	)
+
 	if err != nil {
 		panic(err)
 	}

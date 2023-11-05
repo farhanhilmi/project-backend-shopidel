@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 
 	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
@@ -16,28 +15,27 @@ func ErrorHandler() gin.HandlerFunc {
 		c.Next()
 
 		err := c.Errors.Last()
-		log.Println("ERR", err)
 		if err != nil {
 			if errors.Is(err, context.DeadlineExceeded) {
-				c.AbortWithStatusJSON(http.StatusBadGateway, dtogeneral.ErrResponse{Error: "request timeout"})
+				c.AbortWithStatusJSON(http.StatusBadGateway, dtogeneral.JSONResponse{Message: "request timeout"})
 			}
 
 			errMap, ok := err.Err.(*util.CustomError)
 
 			if !ok {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, dtogeneral.ErrResponse{Error: "Internal Server Error"})
+				c.AbortWithStatusJSON(http.StatusInternalServerError, dtogeneral.JSONResponse{Message: "Internal Server Error"})
 			}
 
 			switch errMap.Code {
 			case util.BadRequest:
-				c.AbortWithStatusJSON(http.StatusBadRequest, dtogeneral.ErrResponse{Error: errMap.Message})
+				c.AbortWithStatusJSON(http.StatusBadRequest, dtogeneral.JSONResponse{Message: errMap.Message})
 			case util.Unauthorized:
-				c.AbortWithStatusJSON(http.StatusUnauthorized, dtogeneral.ErrResponse{Error: errMap.Message})
+				c.AbortWithStatusJSON(http.StatusUnauthorized, dtogeneral.JSONResponse{Message: errMap.Message})
 			case util.NotFound:
-				c.AbortWithStatusJSON(http.StatusNotFound, dtogeneral.ErrResponse{Error: errMap.Message})
+				c.AbortWithStatusJSON(http.StatusNotFound, dtogeneral.JSONResponse{Message: errMap.Message})
 
 			default:
-				c.AbortWithStatusJSON(http.StatusInternalServerError, dtogeneral.ErrResponse{Error: "Internal Server Error"})
+				c.AbortWithStatusJSON(http.StatusInternalServerError, dtogeneral.JSONResponse{Message: "Internal Server Error"})
 			}
 			c.Abort()
 		}
