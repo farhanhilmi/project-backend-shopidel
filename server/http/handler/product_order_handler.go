@@ -55,7 +55,7 @@ func (h *ProductOrderHandler) CanceledOrderBySeller(c *gin.Context) {
 		Status: uRes.Status,
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Succesfully cancel order", Data: res})
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Successfully cancel order", Data: res})
 }
 
 func (h *ProductOrderHandler) ProcessedOrderBySeller(c *gin.Context) {
@@ -81,5 +81,33 @@ func (h *ProductOrderHandler) ProcessedOrderBySeller(c *gin.Context) {
 		Status: uRes.Status,
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Succesfully processed order", Data: res})
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Successfully processed order", Data: res})
+}
+
+func (h *ProductOrderHandler) CheckoutOrder(c *gin.Context) {
+	var req dtohttp.CheckoutOrderRequest
+
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.CheckoutOrderRequest{
+		ProductVariant:       req.ProductVariant,
+		VoucherID:            req.VoucherID,
+		DestinationAddressID: req.DestinationAddressID,
+		UserID:               c.GetInt("userId"),
+		CourierID:            req.CourierID,
+		Notes:                req.Notes,
+		SellerID:             req.SellerID,
+	}
+
+	_, err = h.productOrderUsecase.CheckoutOrder(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Successfully checkout order"})
 }

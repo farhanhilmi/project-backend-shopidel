@@ -57,9 +57,10 @@ type SaleWalletTransactionHistoriesResponse struct {
 }
 
 type MyWalletRequest struct {
-	UserID       int
-	WalletNumber string
-	Balance      decimal.Decimal
+	UserID          int
+	WalletNumber    string
+	Balance         decimal.Decimal
+	TransactionType string
 }
 
 type MyWalletResponse struct {

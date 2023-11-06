@@ -36,6 +36,7 @@ func dropTable() {
 			product_orders,
 			sale_wallet_transaction_histories,
 			product_order_details,
+			account_addresses,
 			couriers;
 	`
 
@@ -70,6 +71,7 @@ func createTable() {
 		&model.ProductVariantSelectionCombinations{},
 		&model.ProductOrders{},
 		&model.ProductOrderDetails{},
+		&model.AccountAddress{},
 	)
 
 	if err != nil {
@@ -418,6 +420,23 @@ func seeding() {
 		AccountID:      1,
 		Type:           constant.SaleMoneyIncomeType,
 		Amount:         decimal.NewFromInt(90000),
+	}).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Create(&model.AccountAddress{
+		AccountID:            2,
+		Province:             "Jawa Barat",
+		District:             "Kabupaten Bandung",
+		SubDistrict:          "Bojongsoang",
+		Kelurahan:            "Sukapura",
+		ZipCode:              "40851",
+		Detail:               "Jl Telekomunikasi No 1 Bojongsoang",
+		RajaOngkirDistrictId: "1",
+		IsBuyerDefault:       true,
+		IsSellerDefault:      false,
 	}).Error
 
 	if err != nil {

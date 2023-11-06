@@ -8,13 +8,21 @@ import (
 )
 
 type ProductOrderRequest struct {
-	ID          int
-	AccountID   int
-	SellerID    int
-	CourierID   int
-	Status      string
-	Notes       string
-	TotalAmount decimal.Decimal
+	ID              int
+	Province        string
+	District        string
+	SubDistrict     string
+	Kelurahan       string
+	ZipCode         string
+	AddressDetail   string
+	AccountID       int
+	SellerID        int
+	CourierID       int
+	Status          string
+	Notes           string
+	DeliveryFee     decimal.Decimal
+	TotalAmount     decimal.Decimal
+	ProductVariants []ProductOrderDetailRequest
 }
 
 type ReceiveOrderRequest struct {
@@ -53,4 +61,22 @@ type ProductOrderSeller struct {
 	IndividualPrice decimal.Decimal
 	Quantity        int
 	Status          string
+}
+
+type ProductOrderDetailRequest struct {
+	ProductOrderID                       int
+	ProductVariantSelectionCombinationID int
+	Quantity                             int
+	IndividualPrice                      decimal.Decimal
+}
+
+type ProductOrderDetailResponse struct {
+	ID                                   int
+	ProductOrderID                       int
+	ProductVariantSelectionCombinationID int
+	Quantity                             int
+	IndividualPrice                      decimal.Decimal
+	CreatedAt                            time.Time
+	UpdatedAt                            time.Time
+	DeletedAt                            time.Time
 }

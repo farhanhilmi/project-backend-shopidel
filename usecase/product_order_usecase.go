@@ -17,14 +17,21 @@ import (
 type ProductOrderUsecase interface {
 	CancelOrderBySeller(ctx context.Context, req dtousecase.ProductOrderRequest) (*dtousecase.ProductOrderResponse, error)
 	ProcessedOrder(ctx context.Context, req dtousecase.ProductOrderRequest) (*dtousecase.ProductOrderResponse, error)
+	CheckoutOrder(ctx context.Context, req dtousecase.CheckoutOrderRequest) (*dtousecase.CheckoutOrderResponse, error)
 }
 
 type productOrderUsecase struct {
-	productOrderRepository repository.ProductOrdersRepository
+	productOrderRepository    repository.ProductOrdersRepository
+	productCombinationVariant repository.ProductVariantCombinationRepository
+	accountAddressRepository  repository.AccountAddressRepository
+	accountRepository         repository.AccountRepository
 }
 
 type ProductOrderUsecaseConfig struct {
-	ProductOrderRepository repository.ProductOrdersRepository
+	ProductOrderRepository              repository.ProductOrdersRepository
+	ProductVariantCombinationRepository repository.ProductVariantCombinationRepository
+	AccountAddressRepository            repository.AccountAddressRepository
+	AccountRepository                   repository.AccountRepository
 }
 
 func NewProductOrderUsecase(config ProductOrderUsecaseConfig) ProductOrderUsecase {
@@ -32,8 +39,102 @@ func NewProductOrderUsecase(config ProductOrderUsecaseConfig) ProductOrderUsecas
 	if config.ProductOrderRepository != nil {
 		au.productOrderRepository = config.ProductOrderRepository
 	}
+	if config.ProductVariantCombinationRepository != nil {
+		au.productCombinationVariant = config.ProductVariantCombinationRepository
+	}
+	if config.AccountAddressRepository != nil {
+		au.accountAddressRepository = config.AccountAddressRepository
+	}
+	if config.AccountRepository != nil {
+		au.accountRepository = config.AccountRepository
+	}
 
 	return au
+}
+
+func (u *productOrderUsecase) CheckoutOrder(ctx context.Context, req dtousecase.CheckoutOrderRequest) (*dtousecase.CheckoutOrderResponse, error) {
+	address, err := u.accountAddressRepository.FindBuyerAddressByID(ctx, dtorepository.AccountAddressRequest{ID: req.DestinationAddressID})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	orderDetails := []dtorepository.ProductOrderDetailRequest{}
+	totalPayment := decimal.NewFromInt(0)
+
+	for _, p := range req.ProductVariant {
+		if p.Quantity < 1 {
+			return nil, util.ErrQtyInputZero
+		}
+
+		productVariant, err := u.productCombinationVariant.FindById(ctx, dtorepository.ProductCombinationVariantRequest{ID: p.ID})
+		if errors.Is(err, util.ErrNoRecordFound) {
+			return nil, util.ErrNoRecordFound
+		}
+		if err != nil {
+			return nil, err
+		}
+		if productVariant.Stock < 1 {
+			return nil, util.ErrInsufficientStock
+		}
+
+		order := dtorepository.ProductOrderDetailRequest{
+			Quantity:                             p.Quantity,
+			ProductVariantSelectionCombinationID: p.ID,
+			IndividualPrice:                      productVariant.IndividualPrice,
+		}
+		qty, err := decimal.NewFromString(fmt.Sprintf("%v", p.Quantity))
+		if err != nil {
+			return nil, err
+		}
+		totalPayment = totalPayment.Add(productVariant.IndividualPrice.Mul(qty))
+		orderDetails = append(orderDetails, order)
+	}
+
+	// TODO: check delivery fee raja ongkir
+	deliveryFee := decimal.NewFromInt(30000)
+	totalPayment = totalPayment.Add(deliveryFee)
+
+	account, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{UserId: req.UserID})
+	if err != nil {
+		return nil, err
+	}
+
+	if account.WalletPin == "" {
+		return nil, util.ErrWalletNotSet
+	}
+
+	if account.Balance.LessThan(totalPayment) {
+		return nil, util.ErrInsufficientBalance
+	}
+
+	orderRequest := dtorepository.ProductOrderRequest{
+		Province:        address.Province,
+		District:        address.District,
+		SubDistrict:     address.SubDistrict,
+		Kelurahan:       address.Kelurahan,
+		AddressDetail:   address.Detail,
+		ZipCode:         address.ZipCode,
+		AccountID:       req.UserID,
+		SellerID:        req.SellerID,
+		CourierID:       req.CourierID,
+		Status:          constant.StatusWaitingSellerConfirmation,
+		Notes:           req.Notes,
+		DeliveryFee:     deliveryFee,
+		TotalAmount:     totalPayment,
+		ProductVariants: orderDetails,
+	}
+
+	order, err := u.productOrderRepository.Create(ctx, orderRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dtousecase.CheckoutOrderResponse{
+		ID: order.ID,
+	}, nil
 }
 
 func (u *productOrderUsecase) CancelOrderBySeller(ctx context.Context, req dtousecase.ProductOrderRequest) (*dtousecase.ProductOrderResponse, error) {
