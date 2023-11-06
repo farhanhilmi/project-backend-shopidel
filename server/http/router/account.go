@@ -20,5 +20,6 @@ func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 
 	group.GET("", h.GetProfile)
 	group.PUT("", h.EditProfile)
+	group.GET("/address", h.GetAddresses)
 	return gin
 }
