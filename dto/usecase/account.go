@@ -111,3 +111,25 @@ type EditAccountResponse struct {
 type LoginResponse struct {
 	AccessToken string
 }
+
+type GetCartRequest struct {
+	UserId int
+}
+
+type GetCartResponse struct {
+	CartShops []CartShop `json:"cart_shops"`
+}
+
+type CartShop struct {
+	ShopId    int        `json:"shop_id"`
+	ShopName  string     `json:"shop_name"`
+	CartItems []CartItem `json:"cart_items"`
+}
+
+type CartItem struct {
+	ProductImageUrl   string          `json:"product_image_url"`
+	ProductName       string          `json:"product_name"`
+	ProductUnitPrice  decimal.Decimal `json:"product_unit_price"`
+	ProductQuantity   int             `json:"product_quantity"`
+	ProductTotalPrice decimal.Decimal `json:"product_total_price"`
+}

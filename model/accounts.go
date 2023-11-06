@@ -58,3 +58,13 @@ type SaleWalletTransactionHistories struct {
 	UpdatedAt      time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	DeletedAt      time.Time       `gorm:"type:timestamp;default:null"`
 }
+
+type AccountCarts struct {
+	ID                                   int       `gorm:"primaryKey;not null,autoIncrement;serial"`
+	AccountID                            int       `gorm:"foreignKey:AccountID;type:bigint;not null"`
+	ProductVariantSelectionCombinationId int       `gorm:"foreignKey:product_variant_selection_combinations;type:bigint;not null"`
+	Quantity                             int       `gorm:"type:int;not null"`
+	CreatedAt                            time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
+	UpdatedAt                            time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
+	DeletedAt                            time.Time `gorm:"type:timestamp;default:null"`
+}

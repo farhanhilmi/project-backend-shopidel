@@ -11,6 +11,7 @@ import (
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
+	"github.com/shopspring/decimal"
 )
 
 type AccountUsecase interface {
@@ -23,6 +24,7 @@ type AccountUsecase interface {
 	GetWallet(ctx context.Context, req dtousecase.AccountRequest) (*dtousecase.WalletResponse, error)
 	Login(ctx context.Context, req dtousecase.LoginRequest) (*dtousecase.LoginResponse, error)
 	TopUpBalanceWallet(ctx context.Context, walletReq dtousecase.TopUpBalanceWalletRequest) (*dtousecase.TopUpBalanceWalletResponse, error)
+	GetCart(ctx context.Context, req dtousecase.GetCartRequest) (dtousecase.GetCartResponse, error)
 }
 
 type accountUsecase struct {
@@ -142,8 +144,8 @@ func (u *accountUsecase) EditProfile(ctx context.Context, req dtousecase.EditAcc
 	}
 
 	usedUsername, err := u.accountRepository.FindByUsername(ctx, dtorepository.GetAccountRequest{
-		UserId: req.UserId,
-		Email: req.Email,
+		UserId:   req.UserId,
+		Email:    req.Email,
 		Username: req.Username,
 	})
 	if err != nil && !errors.Is(err, util.ErrNoRecordFound) {
@@ -153,8 +155,8 @@ func (u *accountUsecase) EditProfile(ctx context.Context, req dtousecase.EditAcc
 		return nil, util.ErrCantUseThisUsername
 	}
 
-	usedPhonenumber, err := u.accountRepository.FindByPhoneNumber(ctx, dtorepository.GetAccountRequest {
-		UserId: req.UserId,
+	usedPhonenumber, err := u.accountRepository.FindByPhoneNumber(ctx, dtorepository.GetAccountRequest{
+		UserId:      req.UserId,
 		PhoneNumber: req.PhoneNumber,
 	})
 	if err != nil && !errors.Is(err, util.ErrNoRecordFound) {
@@ -183,7 +185,7 @@ func (u *accountUsecase) EditProfile(ctx context.Context, req dtousecase.EditAcc
 		Birthdate:      req.Birthdate,
 		ProfilePicture: req.ProfilePicture,
 	}
-	
+
 	if oldAccount.Email == req.Email {
 		_, err := u.accountRepository.UpdateAccountWithoutEmail(ctx, rReq)
 		if err != nil {
@@ -385,4 +387,57 @@ func (u *accountUsecase) CheckPasswordCorrect(ctx context.Context, accountReq dt
 	return &dtousecase.CheckPasswordResponse{
 		IsCorrect: util.CheckPasswordHash(accountReq.Password, userAccount.Password),
 	}, nil
+}
+
+func (u *accountUsecase) GetCart(ctx context.Context, req dtousecase.GetCartRequest) (dtousecase.GetCartResponse, error) {
+	res := dtousecase.GetCartResponse{}
+
+	rReq := dtorepository.GetAccountCartItemsRequest{
+		AccountId: req.UserId,
+	}
+
+	rRes, err := u.accountRepository.FindAccountCartItems(ctx, rReq)
+	if err != nil {
+		return res, err
+	}
+
+	cartShop, err := u.convertCartItems(ctx, rRes)
+	if err != nil {
+		return res, err
+	}
+
+	res.CartShops = cartShop
+
+	return res, nil
+}
+
+func (u *accountUsecase) convertCartItems(ctx context.Context, rRes dtorepository.GetAccountCartItemsResponse) ([]dtousecase.CartShop, error) {
+	res := []dtousecase.CartShop{}
+	cs := dtousecase.CartShop{}
+
+	for _, data := range rRes.CartItems {
+		if cs.ShopId != data.ShopId {
+			if cs.ShopId != 0 {
+				res = append(res, cs)
+			}
+
+			cs.ShopId = data.ShopId
+			cs.ShopName = data.ShopName
+			cs.CartItems = []dtousecase.CartItem{}
+		}
+
+		ci := dtousecase.CartItem{}
+		ci.ProductImageUrl = data.ProductUrl
+		ci.ProductName = data.ProductName
+		ci.ProductQuantity = data.Quantity
+		ci.ProductUnitPrice = data.ProductPrice
+		ci.ProductTotalPrice = data.ProductPrice.Mul(decimal.NewFromInt(int64(ci.ProductQuantity)))
+		cs.CartItems = append(cs.CartItems, ci)
+	}
+
+	if cs.ShopId != 0 {
+		res = append(res, cs)
+	}
+
+	return res, nil
 }

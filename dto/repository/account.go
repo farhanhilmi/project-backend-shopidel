@@ -32,9 +32,9 @@ type EditAccountRequest struct {
 }
 
 type GetAccountRequest struct {
-	UserId   int
-	Email    string
-	Username string
+	UserId      int
+	Email       string
+	Username    string
 	PhoneNumber string
 }
 
@@ -65,4 +65,21 @@ type EditAccountResponse struct {
 	Gender         string
 	Birthdate      time.Time
 	ProfilePicture string
+}
+
+type GetAccountCartItemsRequest struct {
+	AccountId int
+}
+
+type GetAccountCartItemsResponse struct {
+	CartItems []CartItem
+}
+
+type CartItem struct {
+	ShopId       int
+	ShopName     string
+	ProductUrl   string
+	ProductName  string
+	ProductPrice decimal.Decimal
+	Quantity     int
 }
