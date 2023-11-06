@@ -36,7 +36,7 @@ func dropTable() {
 			sale_wallet_transaction_histories,
 			product_order_details,
 			couriers,
-			account_addresses
+			account_addresses,
 			account_carts;
 	`
 
@@ -127,7 +127,6 @@ func seeding() {
 	err := db.Create(accounts).Error
 
 	if err != nil {
-		log.Println(err)
 		panic(err)
 	}
 
