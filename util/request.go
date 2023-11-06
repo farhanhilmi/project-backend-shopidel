@@ -19,7 +19,7 @@ func GetRajaOngkirCost(reqData dtousecase.CheckDeliveryFeeRequest) ([]dtousecase
 		"weight":      {reqData.Weight},
 		"courier":     {reqData.Courier},
 	}
-	req, err := http.NewRequest("POST", fmt.Sprintf("%v/cost", config.GetEnv("RAJA_ONGKOR_ENDPOINT")), bytes.NewBufferString(formData.Encode()))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%v/cost", config.GetEnv("RAJA_ONGKIR_ENDPOINT")), bytes.NewBufferString(formData.Encode()))
 	if err != nil {
 		return nil, err
 	}
