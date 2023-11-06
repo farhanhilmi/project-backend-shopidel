@@ -47,4 +47,6 @@ var (
 	ErrSamePhoneNumber         = &CustomError{Message: "you already used this phone number", Code: BadRequest}
 	ErrSameUsername            = &CustomError{Message: "you alrady use this username", Code: BadRequest}
 	ErrWeakPassword            = &CustomError{Message: "password should have at least one uppercase, one lowercase with minimum length is 8", Code: BadRequest}
+	ErrCantUseThisUsername     = &CustomError{Message: "username already used", Code: BadRequest}
+	ErrCantUseThisPhonenumber  = &CustomError{Message: "phone number already used", Code: BadRequest}
 )

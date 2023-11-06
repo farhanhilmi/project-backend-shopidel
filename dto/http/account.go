@@ -24,7 +24,7 @@ type CheckPasswordRequest struct {
 }
 
 type EditAccountRequest struct {
-	FullName       string    `json:"full_name" binding:"alpha"`
+	FullName       string    `json:"full_name" binding:"required"`
 	Username       string    `json:"username" binding:"alphanum"`
 	Email          string    `json:"email" binding:"email"`
 	PhoneNumber    string    `json:"phone_number" binding:"e164"`

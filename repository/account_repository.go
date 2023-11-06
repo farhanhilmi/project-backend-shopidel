@@ -25,6 +25,8 @@ type AccountRepository interface {
 	FindByEmail(ctx context.Context, req dtorepository.GetAccountRequest) (dtorepository.GetAccountResponse, error)
 	TopUpWalletBalanceByID(ctx context.Context, req dtorepository.TopUpWalletRequest) (dtorepository.WalletResponse, error)
 	FindByUsername(ctx context.Context, req dtorepository.GetAccountRequest) (dtorepository.GetAccountResponse, error)
+	FindByPhoneNumber(ctx context.Context, req dtorepository.GetAccountRequest) (dtorepository.GetAccountResponse, error)
+	UpdateAccountWithoutEmail(ctx context.Context, req dtorepository.EditAccountRequest) (*dtorepository.EditAccountResponse, error)
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
@@ -73,6 +75,42 @@ func (r *accountRepository) UpdateAccount(ctx context.Context, req dtorepository
 	}
 
 	tx.Commit()
+
+	res.ID = a.ID
+	res.FullName = a.FullName
+	res.Username = a.Username
+	res.Email = a.Email
+	res.PhoneNumber = a.PhoneNumber
+	res.Gender = a.Gender
+	res.Birthdate = a.Birthdate
+	res.ProfilePicture = a.ProfilePicture
+
+	return res, nil
+}
+
+func (r *accountRepository) UpdateAccountWithoutEmail(ctx context.Context, req dtorepository.EditAccountRequest) (*dtorepository.EditAccountResponse, error) {
+	res := &dtorepository.EditAccountResponse{}
+
+	a := model.Accounts{}
+	err := r.db.WithContext(ctx).Where("id = ?", req.UserId).First(&a).Error
+
+	if err != nil {
+		return res, err
+	}
+
+	a.FullName = req.FullName
+	a.Username = req.Username
+	a.Email = req.Email
+	a.PhoneNumber = req.PhoneNumber
+	a.Gender = req.Gender
+	a.Birthdate = req.Birthdate
+	a.ProfilePicture = req.ProfilePicture
+
+	err = r.db.WithContext(ctx).Save(&a).Error
+
+	if err != nil {
+		return res, err
+	}
 
 	res.ID = a.ID
 	res.FullName = a.FullName
@@ -184,6 +222,34 @@ func (r *accountRepository) FindById(ctx context.Context, req dtorepository.GetA
 	return res, err
 }
 
+func (r *accountRepository) FindByPhoneNumber(ctx context.Context, req dtorepository.GetAccountRequest) (dtorepository.GetAccountResponse, error) {
+	account := model.Accounts{}
+	res := dtorepository.GetAccountResponse{}
+
+	err := r.db.WithContext(ctx).Where("phone_number = ?", req.PhoneNumber).Where("id != ?", req.UserId).First(&account).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+
+	res.FullName = account.FullName
+	res.Username = account.Username
+	res.Email = account.Email
+	res.PhoneNumber = account.PhoneNumber
+	res.Gender = account.Gender
+	res.Birthdate = account.Birthdate
+	res.ProfilePicture = account.ProfilePicture
+	res.WalletNumber = account.WalletNumber
+	res.Balance = account.Balance
+	res.Password = account.Password
+	res.WalletPin = account.WalletPin
+	res.ID = account.ID
+	res.ForgetPasswordExpiredAt = account.ForgetPasswordExpiredAt
+	res.ForgetPasswordToken = account.ForgetPasswordToken
+
+	return res, err
+}
+
 func (r *accountRepository) FindByEmail(ctx context.Context, req dtorepository.GetAccountRequest) (dtorepository.GetAccountResponse, error) {
 	account := model.Accounts{}
 	res := dtorepository.GetAccountResponse{}
@@ -216,7 +282,7 @@ func (r *accountRepository) FindByUsername(ctx context.Context, req dtorepositor
 	account := model.Accounts{}
 	res := dtorepository.GetAccountResponse{}
 
-	err := r.db.WithContext(ctx).Where("username = ?", req.Username).First(&account).Error
+	err := r.db.WithContext(ctx).Where("username = ?", req.Username).Where("id != ?", req.UserId).First(&account).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound
