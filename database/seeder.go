@@ -435,35 +435,35 @@ func seeding() {
 			AccountID: 2,
 			Province: "DKI Jakarta",
 			District: "Jakarta Selatan",
-			SubDistrict: "Sub District 1",
-			Kelurahan: "lurahan skuy living",
+			SubDistrict: "Setiabudi",
+			Kelurahan: "Setiabudi",
 			ZipCode: "12230",
 			RajaOngkirDistrictId: "153",
-			Detail: "mambo jambo",
-		},
-		{
-			AccountID: 2,
-			Province: "DKI Jakarta",
-			District: "Jakarta Timur",
-			SubDistrict: "Sub District 2",
-			Kelurahan: "lurahan teranjay",
-			ZipCode: "14738",
-			RajaOngkirDistrictId: "154",
-			Detail: "rujak cireng",
+			Detail: "Sopo Del Tower, Jalan Mega Kuningan Barat III Lot 10.1-6, RT.03/RW.03",
 			IsBuyerDefault: true,
 		},
 		{
 			AccountID: 2,
 			Province: "DKI Jakarta",
+			District: "Jakarta Timur",
+			SubDistrict: "Jatinegara",
+			Kelurahan: "Cipinang Besar Sel",
+			ZipCode: "14738",
+			RajaOngkirDistrictId: "154",
+			Detail: "Jl. Jend. Basuki Rachmat No.1A",
+		},
+		{
+			AccountID: 2,
+			Province: "DKI Jakarta",
 			District: "Jakarta Barat",
-			SubDistrict: "Sub District 3",
-			Kelurahan: "lurahan skuy living",
+			SubDistrict: "Kembangan",
+			Kelurahan: "Lingkar Luar",
 			RajaOngkirDistrictId: "151",
-			ZipCode: "15405",
-			Detail: "es jambu",
+			ZipCode: "11610",
+			Detail: "Puri Mansion Estate, Jl. Puri",
 		},
 	}).Error
-		
+
 	if err != nil {
 		panic(err)
 	}
