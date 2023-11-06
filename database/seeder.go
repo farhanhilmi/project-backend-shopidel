@@ -90,7 +90,6 @@ func seeding() {
 		Gender:         "male",
 		ShopName:       "XYZ SHOP",
 		Birthdate:      time.Date(2000, 10, 10, 0, 0, 0, 0, time.UTC),
-		ProfilePicture: "https://cdn4.iconfinder.com/data/icons/web-ui-color/128/Account-512.png",
 		Balance:        decimal.NewFromInt(0),
 		WalletPin:      "123456",
 		SallerBalance:  decimal.NewFromInt(90000),
@@ -110,7 +109,6 @@ func seeding() {
 		WalletNumber:   "4200000000002",
 		Gender:         "male",
 		Birthdate:      time.Date(1990, 10, 10, 0, 0, 0, 0, time.UTC),
-		ProfilePicture: "https://cdn4.iconfinder.com/data/icons/web-ui-color/128/Account-512.png",
 		Balance:        decimal.NewFromInt(0),
 	}).Error
 
