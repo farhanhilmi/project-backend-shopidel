@@ -46,7 +46,9 @@ var (
 	ErrInvalidAmountRange      = &CustomError{Message: "amount should be between 50000 and 10000000", Code: BadRequest}
 	ErrSamePhoneNumber         = &CustomError{Message: "you already used this phone number", Code: BadRequest}
 	ErrSameUsername            = &CustomError{Message: "you alrady use this username", Code: BadRequest}
-	ErrWeakPassword            = &CustomError{Message: "password should have at least one uppercase, one lowercase with minimum length is 8", Code: BadRequest}
 	ErrCantUseThisUsername     = &CustomError{Message: "username already used", Code: BadRequest}
 	ErrCantUseThisPhonenumber  = &CustomError{Message: "phone number already used", Code: BadRequest}
+	ErrOrderStatusNotWaiting   = &CustomError{Message: "you can only cancel orders that are still awaiting seller confirmation", Code: BadRequest}
+	ErrWeakPassword            = &CustomError{Message: "password should have at least one uppercase, one lowercase with minimum length is 8", Code: BadRequest}
+	ErrOrderNotFound           = &CustomError{Message: "We could not find the order you are looking for or the order has been processed previously"}
 )
