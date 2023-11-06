@@ -2,7 +2,6 @@ package database
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/config"
@@ -100,7 +99,6 @@ func seeding() {
 	}).Error
 
 	if err != nil {
-		log.Println(err)
 		panic(err)
 	}
 
