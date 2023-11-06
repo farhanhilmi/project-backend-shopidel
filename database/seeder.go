@@ -82,37 +82,34 @@ func createTable() {
 }
 
 func seeding() {
-	err := db.Create(&model.Accounts{
-		Username:       "testing",
-		FullName:       "My Testing Account",
-		Email:          "testing@mail.com",
-		PhoneNumber:    "08982873823",
-		Password:       "$2a$14$ggRGSX9uKrEfapylGVadWee/P1yCOKduFFqnzNdq7U3ble5nxtNqC",
-		WalletNumber:   "4200000000001",
-		Gender:         "male",
-		ShopName:       "XYZ SHOP",
-		Birthdate:      time.Date(2000, 10, 10, 0, 0, 0, 0, time.UTC),
-		ProfilePicture: "",
-		Balance:        decimal.NewFromInt(0),
-		WalletPin:      "123456",
-		SallerBalance:  decimal.NewFromInt(90000),
-	}).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(&model.Accounts{
-		Username:       "satoni",
-		FullName:       "Ahmad Satoni",
-		Email:          "satoni@mail.com",
-		PhoneNumber:    "089828738222",
-		Password:       "$2a$14$ggRGSX9uKrEfapylGVadWee/P1yCOKduFFqnzNdq7U3ble5nxtNqC",
-		WalletNumber:   "4200000000002",
-		Gender:         "male",
-		Birthdate:      time.Date(1990, 10, 10, 0, 0, 0, 0, time.UTC),
-		ProfilePicture: "",
-		Balance:        decimal.NewFromInt(0),
+	err := db.Create(&[]model.Accounts{
+		{
+			Username:       "testing",
+			FullName:       "My Testing Account",
+			Email:          "testing@mail.com",
+			PhoneNumber:    "08982873823",
+			Password:       "$2a$14$ggRGSX9uKrEfapylGVadWee/P1yCOKduFFqnzNdq7U3ble5nxtNqC",
+			WalletNumber:   "4200000000001",
+			Gender:         "male",
+			ShopName:       "XYZ SHOP",
+			Birthdate:      time.Date(2000, 10, 10, 0, 0, 0, 0, time.UTC),
+			ProfilePicture: "",
+			Balance:        decimal.NewFromInt(0),
+			WalletPin:      "123456",
+			SallerBalance:  decimal.NewFromInt(90000),
+		},
+		{
+			Username:       "satoni",
+			FullName:       "Ahmad Satoni",
+			Email:          "satoni@mail.com",
+			PhoneNumber:    "089828738222",
+			Password:       "$2a$14$ggRGSX9uKrEfapylGVadWee/P1yCOKduFFqnzNdq7U3ble5nxtNqC",
+			WalletNumber:   "4200000000002",
+			Gender:         "male",
+			Birthdate:      time.Date(1990, 10, 10, 0, 0, 0, 0, time.UTC),
+			ProfilePicture: "",
+			Balance:        decimal.NewFromInt(0),
+		},
 	}).Error
 
 	if err != nil {
@@ -357,18 +354,15 @@ func seeding() {
 		panic(err)
 	}
 
-	err = db.Create(&model.Couriers{
-		Name:        "jne",
-		Description: "layanan JNE courier",
-	}).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(&model.Couriers{
-		Name:        "tiki",
-		Description: "layanan TIKI courier",
+	err = db.Create(&[]model.Couriers{
+		{
+			Name:        "jne",
+			Description: "layanan JNE courier",
+		},
+		{
+			Name:        "tiki",
+			Description: "layanan TIKI courier",
+		},
 	}).Error
 
 	if err != nil {
@@ -392,22 +386,19 @@ func seeding() {
 		panic(err)
 	}
 
-	err = db.Create(&model.ProductOrderDetails{
-		ProductOrderID:                       1,
-		ProductVariantSelectionCombinationID: 1,
-		Quantity:                             2,
-		IndividualPrice:                      decimal.NewFromInt(20000),
-	}).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(&model.ProductOrderDetails{
-		ProductOrderID:                       1,
-		ProductVariantSelectionCombinationID: 3,
-		Quantity:                             1,
-		IndividualPrice:                      decimal.NewFromInt(50000),
+	err = db.Create(&[]model.ProductOrderDetails{
+		{
+			ProductOrderID:                       1,
+			ProductVariantSelectionCombinationID: 1,
+			Quantity:                             2,
+			IndividualPrice:                      decimal.NewFromInt(20000),
+		},
+		{
+			ProductOrderID:                       1,
+			ProductVariantSelectionCombinationID: 3,
+			Quantity:                             1,
+			IndividualPrice:                      decimal.NewFromInt(50000),
+		},
 	}).Error
 
 	if err != nil {
@@ -428,17 +419,17 @@ func seeding() {
 	err = db.Create(&[]model.AccountAddress{
 		{
 			AccountID: 2,
-			Province: "Banten",
-			District: "Jambi",
-			SubDistrict: "",
+			Province: "DKI Jakarta",
+			District: "Jakarta Selatan",
+			SubDistrict: "Sub District 1",
 			Kelurahan: "lurahan skuy living",
-			ZipCode: "15473",
+			ZipCode: "12230",
 			Detail: "mambo jambo",
 		},
 		{
 			AccountID: 2,
-			Province: "Banten",
-			District: "District 2",
+			Province: "DKI Jakarta",
+			District: "Jakarta Timur",
 			SubDistrict: "Sub District 2",
 			Kelurahan: "lurahan teranjay",
 			ZipCode: "14738",
@@ -447,9 +438,9 @@ func seeding() {
 		},
 		{
 			AccountID: 2,
-			Province: "Banten",
-			District: "District 2",
-			SubDistrict: "Sub District 2",
+			Province: "DKI Jakarta",
+			District: "Jakarta Barat",
+			SubDistrict: "Sub District 3",
 			Kelurahan: "lurahan skuy living",
 			ZipCode: "15405",
 			Detail: "es jambu",
