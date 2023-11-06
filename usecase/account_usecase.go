@@ -223,6 +223,7 @@ func (u *accountUsecase) GetProfile(ctx context.Context, req dtousecase.GetAccou
 		return nil, err
 	}
 
+	res.ID = userAccount.ID
 	res.FullName = userAccount.FullName
 	res.Username = userAccount.Username
 	res.Email = userAccount.Email
