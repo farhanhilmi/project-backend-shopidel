@@ -278,3 +278,17 @@ func (h *AccountHandler) CreateAccount(c *gin.Context) {
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
 }
+
+func (h *AccountHandler) GetCart(c *gin.Context) {
+	uReq := dtousecase.GetCartRequest{
+		UserId: c.GetInt("userId"),
+	}
+
+	uRes, err := h.accountUsecase.GetCart(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes})
+}

@@ -36,7 +36,8 @@ func dropTable() {
 			product_orders,
 			sale_wallet_transaction_histories,
 			product_order_details,
-			couriers;
+			couriers,
+			account_carts;
 	`
 
 	err := db.Exec(sql).Error
@@ -70,6 +71,7 @@ func createTable() {
 		&model.ProductVariantSelectionCombinations{},
 		&model.ProductOrders{},
 		&model.ProductOrderDetails{},
+		&model.AccountCarts{},
 	)
 
 	if err != nil {
@@ -80,39 +82,51 @@ func createTable() {
 }
 
 func seeding() {
-	err := db.Create(&model.Accounts{
-		Username:       "testing",
-		FullName:       "My Testing Account",
-		Email:          "testing@mail.com",
-		PhoneNumber:    "08982873823",
-		Password:       "$2a$14$ggRGSX9uKrEfapylGVadWee/P1yCOKduFFqnzNdq7U3ble5nxtNqC",
-		WalletNumber:   "4200000000001",
-		Gender:         "male",
-		ShopName:       "XYZ SHOP",
-		Birthdate:      time.Date(2000, 10, 10, 0, 0, 0, 0, time.UTC),
-		Balance:        decimal.NewFromInt(0),
-		WalletPin:      "123456",
-		SallerBalance:  decimal.NewFromInt(90000),
-	}).Error
+	accounts := []*model.Accounts{
+		{
+			Username:      "testing",
+			FullName:      "My Testing Account",
+			Email:         "testing@mail.com",
+			PhoneNumber:   "08982873823",
+			Password:      "$2a$14$ggRGSX9uKrEfapylGVadWee/P1yCOKduFFqnzNdq7U3ble5nxtNqC",
+			WalletNumber:  "4200000000001",
+			Gender:        "male",
+			ShopName:      "XYZ SHOP",
+			Birthdate:     time.Date(2000, 10, 10, 0, 0, 0, 0, time.UTC),
+			Balance:       decimal.NewFromInt(0),
+			WalletPin:     "123456",
+			SallerBalance: decimal.NewFromInt(90000),
+		},
+		{
+			Username:     "satoni",
+			FullName:     "Ahmad Satoni",
+			Email:        "satoni@mail.com",
+			PhoneNumber:  "089828738222",
+			Password:     "$2a$14$ggRGSX9uKrEfapylGVadWee/P1yCOKduFFqnzNdq7U3ble5nxtNqC",
+			WalletNumber: "4200000000002",
+			Gender:       "male",
+			Birthdate:    time.Date(1990, 10, 10, 0, 0, 0, 0, time.UTC),
+			Balance:      decimal.NewFromInt(0),
+		},
+		{
+			Username:      "satrianusa",
+			FullName:      "Satria Nusa",
+			Email:         "satria@mail.com",
+			PhoneNumber:   "089345433823",
+			Password:      "$2a$14$ggRGSX9uKrEfapylGVadWee/P1yCOKduFFqnzNdq7U3ble5nxtNqC",
+			WalletNumber:  "4200000000003",
+			Gender:        "male",
+			ShopName:      "Satria Shop",
+			Birthdate:     time.Date(2000, 10, 10, 0, 0, 0, 0, time.UTC),
+			Balance:       decimal.NewFromInt(0),
+			WalletPin:     "123456",
+			SallerBalance: decimal.NewFromInt(0),
+		},
+	}
+	err := db.Create(accounts).Error
 
 	if err != nil {
 		log.Println(err)
-		panic(err)
-	}
-
-	err = db.Create(&model.Accounts{
-		Username:       "satoni",
-		FullName:       "Ahmad Satoni",
-		Email:          "satoni@mail.com",
-		PhoneNumber:    "089828738222",
-		Password:       "$2a$14$ggRGSX9uKrEfapylGVadWee/P1yCOKduFFqnzNdq7U3ble5nxtNqC",
-		WalletNumber:   "4200000000002",
-		Gender:         "male",
-		Birthdate:      time.Date(1990, 10, 10, 0, 0, 0, 0, time.UTC),
-		Balance:        decimal.NewFromInt(0),
-	}).Error
-
-	if err != nil {
 		panic(err)
 	}
 
@@ -187,7 +201,7 @@ func seeding() {
 			InternalSKU:       "OAKO",
 			ViewCount:         0,
 			IsActive:          true,
-			SellerID:          1,
+			SellerID:          3,
 		},
 	}
 
@@ -417,6 +431,30 @@ func seeding() {
 		Type:           constant.SaleMoneyIncomeType,
 		Amount:         decimal.NewFromInt(90000),
 	}).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	accountCarts := []*model.AccountCarts{
+		{
+			AccountID:                            2,
+			ProductVariantSelectionCombinationId: 1,
+			Quantity:                             2,
+		},
+		{
+			AccountID:                            2,
+			ProductVariantSelectionCombinationId: 3,
+			Quantity:                             1,
+		},
+		{
+			AccountID:                            2,
+			ProductVariantSelectionCombinationId: 7,
+			Quantity:                             1,
+		},
+	}
+
+	err = db.Create(accountCarts).Error
 
 	if err != nil {
 		panic(err)
