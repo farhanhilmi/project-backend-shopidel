@@ -429,8 +429,8 @@ func seeding() {
 		{
 			AccountID: 2,
 			Province: "Banten",
-			District: "District 1",
-			SubDistrict: "Sub District 1",
+			District: "Jambi",
+			SubDistrict: "",
 			Kelurahan: "lurahan skuy living",
 			ZipCode: "15473",
 			Detail: "mambo jambo",
