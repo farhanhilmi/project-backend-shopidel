@@ -20,6 +20,7 @@ type ProductOrderUsecase interface {
 	ProcessedOrder(ctx context.Context, req dtousecase.ProductOrderRequest) (*dtousecase.ProductOrderResponse, error)
 	CheckoutOrder(ctx context.Context, req dtousecase.CheckoutOrderRequest) (*dtousecase.CheckoutOrderResponse, error)
 	CheckDeliveryFee(ctx context.Context, req dtousecase.CheckDeliveryFeeRequest) ([]dtousecase.DeliveryFeeResponse, error)
+	GetCouriers(ctx context.Context) ([]model.Couriers, error)
 }
 
 type productOrderUsecase struct {
@@ -248,6 +249,15 @@ func (u *productOrderUsecase) CheckDeliveryFee(ctx context.Context, req dtouseca
 	}
 
 	response, err := util.GetRajaOngkirCost(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+func (u *productOrderUsecase) GetCouriers(ctx context.Context) ([]model.Couriers, error) {
+	response, err := u.courierRepository.FindAll(ctx)
 	if err != nil {
 		return nil, err
 	}
