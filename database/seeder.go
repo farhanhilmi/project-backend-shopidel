@@ -36,7 +36,9 @@ func dropTable() {
 			product_orders,
 			sale_wallet_transaction_histories,
 			product_order_details,
-			couriers;
+			couriers,
+			account_addresses
+			;
 	`
 
 	err := db.Exec(sql).Error
@@ -70,6 +72,7 @@ func createTable() {
 		&model.ProductVariantSelectionCombinations{},
 		&model.ProductOrders{},
 		&model.ProductOrderDetails{},
+		&model.AccountAddress{},
 	)
 
 	if err != nil {
@@ -418,6 +421,41 @@ func seeding() {
 		AccountID:      1,
 		Type:           constant.SaleMoneyIncomeType,
 		Amount:         decimal.NewFromInt(90000),
+	}).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Create(&[]model.AccountAddress{
+		{
+			AccountID: 2,
+			Province: "Banten",
+			District: "District 1",
+			SubDistrict: "Sub District 1",
+			Kelurahan: "lurahan skuy living",
+			ZipCode: "15473",
+			Detail: "mambo jambo",
+		},
+		{
+			AccountID: 2,
+			Province: "Banten",
+			District: "District 2",
+			SubDistrict: "Sub District 2",
+			Kelurahan: "lurahan teranjay",
+			ZipCode: "14738",
+			Detail: "rujak cireng",
+			IsBuyerDefault: true,
+		},
+		{
+			AccountID: 2,
+			Province: "Banten",
+			District: "District 2",
+			SubDistrict: "Sub District 2",
+			Kelurahan: "lurahan skuy living",
+			ZipCode: "15405",
+			Detail: "es jambu",
+		},
 	}).Error
 
 	if err != nil {
