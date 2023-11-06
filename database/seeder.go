@@ -2,7 +2,6 @@ package database
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/config"
@@ -36,8 +35,9 @@ func dropTable() {
 			product_orders,
 			sale_wallet_transaction_histories,
 			product_order_details,
+			couriers,
 			account_addresses,
-			couriers;
+			account_carts;
 	`
 
 	err := db.Exec(sql).Error
@@ -72,6 +72,7 @@ func createTable() {
 		&model.ProductOrders{},
 		&model.ProductOrderDetails{},
 		&model.AccountAddress{},
+		&model.AccountCarts{},
 	)
 
 	if err != nil {
@@ -82,39 +83,48 @@ func createTable() {
 }
 
 func seeding() {
-	err := db.Create(&model.Accounts{
-		Username:       "testing",
-		FullName:       "My Testing Account",
-		Email:          "testing@mail.com",
-		PhoneNumber:    "08982873823",
-		Password:       "$2a$14$ggRGSX9uKrEfapylGVadWee/P1yCOKduFFqnzNdq7U3ble5nxtNqC",
-		WalletNumber:   "4200000000001",
-		Gender:         "male",
-		ShopName:       "XYZ SHOP",
-		Birthdate:      time.Date(2000, 10, 10, 0, 0, 0, 0, time.UTC),
-		ProfilePicture: "https://cdn4.iconfinder.com/data/icons/web-ui-color/128/Account-512.png",
-		Balance:        decimal.NewFromInt(0),
-		WalletPin:      "123456",
-		SallerBalance:  decimal.NewFromInt(90000),
-	}).Error
-
-	if err != nil {
-		log.Println(err)
-		panic(err)
+	accounts := []*model.Accounts{
+		{
+			Username:      "testing",
+			FullName:      "My Testing Account",
+			Email:         "testing@mail.com",
+			PhoneNumber:   "08982873823",
+			Password:      "$2a$14$ggRGSX9uKrEfapylGVadWee/P1yCOKduFFqnzNdq7U3ble5nxtNqC",
+			WalletNumber:  "4200000000001",
+			Gender:        "male",
+			ShopName:      "XYZ SHOP",
+			Birthdate:     time.Date(2000, 10, 10, 0, 0, 0, 0, time.UTC),
+			Balance:       decimal.NewFromInt(0),
+			WalletPin:     "123456",
+			SallerBalance: decimal.NewFromInt(90000),
+		},
+		{
+			Username:     "satoni",
+			FullName:     "Ahmad Satoni",
+			Email:        "satoni@mail.com",
+			PhoneNumber:  "089828738222",
+			Password:     "$2a$14$ggRGSX9uKrEfapylGVadWee/P1yCOKduFFqnzNdq7U3ble5nxtNqC",
+			WalletNumber: "4200000000002",
+			Gender:       "male",
+			Birthdate:    time.Date(1990, 10, 10, 0, 0, 0, 0, time.UTC),
+			Balance:      decimal.NewFromInt(0),
+		},
+		{
+			Username:      "satrianusa",
+			FullName:      "Satria Nusa",
+			Email:         "satria@mail.com",
+			PhoneNumber:   "089345433823",
+			Password:      "$2a$14$ggRGSX9uKrEfapylGVadWee/P1yCOKduFFqnzNdq7U3ble5nxtNqC",
+			WalletNumber:  "4200000000003",
+			Gender:        "male",
+			ShopName:      "Satria Shop",
+			Birthdate:     time.Date(2000, 10, 10, 0, 0, 0, 0, time.UTC),
+			Balance:       decimal.NewFromInt(0),
+			WalletPin:     "123456",
+			SallerBalance: decimal.NewFromInt(0),
+		},
 	}
-
-	err = db.Create(&model.Accounts{
-		Username:       "satoni",
-		FullName:       "Ahmad Satoni",
-		Email:          "satoni@mail.com",
-		PhoneNumber:    "089828738222",
-		Password:       "$2a$14$ggRGSX9uKrEfapylGVadWee/P1yCOKduFFqnzNdq7U3ble5nxtNqC",
-		WalletNumber:   "4200000000002",
-		Gender:         "male",
-		Birthdate:      time.Date(1990, 10, 10, 0, 0, 0, 0, time.UTC),
-		ProfilePicture: "https://cdn4.iconfinder.com/data/icons/web-ui-color/128/Account-512.png",
-		Balance:        decimal.NewFromInt(0),
-	}).Error
+	err := db.Create(accounts).Error
 
 	if err != nil {
 		panic(err)
@@ -191,7 +201,7 @@ func seeding() {
 			InternalSKU:       "OAKO",
 			ViewCount:         0,
 			IsActive:          true,
-			SellerID:          1,
+			SellerID:          3,
 		},
 	}
 
@@ -358,18 +368,15 @@ func seeding() {
 		panic(err)
 	}
 
-	err = db.Create(&model.Couriers{
-		Name:        "jne",
-		Description: "layanan JNE courier",
-	}).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(&model.Couriers{
-		Name:        "tiki",
-		Description: "layanan TIKI courier",
+	err = db.Create(&[]model.Couriers{
+		{
+			Name:        "jne",
+			Description: "layanan JNE courier",
+		},
+		{
+			Name:        "tiki",
+			Description: "layanan TIKI courier",
+		},
 	}).Error
 
 	if err != nil {
@@ -393,22 +400,19 @@ func seeding() {
 		panic(err)
 	}
 
-	err = db.Create(&model.ProductOrderDetails{
-		ProductOrderID:                       1,
-		ProductVariantSelectionCombinationID: 1,
-		Quantity:                             2,
-		IndividualPrice:                      decimal.NewFromInt(20000),
-	}).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(&model.ProductOrderDetails{
-		ProductOrderID:                       1,
-		ProductVariantSelectionCombinationID: 3,
-		Quantity:                             1,
-		IndividualPrice:                      decimal.NewFromInt(50000),
+	err = db.Create(&[]model.ProductOrderDetails{
+		{
+			ProductOrderID:                       1,
+			ProductVariantSelectionCombinationID: 1,
+			Quantity:                             2,
+			IndividualPrice:                      decimal.NewFromInt(20000),
+		},
+		{
+			ProductOrderID:                       1,
+			ProductVariantSelectionCombinationID: 3,
+			Quantity:                             1,
+			IndividualPrice:                      decimal.NewFromInt(50000),
+		},
 	}).Error
 
 	if err != nil {
@@ -426,17 +430,43 @@ func seeding() {
 		panic(err)
 	}
 
-	err = db.Create(&model.AccountAddress{
-		AccountID:            2,
-		Province:             "Jawa Barat",
-		District:             "Kabupaten Bandung",
-		SubDistrict:          "Bojongsoang",
-		Kelurahan:            "Sukapura",
-		ZipCode:              "40851",
-		Detail:               "Jl Telekomunikasi No 1 Bojongsoang",
-		RajaOngkirDistrictId: "1",
-		IsBuyerDefault:       true,
-		IsSellerDefault:      false,
+	err = db.Create(&[]model.AccountAddress{
+		{
+			AccountID:            2,
+			Province:             "DKI Jakarta",
+			District:             "Jakarta Selatan",
+			SubDistrict:          "Setiabudi",
+			Kelurahan:            "Setiabudi",
+			ZipCode:              "12230",
+			RajaOngkirDistrictId: "153",
+			Detail:               "Sopo Del Tower, Jalan Mega Kuningan Barat III Lot 10.1-6, RT.03/RW.03",
+			IsBuyerDefault:       true,
+			IsSellerDefault:      false,
+		},
+		{
+			AccountID:            2,
+			Province:             "DKI Jakarta",
+			District:             "Jakarta Timur",
+			SubDistrict:          "Jatinegara",
+			Kelurahan:            "Cipinang Besar Sel",
+			ZipCode:              "14738",
+			RajaOngkirDistrictId: "154",
+			Detail:               "Jl. Jend. Basuki Rachmat No.1A",
+			IsBuyerDefault:       true,
+			IsSellerDefault:      false,
+		},
+		{
+			AccountID:            1,
+			Province:             "DKI Jakarta",
+			District:             "Jakarta Barat",
+			SubDistrict:          "Kembangan",
+			Kelurahan:            "Lingkar Luar",
+			RajaOngkirDistrictId: "151",
+			ZipCode:              "11610",
+			Detail:               "Puri Mansion Estate, Jl. Puri",
+			IsBuyerDefault:       false,
+			IsSellerDefault:      true,
+		},
 	}).Error
 
 	if err != nil {
@@ -455,6 +485,25 @@ func seeding() {
 		IsBuyerDefault:       false,
 		IsSellerDefault:      true,
 	}).Error
+	accountCarts := []*model.AccountCarts{
+		{
+			AccountID:                            2,
+			ProductVariantSelectionCombinationId: 1,
+			Quantity:                             2,
+		},
+		{
+			AccountID:                            2,
+			ProductVariantSelectionCombinationId: 3,
+			Quantity:                             1,
+		},
+		{
+			AccountID:                            2,
+			ProductVariantSelectionCombinationId: 7,
+			Quantity:                             1,
+		},
+	}
+
+	err = db.Create(accountCarts).Error
 
 	if err != nil {
 		panic(err)

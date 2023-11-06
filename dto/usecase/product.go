@@ -33,20 +33,24 @@ type ProductResponse struct {
 }
 
 type GetProductDetailRequest struct {
-	ProductId  int
-	Variant1Id int
-	Variant2Id int
+	ProductId int
 }
 
 type GetProductDetailResponse struct {
-	Id          int              `json:"id"`
-	ProductName string           `json:"name"`
-	Description string           `json:"description"`
-	Stars       decimal.Decimal  `json:"stars"`
-	Sold        int              `json:"sold"`
-	Available   int              `json:"available"`
-	Images      []string         `json:"images"`
-	Variants    []ProductVariant `json:"variants,omitempty"`
+	Id             int              `json:"id"`
+	ProductName    string           `json:"name"`
+	Description    string           `json:"description"`
+	Stars          decimal.Decimal  `json:"stars"`
+	Sold           int              `json:"sold"`
+	Available      int              `json:"available"`
+	Images         []string         `json:"images"`
+	VariantOptions []VariantOption  `json:"variant_options,omitempty"`
+	Variants       []ProductVariant `json:"variants,omitempty"`
+}
+
+type VariantOption struct {
+	VariantOptionName string   `json:"variant_option_name"`
+	Childs            []string `json:"childs"`
 }
 
 type ProductVariant struct {
@@ -58,5 +62,6 @@ type ProductVariant struct {
 }
 
 type ProductSelection struct {
-	SelectionName string `json:"selection_name,omitempty"`
+	SelectionVariantName string `json:"selection_variant_name,omitempty"`
+	SelectionName        string `json:"selection_name,omitempty"`
 }
