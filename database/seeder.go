@@ -438,6 +438,7 @@ func seeding() {
 			SubDistrict: "Sub District 1",
 			Kelurahan: "lurahan skuy living",
 			ZipCode: "12230",
+			RajaOngkirDistrictId: "153",
 			Detail: "mambo jambo",
 		},
 		{
@@ -447,6 +448,7 @@ func seeding() {
 			SubDistrict: "Sub District 2",
 			Kelurahan: "lurahan teranjay",
 			ZipCode: "14738",
+			RajaOngkirDistrictId: "154",
 			Detail: "rujak cireng",
 			IsBuyerDefault: true,
 		},
@@ -456,11 +458,12 @@ func seeding() {
 			District: "Jakarta Barat",
 			SubDistrict: "Sub District 3",
 			Kelurahan: "lurahan skuy living",
+			RajaOngkirDistrictId: "151",
 			ZipCode: "15405",
 			Detail: "es jambu",
 		},
 	}).Error
-
+		
 	if err != nil {
 		panic(err)
 	}
