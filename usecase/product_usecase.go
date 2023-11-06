@@ -84,9 +84,9 @@ func (u *productUsecase) convertProductVariants(ctx context.Context, productName
 				pv.VariantName = pv.VariantName + ", " + data.SelectionName2
 			}
 
-			pv.Selections = append(pv.Selections, dtousecase.ProductSelection{SelectionName: data.SelectionName1})
+			pv.Selections = append(pv.Selections, dtousecase.ProductSelection{SelectionName: data.SelectionName1, SelectionVariantName: data.VariantName1})
 			if data.SelectionId2 != 0 {
-				pv.Selections = append(pv.Selections, dtousecase.ProductSelection{SelectionName: data.SelectionName2})
+				pv.Selections = append(pv.Selections, dtousecase.ProductSelection{SelectionName: data.SelectionName2, SelectionVariantName: data.VariantName2})
 			}
 		}
 

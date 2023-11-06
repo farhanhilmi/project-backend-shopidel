@@ -30,6 +30,7 @@ type AccountRepository interface {
 	UpdateAccountWithoutEmail(ctx context.Context, req dtorepository.EditAccountRequest) (*dtorepository.EditAccountResponse, error)
 	RefundBalance(ctx context.Context, tx *gorm.DB, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error)
 	DecreaseBalanceSellerWithTx(ctx context.Context, tx *gorm.DB, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error)
+	FindAccountCartItems(ctx context.Context, req dtorepository.GetAccountCartItemsRequest) (dtorepository.GetAccountCartItemsResponse, error)
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
@@ -391,4 +392,36 @@ func (r *accountRepository) Create(ctx context.Context, req dtorepository.Create
 	res.Username = a.Username
 
 	return res, err
+}
+
+func (r *accountRepository) FindAccountCartItems(ctx context.Context, req dtorepository.GetAccountCartItemsRequest) (dtorepository.GetAccountCartItemsResponse, error) {
+	res := dtorepository.GetAccountCartItemsResponse{}
+
+	q := `
+		select 
+			seller.id as "ShopId",
+			seller.shop_name as "ShopName",
+			pvsc.id as "ProductId",
+			pvsc.picture_url as "ProductUrl",
+			p."name" as "ProductName",
+			pvsc.price as "ProductPrice",
+			ac.quantity as "Quantity"
+		from account_carts ac 
+			left join product_variant_selection_combinations pvsc 
+				on pvsc.id = ac.product_variant_selection_combination_id 
+			left join products p 
+				on p.id = pvsc.product_id 
+			left join accounts seller
+				on seller.id = p.seller_id 
+		where ac.account_id = ?
+		order by seller.id asc
+	`
+
+	err := r.db.WithContext(ctx).Raw(q, req.AccountId).Scan(&res.CartItems).Error
+
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
 }

@@ -58,5 +58,6 @@ type ProductVariant struct {
 }
 
 type ProductSelection struct {
-	SelectionName string `json:"selection_name,omitempty"`
+	SelectionVariantName string `json:"selection_variant_name,omitempty"`
+	SelectionName        string `json:"selection_name,omitempty"`
 }

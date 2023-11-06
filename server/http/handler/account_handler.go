@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -57,7 +56,6 @@ func (h *AccountHandler) EditProfile(c *gin.Context) {
 	err := c.ShouldBindJSON(&req)
 
 	if err != nil {
-		fmt.Println(err)
 		c.Error(util.ErrInvalidInput)
 		return
 	}
@@ -279,4 +277,18 @@ func (h *AccountHandler) CreateAccount(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
+}
+
+func (h *AccountHandler) GetCart(c *gin.Context) {
+	uReq := dtousecase.GetCartRequest{
+		UserId: c.GetInt("userId"),
+	}
+
+	uRes, err := h.accountUsecase.GetCart(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes})
 }
