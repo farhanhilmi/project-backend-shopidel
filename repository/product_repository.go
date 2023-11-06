@@ -65,16 +65,22 @@ func (r *productRepository) FindProductVariant(ctx context.Context, req dtorepos
 			pvsc.id as "VariantId",
 			pvsc.product_variant_selection_id1 as "SelectionId1",
 			pvs."name" as "SelectionName1",
+			pv."name" as "VariantName1",
 			pvsc.product_variant_selection_id2 as "SelectionId2",
 			pvs2."name" as "SelectionName2",
+			pv2."name" as "VariantName2",
 			pvsc.price, 
 			pvsc.stock
 		from product_variant_selection_combinations pvsc
 		left join product_variant_selections pvs
-			on pvs.id = pvsc.product_variant_selection_id1 
+			on pvs.id = pvsc.product_variant_selection_id1
+		left join product_variants pv
+			on pv.id = pvs.product_variant_id
 		left join product_variant_selections pvs2 
 			on pvs2.id = pvsc.product_variant_selection_id2 
-		where product_id = ?
+		left join product_variants pv2
+			on pv2.id = pvs2.product_variant_id
+		where pvsc.product_id = ?
 		order by pvs.id asc, pvs2.id asc
 	`
 

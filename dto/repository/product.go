@@ -63,6 +63,8 @@ type ProductVariant struct {
 	SelectionId2   int
 	SelectionName1 string
 	SelectionName2 string
+	VariantName1   string
+	VariantName2   string
 	Price          decimal.Decimal
 	Stock          int
 }
