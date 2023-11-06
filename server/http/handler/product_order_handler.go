@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 
@@ -110,4 +111,30 @@ func (h *ProductOrderHandler) CheckoutOrder(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Successfully checkout order"})
+}
+
+func (h *ProductOrderHandler) CheckDeveliryFee(c *gin.Context) {
+	var req dtohttp.CheckDeliveryFeeRequest
+
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		log.Println(err)
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.CheckDeliveryFeeRequest{
+		Origin:      req.Origin,
+		Destination: req.Destination,
+		Weight:      req.Weight,
+		Courier:     req.Courier,
+	}
+
+	response, err := h.productOrderUsecase.CheckDeliveryFee(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
 }

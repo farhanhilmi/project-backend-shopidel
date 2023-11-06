@@ -30,12 +30,14 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 	productOrderRepo := repository.NewProductOrdersRepository(db)
 	productVariantCombinationRepo := repository.NewProductVariantCombinationRepository(db)
 	accountAddressRepo := repository.NewAccountAddressRepository(db)
+	courierRepo := repository.NewCourierRepository(db)
 
 	pouc := usecase.ProductOrderUsecaseConfig{
 		ProductOrderRepository:              productOrderRepo,
 		ProductVariantCombinationRepository: productVariantCombinationRepo,
 		AccountRepository:                   accountRepo,
 		AccountAddressRepository:            accountAddressRepo,
+		CourierRepository:                   courierRepo,
 	}
 	productRepo := repository.NewProductRepository(db)
 

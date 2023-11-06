@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
@@ -18,6 +19,7 @@ type ProductOrderUsecase interface {
 	CancelOrderBySeller(ctx context.Context, req dtousecase.ProductOrderRequest) (*dtousecase.ProductOrderResponse, error)
 	ProcessedOrder(ctx context.Context, req dtousecase.ProductOrderRequest) (*dtousecase.ProductOrderResponse, error)
 	CheckoutOrder(ctx context.Context, req dtousecase.CheckoutOrderRequest) (*dtousecase.CheckoutOrderResponse, error)
+	CheckDeliveryFee(ctx context.Context, req dtousecase.CheckDeliveryFeeRequest) ([]dtousecase.DeliveryFeeResponse, error)
 }
 
 type productOrderUsecase struct {
@@ -25,6 +27,7 @@ type productOrderUsecase struct {
 	productCombinationVariant repository.ProductVariantCombinationRepository
 	accountAddressRepository  repository.AccountAddressRepository
 	accountRepository         repository.AccountRepository
+	courierRepository         repository.CourierRepository
 }
 
 type ProductOrderUsecaseConfig struct {
@@ -32,6 +35,7 @@ type ProductOrderUsecaseConfig struct {
 	ProductVariantCombinationRepository repository.ProductVariantCombinationRepository
 	AccountAddressRepository            repository.AccountAddressRepository
 	AccountRepository                   repository.AccountRepository
+	CourierRepository                   repository.CourierRepository
 }
 
 func NewProductOrderUsecase(config ProductOrderUsecaseConfig) ProductOrderUsecase {
@@ -47,6 +51,9 @@ func NewProductOrderUsecase(config ProductOrderUsecaseConfig) ProductOrderUsecas
 	}
 	if config.AccountRepository != nil {
 		au.accountRepository = config.AccountRepository
+	}
+	if config.CourierRepository != nil {
+		au.courierRepository = config.CourierRepository
 	}
 
 	return au
@@ -229,4 +236,21 @@ func (u *productOrderUsecase) ProcessedOrder(ctx context.Context, req dtousecase
 		ID:     data.ID,
 		Status: data.Status,
 	}, nil
+}
+
+func (u *productOrderUsecase) CheckDeliveryFee(ctx context.Context, req dtousecase.CheckDeliveryFeeRequest) ([]dtousecase.DeliveryFeeResponse, error) {
+	_, err := u.courierRepository.FindByName(ctx, dtorepository.CourierData{Name: strings.ToLower(req.Courier)})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := util.GetRajaOngkirCost(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }

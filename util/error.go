@@ -50,4 +50,5 @@ var (
 	ErrInsufficientStock       = &CustomError{Message: "Insufficient product stock", Code: BadRequest}
 	ErrInsufficientBalance     = &CustomError{Message: "Your wallet balance is insufficient, please top up first to proceed with order checkout", Code: BadRequest}
 	ErrQtyInputZero            = &CustomError{Message: "Quantity must be minimum one", Code: BadRequest}
+	ErrCourierNotAvailable     = &CustomError{Message: "courier not found or not available", Code: BadRequest}
 )

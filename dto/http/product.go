@@ -28,3 +28,10 @@ type CategoryResponse struct {
 	ID   int    `json:"id"`
 	Name string `json:"name,omitempty"`
 }
+
+type CheckDeliveryFeeRequest struct {
+	Origin      string `json:"origin" binding:"required"`
+	Destination string `json:"destination" binding:"required"`
+	Weight      string `json:"weight" binding:"required"`
+	Courier     string `json:"courier" binding:"required"`
+}
