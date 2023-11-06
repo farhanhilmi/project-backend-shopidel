@@ -78,6 +78,7 @@ type GetAccountCartItemsResponse struct {
 type CartItem struct {
 	ShopId       int
 	ShopName     string
+	ProductId    int
 	ProductUrl   string
 	ProductName  string
 	ProductPrice decimal.Decimal

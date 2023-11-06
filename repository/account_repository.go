@@ -401,6 +401,7 @@ func (r *accountRepository) FindAccountCartItems(ctx context.Context, req dtorep
 		select 
 			seller.id as "ShopId",
 			seller.shop_name as "ShopName",
+			pvsc.id as "ProductId",
 			pvsc.picture_url as "ProductUrl",
 			p."name" as "ProductName",
 			pvsc.price as "ProductPrice",
