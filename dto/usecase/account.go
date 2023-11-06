@@ -127,6 +127,7 @@ type CartShop struct {
 }
 
 type CartItem struct {
+	ProductId         int             `json:"product_id"`
 	ProductImageUrl   string          `json:"product_image_url"`
 	ProductName       string          `json:"product_name"`
 	ProductUnitPrice  decimal.Decimal `json:"product_unit_price"`

@@ -427,6 +427,7 @@ func (u *accountUsecase) convertCartItems(ctx context.Context, rRes dtorepositor
 		}
 
 		ci := dtousecase.CartItem{}
+		ci.ProductId = data.ProductId
 		ci.ProductImageUrl = data.ProductUrl
 		ci.ProductName = data.ProductName
 		ci.ProductQuantity = data.Quantity
