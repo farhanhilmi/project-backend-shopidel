@@ -8,21 +8,22 @@ import (
 )
 
 type ProductOrderRequest struct {
-	ID              int
-	Province        string
-	District        string
-	SubDistrict     string
-	Kelurahan       string
-	ZipCode         string
-	AddressDetail   string
-	AccountID       int
-	SellerID        int
-	CourierID       int
-	Status          string
-	Notes           string
-	DeliveryFee     decimal.Decimal
-	TotalAmount     decimal.Decimal
-	ProductVariants []ProductOrderDetailRequest
+	ID                int
+	Province          string
+	District          string
+	SubDistrict       string
+	Kelurahan         string
+	ZipCode           string
+	AddressDetail     string
+	AccountID         int
+	SellerID          int
+	CourierID         int
+	Status            string
+	Notes             string
+	DeliveryFee       decimal.Decimal
+	TotalAmount       decimal.Decimal
+	TotalSellerAmount decimal.Decimal
+	ProductVariants   []ProductOrderDetailRequest
 }
 
 type ReceiveOrderRequest struct {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
@@ -60,7 +61,11 @@ func NewProductOrderUsecase(config ProductOrderUsecaseConfig) ProductOrderUsecas
 }
 
 func (u *productOrderUsecase) CheckoutOrder(ctx context.Context, req dtousecase.CheckoutOrderRequest) (*dtousecase.CheckoutOrderResponse, error) {
-	address, err := u.accountAddressRepository.FindBuyerAddressByID(ctx, dtorepository.AccountAddressRequest{ID: req.DestinationAddressID})
+	id, err := strconv.Atoi(req.DestinationAddressID)
+	if err != nil {
+		return nil, err
+	}
+	address, err := u.accountAddressRepository.FindBuyerAddressByID(ctx, dtorepository.AccountAddressRequest{ID: id})
 	if errors.Is(err, util.ErrNoRecordFound) {
 		return nil, util.ErrNoRecordFound
 	}
@@ -100,8 +105,35 @@ func (u *productOrderUsecase) CheckoutOrder(ctx context.Context, req dtousecase.
 		orderDetails = append(orderDetails, order)
 	}
 
-	// TODO: check delivery fee raja ongkir
-	deliveryFee := decimal.NewFromInt(30000)
+	sellerAccount, err := u.accountAddressRepository.FindSellerAddressByAccountID(ctx, dtorepository.AccountAddressRequest{
+		AccountID: req.SellerID,
+	})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	courier, err := u.courierRepository.FindById(ctx, dtorepository.CourierData{ID: req.CourierID})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+	courierFee, err := u.CheckDeliveryFee(ctx, dtousecase.CheckDeliveryFeeRequest{
+		ID:          req.CourierID,
+		Origin:      sellerAccount.RajaOngkirDistrictId,
+		Destination: req.DestinationAddressID,
+		Weight:      req.Weight,
+		Courier:     courier.Name,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	deliveryFee := decimal.NewFromInt(int64(courierFee.Cost))
 	totalPayment = totalPayment.Add(deliveryFee)
 
 	account, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{UserId: req.UserID})
@@ -118,20 +150,21 @@ func (u *productOrderUsecase) CheckoutOrder(ctx context.Context, req dtousecase.
 	}
 
 	orderRequest := dtorepository.ProductOrderRequest{
-		Province:        address.Province,
-		District:        address.District,
-		SubDistrict:     address.SubDistrict,
-		Kelurahan:       address.Kelurahan,
-		AddressDetail:   address.Detail,
-		ZipCode:         address.ZipCode,
-		AccountID:       req.UserID,
-		SellerID:        req.SellerID,
-		CourierID:       req.CourierID,
-		Status:          constant.StatusWaitingSellerConfirmation,
-		Notes:           req.Notes,
-		DeliveryFee:     deliveryFee,
-		TotalAmount:     totalPayment,
-		ProductVariants: orderDetails,
+		Province:          address.Province,
+		District:          address.District,
+		SubDistrict:       address.SubDistrict,
+		Kelurahan:         address.Kelurahan,
+		AddressDetail:     address.Detail,
+		ZipCode:           address.ZipCode,
+		AccountID:         req.UserID,
+		SellerID:          req.SellerID,
+		CourierID:         req.CourierID,
+		Status:            constant.StatusWaitingSellerConfirmation,
+		Notes:             req.Notes,
+		DeliveryFee:       deliveryFee,
+		TotalAmount:       totalPayment,
+		TotalSellerAmount: totalPayment.Sub(deliveryFee),
+		ProductVariants:   orderDetails,
 	}
 
 	order, err := u.productOrderRepository.Create(ctx, orderRequest)

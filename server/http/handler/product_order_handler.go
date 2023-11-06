@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
@@ -102,6 +101,7 @@ func (h *ProductOrderHandler) CheckoutOrder(c *gin.Context) {
 		CourierID:            req.CourierID,
 		Notes:                req.Notes,
 		SellerID:             req.SellerID,
+		Weight:               req.Weight,
 	}
 
 	_, err = h.productOrderUsecase.CheckoutOrder(c.Request.Context(), uReq)
@@ -118,7 +118,6 @@ func (h *ProductOrderHandler) CheckDeveliryFee(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		log.Println(err)
 		c.Error(util.ErrInvalidInput)
 		return
 	}

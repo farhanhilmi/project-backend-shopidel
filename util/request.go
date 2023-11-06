@@ -21,8 +21,7 @@ func GetRajaOngkirCost(reqData dtousecase.CheckDeliveryFeeRequest) ([]dtousecase
 	}
 	req, err := http.NewRequest("POST", fmt.Sprintf("%v/cost", config.GetEnv("RAJA_ONGKOR_ENDPOINT")), bytes.NewBufferString(formData.Encode()))
 	if err != nil {
-		fmt.Println("Error creating request:", err)
-		panic(err)
+		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")

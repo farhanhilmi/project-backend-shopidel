@@ -40,8 +40,9 @@ type ProductOrderReceiveResponse struct {
 type CheckoutOrderRequest struct {
 	SellerID             int                              `json:"seller_id" binding:"required"`
 	ProductVariant       []dtousecase.ProductVariantOrder `json:"product_variant" binding:"required"`
-	DestinationAddressID int                              `json:"destination_address_id" binding:"required"`
+	DestinationAddressID string                           `json:"destination_address_id" binding:"required"`
 	VoucherID            int                              `json:"voucher_id"`
 	Notes                string                           `json:"notes"`
+	Weight               string                           `json:"weight" binding:"required"`
 	CourierID            int                              `json:"courier_id" binding:"required"`
 }

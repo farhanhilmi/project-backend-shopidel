@@ -16,6 +16,7 @@ type accountAddressRepository struct {
 
 type AccountAddressRepository interface {
 	FindBuyerAddressByID(ctx context.Context, req dtorepository.AccountAddressRequest) (dtorepository.AccountAddressResponse, error)
+	FindSellerAddressByAccountID(ctx context.Context, req dtorepository.AccountAddressRequest) (dtorepository.AccountAddressResponse, error)
 }
 
 func NewAccountAddressRepository(db *gorm.DB) AccountAddressRepository {
@@ -28,7 +29,7 @@ func (r *accountAddressRepository) FindBuyerAddressByID(ctx context.Context, req
 	accountAddress := model.AccountAddress{}
 	res := dtorepository.AccountAddressResponse{}
 
-	err := r.db.WithContext(ctx).Where("id = ?", req.ID).First(&accountAddress).Error
+	err := r.db.WithContext(ctx).Where("id = ?", req.ID).Where("is_buyer_default is true").First(&accountAddress).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound
@@ -48,5 +49,34 @@ func (r *accountAddressRepository) FindBuyerAddressByID(ctx context.Context, req
 	res.Detail = accountAddress.Detail
 	res.IsBuyerDefault = accountAddress.IsBuyerDefault
 	res.IsSellerDefault = accountAddress.IsSellerDefault
+	res.RajaOngkirDistrictId = accountAddress.RajaOngkirDistrictId
+	return res, err
+}
+
+func (r *accountAddressRepository) FindSellerAddressByAccountID(ctx context.Context, req dtorepository.AccountAddressRequest) (dtorepository.AccountAddressResponse, error) {
+	accountAddress := model.AccountAddress{}
+	res := dtorepository.AccountAddressResponse{}
+
+	err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountID).Where("is_seller_default is true").First(&accountAddress).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+
+	if err != nil {
+		return res, err
+	}
+
+	res.ID = accountAddress.ID
+	res.AccountID = accountAddress.AccountID
+	res.Province = accountAddress.Province
+	res.SubDistrict = accountAddress.SubDistrict
+	res.District = accountAddress.District
+	res.Kelurahan = accountAddress.Kelurahan
+	res.ZipCode = accountAddress.ZipCode
+	res.Detail = accountAddress.Detail
+	res.IsBuyerDefault = accountAddress.IsBuyerDefault
+	res.IsSellerDefault = accountAddress.IsSellerDefault
+	res.RajaOngkirDistrictId = accountAddress.RajaOngkirDistrictId
 	return res, err
 }

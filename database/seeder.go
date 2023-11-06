@@ -443,5 +443,22 @@ func seeding() {
 		panic(err)
 	}
 
+	err = db.Create(&model.AccountAddress{
+		AccountID:            1,
+		Province:             "Jawa Barat",
+		District:             "Kabupaten Bandung",
+		SubDistrict:          "Bojongsoang",
+		Kelurahan:            "Sukapura",
+		ZipCode:              "40851",
+		Detail:               "Jl Telekomunikasi No 1 Bojongsoang",
+		RajaOngkirDistrictId: "10",
+		IsBuyerDefault:       false,
+		IsSellerDefault:      true,
+	}).Error
+
+	if err != nil {
+		panic(err)
+	}
+
 	fmt.Println("successfully seed tables")
 }

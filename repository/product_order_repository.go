@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"log"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -235,7 +234,7 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 		AddressDetail: req.AddressDetail,
 	}
 
-	err := tx.WithContext(ctx).Create(&a).Error
+	err := tx.WithContext(ctx).Create(&a).Scan(&res).Error
 	if err != nil {
 		tx.Rollback()
 		return res, err
@@ -245,7 +244,6 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 	productVariants := []model.ProductCombinationVariant{}
 
 	for _, o := range req.ProductVariants {
-		log.Println("O", o)
 		variant := model.ProductCombinationVariant{
 			ID:    o.ProductVariantSelectionCombinationID,
 			Stock: o.Quantity,
@@ -259,7 +257,6 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 		productVariants = append(productVariants, variant)
 		orderDetailReq = append(orderDetailReq, product)
 	}
-	log.Println("orderDetailReq", orderDetailReq)
 
 	_, err = r.productDetailRepository.CreateWithTx(ctx, tx, orderDetailReq)
 	if err != nil {
@@ -278,7 +275,7 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 	}
 	_, err = r.accountRepository.IncreaseBalanceSallerWithTx(ctx, tx, dtorepository.MyWalletRequest{
 		UserID:          req.AccountID,
-		Balance:         req.TotalAmount,
+		Balance:         req.TotalSellerAmount,
 		TransactionType: "Sale",
 	})
 	if err != nil {

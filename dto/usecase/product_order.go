@@ -40,12 +40,13 @@ type ProductVariantOrder struct {
 
 type CheckoutOrderRequest struct {
 	ProductVariant       []ProductVariantOrder
-	DestinationAddressID int
+	DestinationAddressID string
 	VoucherID            int
 	UserID               int
 	CourierID            int
 	SellerID             int
 	Notes                string
+	Weight               string
 }
 
 type CheckoutOrderResponse struct {

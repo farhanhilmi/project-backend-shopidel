@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"log"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -25,7 +24,6 @@ func NewProductOrderDetailRepository(db *gorm.DB) ProductOrderDetailRepository {
 
 func (r *productDetailRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, req []model.ProductOrderDetails) (dtorepository.ProductOrderDetailResponse, error) {
 	res := dtorepository.ProductOrderDetailResponse{}
-	log.Println("REQ", req)
 
 	err := tx.WithContext(ctx).CreateInBatches(&req, len(req)).Error
 
