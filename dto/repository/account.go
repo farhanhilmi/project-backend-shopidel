@@ -35,6 +35,7 @@ type GetAccountRequest struct {
 	UserId   int
 	Email    string
 	Username string
+	PhoneNumber string
 }
 
 type GetAccountResponse struct {

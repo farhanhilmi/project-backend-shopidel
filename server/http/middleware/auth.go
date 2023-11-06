@@ -6,6 +6,7 @@ import (
 
 	"strings"
 
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
 	"github.com/gin-gonic/gin"
@@ -44,6 +45,23 @@ func AuthenticateJWT() gin.HandlerFunc {
 			return
 		}
 		c.Set("userId", claims.UserId)
+		c.Set("role", claims.Role)
+		c.Next()
+	}
+}
+
+func IsRoleSeller() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if os.Getenv("ENV") == "testing" {
+			c.Next()
+			return
+		}
+		role := c.GetString("role")
+		if role != constant.SellerRole {
+			c.AbortWithStatusJSON(http.StatusForbidden, dtogeneral.JSONResponse{Message: "forbidden access"})
+			return
+		}
+
 		c.Next()
 	}
 }

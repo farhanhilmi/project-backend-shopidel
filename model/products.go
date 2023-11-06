@@ -11,6 +11,7 @@ type Products struct {
 	Name        string `gorm:"type:varchar;not null"`
 	Description string `gorm:"type:text;"`
 	CategoryID  int    `gorm:"foreignKey:CategoryID;type:bigint;not null"`
+	SellerID    int    `gorm:"foreignKey:SellerID;type:bigint;not null"`
 	Category    Category
 	// ProductImages     ProductImages
 	// ProductVideos     ProductVideos
@@ -85,4 +86,9 @@ type ProductVideos struct {
 	CreatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	UpdatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	DeletedAt time.Time `gorm:"type:timestamp;default:null"`
+}
+
+type ProductCombinationVariant struct {
+	ID    int `gorm:"serial"`
+	Stock int `gorm:"type:int;not null"`
 }

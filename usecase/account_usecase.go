@@ -57,7 +57,12 @@ func (u *accountUsecase) Login(ctx context.Context, req dtousecase.LoginRequest)
 		return nil, util.ErrInvalidPassword
 	}
 
-	token, err := util.GenerateJWT(userAccount.ID)
+	role := "buyer"
+	if userAccount.ShopName != "" {
+		role = "seller"
+	}
+
+	token, err := util.GenerateJWT(userAccount.ID, role)
 	if err != nil {
 		return nil, err
 	}
@@ -136,8 +141,27 @@ func (u *accountUsecase) EditProfile(ctx context.Context, req dtousecase.EditAcc
 		return &res, err
 	}
 
-	if strings.EqualFold(oldAccount.Email, req.Email) {
-		return &res, util.ErrSameEmail
+	usedUsername, err := u.accountRepository.FindByUsername(ctx, dtorepository.GetAccountRequest{
+		UserId: req.UserId,
+		Email: req.Email,
+		Username: req.Username,
+	})
+	if err != nil && !errors.Is(err, util.ErrNoRecordFound) {
+		return nil, err
+	}
+	if usedUsername.Username == req.Username {
+		return nil, util.ErrCantUseThisUsername
+	}
+
+	usedPhonenumber, err := u.accountRepository.FindByPhoneNumber(ctx, dtorepository.GetAccountRequest {
+		UserId: req.UserId,
+		PhoneNumber: req.PhoneNumber,
+	})
+	if err != nil && !errors.Is(err, util.ErrNoRecordFound) {
+		return nil, err
+	}
+	if usedPhonenumber.PhoneNumber == req.PhoneNumber {
+		return nil, util.ErrCantUseThisPhonenumber
 	}
 
 	usedEmail, err := u.usedEmailRepository.FindByEmail(ctx, dtorepository.UsedEmailRequest{Email: req.Email})
@@ -159,20 +183,27 @@ func (u *accountUsecase) EditProfile(ctx context.Context, req dtousecase.EditAcc
 		Birthdate:      req.Birthdate,
 		ProfilePicture: req.ProfilePicture,
 	}
-
-	userAccount, err := u.accountRepository.UpdateAccount(ctx, rReq)
-	if err != nil {
-		return &res, err
+	
+	if oldAccount.Email == req.Email {
+		_, err := u.accountRepository.UpdateAccountWithoutEmail(ctx, rReq)
+		if err != nil {
+			return &res, err
+		}
+	} else {
+		_, err = u.accountRepository.UpdateAccount(ctx, rReq)
+		if err != nil {
+			return &res, err
+		}
 	}
 
-	res.ID = userAccount.ID
-	res.FullName = userAccount.FullName
-	res.Username = userAccount.Username
-	res.Email = userAccount.Email
-	res.PhoneNumber = userAccount.PhoneNumber
-	res.Gender = userAccount.Gender
-	res.Birthdate = userAccount.Birthdate
-	res.ProfilePicture = userAccount.ProfilePicture
+	res.ID = rReq.UserId
+	res.FullName = rReq.FullName
+	res.Username = rReq.Username
+	res.Email = rReq.Email
+	res.PhoneNumber = rReq.PhoneNumber
+	res.Gender = rReq.Gender
+	res.Birthdate = rReq.Birthdate
+	res.ProfilePicture = rReq.ProfilePicture
 
 	return &res, nil
 }
@@ -192,6 +223,7 @@ func (u *accountUsecase) GetProfile(ctx context.Context, req dtousecase.GetAccou
 		return nil, err
 	}
 
+	res.ID = userAccount.ID
 	res.FullName = userAccount.FullName
 	res.Username = userAccount.Username
 	res.Email = userAccount.Email
@@ -325,6 +357,7 @@ func (u *accountUsecase) TopUpBalanceWallet(ctx context.Context, walletReq dtous
 	acc, err := u.accountRepository.TopUpWalletBalanceByID(ctx, dtorepository.TopUpWalletRequest{
 		UserID: walletReq.UserID,
 		Amount: walletReq.Amount,
+		Type:   "TOP UP",
 	})
 
 	if errors.Is(err, util.ErrNoRecordFound) {
