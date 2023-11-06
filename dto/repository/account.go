@@ -38,6 +38,10 @@ type GetAccountRequest struct {
 	PhoneNumber string
 }
 
+type AddressRequest struct {
+	UserId int
+}
+
 type GetAccountResponse struct {
 	ID                      int
 	FullName                string
@@ -83,4 +87,11 @@ type CartItem struct {
 	ProductName  string
 	ProductPrice decimal.Decimal
 	Quantity     int
+}
+
+type AddressResponse struct {
+	ID              int
+	FullAddress     string
+	IsBuyerDefault  bool
+	IsSellerDefault bool
 }

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -31,12 +32,41 @@ type AccountRepository interface {
 	RefundBalance(ctx context.Context, tx *gorm.DB, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error)
 	DecreaseBalanceSellerWithTx(ctx context.Context, tx *gorm.DB, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error)
 	FindAccountCartItems(ctx context.Context, req dtorepository.GetAccountCartItemsRequest) (dtorepository.GetAccountCartItemsResponse, error)
+	GetAddresses(ctx context.Context, req dtorepository.AddressRequest) (*[]dtorepository.AddressResponse, error)
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
 	return &accountRepository{
 		db: db,
 	}
+}
+
+func (r *accountRepository) GetAddresses(ctx context.Context, req dtorepository.AddressRequest) (*[]dtorepository.AddressResponse, error) {
+	res := []dtorepository.AddressResponse{}
+	addresses := []model.AccountAddress{}
+
+	err := r.db.WithContext(ctx).Find(&addresses).Where("account_id = ?", req.UserId).Error 
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return &res, util.ErrNoRecordFound
+	}
+
+	for _, address := range addresses {
+		convertedFullAddress := fmt.Sprintf("%s, %s, %s, %s, %s.",
+			address.Detail,
+			address.Kelurahan,
+			address.SubDistrict,
+			address.District,
+			address.Province,
+		)
+		res = append(res, dtorepository.AddressResponse{
+			ID: address.ID,
+			FullAddress: convertedFullAddress,
+			IsBuyerDefault: address.IsBuyerDefault,
+			IsSellerDefault: address.IsSellerDefault,
+		})
+	}
+
+	return &res, nil
 }
 
 func (r *accountRepository) UpdateAccount(ctx context.Context, req dtorepository.EditAccountRequest) (*dtorepository.EditAccountResponse, error) {

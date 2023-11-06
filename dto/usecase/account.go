@@ -80,6 +80,10 @@ type LoginRequest struct {
 	Password string
 }
 
+type AddressRequest struct {
+	UserId int
+}
+
 type GetAccountResponse struct {
 	ID                      int
 	FullName                string
@@ -133,4 +137,11 @@ type CartItem struct {
 	ProductUnitPrice  decimal.Decimal `json:"product_unit_price"`
 	ProductQuantity   int             `json:"product_quantity"`
 	ProductTotalPrice decimal.Decimal `json:"product_total_price"`
+}
+
+type AddressResponse struct {
+	ID              int
+	FullAddress     string
+	IsBuyerDefault  bool
+	IsSellerDefault bool
 }

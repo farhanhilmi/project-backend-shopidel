@@ -25,6 +25,7 @@ type AccountUsecase interface {
 	Login(ctx context.Context, req dtousecase.LoginRequest) (*dtousecase.LoginResponse, error)
 	TopUpBalanceWallet(ctx context.Context, walletReq dtousecase.TopUpBalanceWalletRequest) (*dtousecase.TopUpBalanceWalletResponse, error)
 	GetCart(ctx context.Context, req dtousecase.GetCartRequest) (dtousecase.GetCartResponse, error)
+	GetAddresses(ctx context.Context, req dtousecase.AddressRequest) (*[]dtousecase.AddressResponse, error)
 }
 
 type accountUsecase struct {
@@ -45,6 +46,29 @@ func NewAccountUsecase(config AccountUsecaseConfig) AccountUsecase {
 	}
 
 	return au
+}
+
+func (u *accountUsecase) GetAddresses(ctx context.Context, req dtousecase.AddressRequest) (*[]dtousecase.AddressResponse, error) {
+	res := []dtousecase.AddressResponse{}
+
+	rReq := dtorepository.AddressRequest {
+		UserId: req.UserId,
+	}
+	addresses, err := u.accountRepository.GetAddresses(ctx, rReq)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, data := range *addresses {
+		res = append(res, dtousecase.AddressResponse{
+			ID: data.ID,
+			FullAddress: data.FullAddress,
+			IsBuyerDefault: data.IsBuyerDefault,
+			IsSellerDefault: data.IsSellerDefault,
+		})
+	}
+
+	return &res, nil
 }
 
 func (u *accountUsecase) Login(ctx context.Context, req dtousecase.LoginRequest) (*dtousecase.LoginResponse, error) {

@@ -42,6 +42,10 @@ type LoginRequest struct {
 	Password string `json:"password" validate:"required"`
 }
 
+type AddressRequest struct {
+	UserId int `json:"id"`
+}
+
 type GetAccountResponse struct {
 	ID                      int             `json:"id"`
 	FullName                string          `json:"full_name,omitempty"`
@@ -72,4 +76,11 @@ type EditAccountResponse struct {
 
 type CheckPasswordResponse struct {
 	IsCorrect bool `json:"isCorrect"`
+}
+
+type AddressResponse struct {
+	ID              int    `json:"id"`
+	FullAddress     string `json:"full_address"`
+	IsBuyerDefault  bool `json:"is_buyer_default"`
+	IsSellerDefault bool `json:"is_seller_default"`
 }
