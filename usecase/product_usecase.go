@@ -132,14 +132,10 @@ func (u *productUsecase) convertVariantOptions(ctx context.Context, req dtorepos
 	}
 
 	for key, value := range m {
-		vos := []dtousecase.VariantOptionChild{}
+		vos := []string{}
 
 		for key2 := range value {
-			vo := dtousecase.VariantOptionChild{
-				ChildName: key2,
-			}
-
-			vos = append(vos, vo)
+			vos = append(vos, key2)
 		}
 
 		res = append(res, dtousecase.VariantOption{
