@@ -2,7 +2,6 @@ package database
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/config"
@@ -37,6 +36,7 @@ func dropTable() {
 			sale_wallet_transaction_histories,
 			product_order_details,
 			couriers,
+			account_addresses,
 			account_carts;
 	`
 
@@ -71,6 +71,7 @@ func createTable() {
 		&model.ProductVariantSelectionCombinations{},
 		&model.ProductOrders{},
 		&model.ProductOrderDetails{},
+		&model.AccountAddress{},
 		&model.AccountCarts{},
 	)
 
@@ -126,7 +127,6 @@ func seeding() {
 	err := db.Create(accounts).Error
 
 	if err != nil {
-		log.Println(err)
 		panic(err)
 	}
 
@@ -368,18 +368,15 @@ func seeding() {
 		panic(err)
 	}
 
-	err = db.Create(&model.Couriers{
-		Name:        "jne",
-		Description: "layanan JNE courier",
-	}).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(&model.Couriers{
-		Name:        "tiki",
-		Description: "layanan TIKI courier",
+	err = db.Create(&[]model.Couriers{
+		{
+			Name:        "jne",
+			Description: "layanan JNE courier",
+		},
+		{
+			Name:        "tiki",
+			Description: "layanan TIKI courier",
+		},
 	}).Error
 
 	if err != nil {
@@ -403,22 +400,19 @@ func seeding() {
 		panic(err)
 	}
 
-	err = db.Create(&model.ProductOrderDetails{
-		ProductOrderID:                       1,
-		ProductVariantSelectionCombinationID: 1,
-		Quantity:                             2,
-		IndividualPrice:                      decimal.NewFromInt(20000),
-	}).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(&model.ProductOrderDetails{
-		ProductOrderID:                       1,
-		ProductVariantSelectionCombinationID: 3,
-		Quantity:                             1,
-		IndividualPrice:                      decimal.NewFromInt(50000),
+	err = db.Create(&[]model.ProductOrderDetails{
+		{
+			ProductOrderID:                       1,
+			ProductVariantSelectionCombinationID: 1,
+			Quantity:                             2,
+			IndividualPrice:                      decimal.NewFromInt(20000),
+		},
+		{
+			ProductOrderID:                       1,
+			ProductVariantSelectionCombinationID: 3,
+			Quantity:                             1,
+			IndividualPrice:                      decimal.NewFromInt(50000),
+		},
 	}).Error
 
 	if err != nil {
@@ -432,6 +426,44 @@ func seeding() {
 		Amount:         decimal.NewFromInt(90000),
 	}).Error
 
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Create(&[]model.AccountAddress{
+		{
+			AccountID: 2,
+			Province: "DKI Jakarta",
+			District: "Jakarta Selatan",
+			SubDistrict: "Sub District 1",
+			Kelurahan: "lurahan skuy living",
+			ZipCode: "12230",
+			RajaOngkirDistrictId: "153",
+			Detail: "mambo jambo",
+		},
+		{
+			AccountID: 2,
+			Province: "DKI Jakarta",
+			District: "Jakarta Timur",
+			SubDistrict: "Sub District 2",
+			Kelurahan: "lurahan teranjay",
+			ZipCode: "14738",
+			RajaOngkirDistrictId: "154",
+			Detail: "rujak cireng",
+			IsBuyerDefault: true,
+		},
+		{
+			AccountID: 2,
+			Province: "DKI Jakarta",
+			District: "Jakarta Barat",
+			SubDistrict: "Sub District 3",
+			Kelurahan: "lurahan skuy living",
+			RajaOngkirDistrictId: "151",
+			ZipCode: "15405",
+			Detail: "es jambu",
+		},
+	}).Error
+		
 	if err != nil {
 		panic(err)
 	}
