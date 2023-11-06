@@ -49,12 +49,8 @@ type GetProductDetailResponse struct {
 }
 
 type VariantOption struct {
-	VariantOptionName string               `json:"variant_option_name"`
-	Childs            []VariantOptionChild `json:"childs"`
-}
-
-type VariantOptionChild struct {
-	ChildName string `json:"child_name"`
+	VariantOptionName string   `json:"variant_option_name"`
+	Childs            []string `json:"childs"`
 }
 
 type ProductVariant struct {
