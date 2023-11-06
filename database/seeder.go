@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/config"
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
 	"github.com/shopspring/decimal"
 )
@@ -31,7 +32,11 @@ func dropTable() {
 			product_videos,
 			products,
 			used_emails,
-			MyWalletTransactionHistories;
+			MyWalletTransactionHistories,
+			product_orders,
+			sale_wallet_transaction_histories,
+			product_order_details,
+			couriers;
 	`
 
 	err := db.Exec(sql).Error
@@ -54,6 +59,17 @@ func createTable() {
 		&model.ProductVariantSelections{},
 		&model.ProductVariantSelectionCombinations{},
 		&model.MyWalletTransactionHistories{},
+		&model.SaleWalletTransactionHistories{},
+		&model.Couriers{},
+		&model.Category{},
+		&model.Products{},
+		&model.ProductImages{},
+		&model.ProductVideos{},
+		&model.ProductVariants{},
+		&model.ProductVariantSelections{},
+		&model.ProductVariantSelectionCombinations{},
+		&model.ProductOrders{},
+		&model.ProductOrderDetails{},
 	)
 
 	if err != nil {
@@ -70,12 +86,14 @@ func seeding() {
 		Email:          "testing@mail.com",
 		PhoneNumber:    "08982873823",
 		Password:       "$2a$14$ggRGSX9uKrEfapylGVadWee/P1yCOKduFFqnzNdq7U3ble5nxtNqC",
-		WalletNumber:   "7770000000001",
+		WalletNumber:   "4200000000001",
 		Gender:         "male",
+		ShopName:       "XYZ SHOP",
 		Birthdate:      time.Date(2000, 10, 10, 0, 0, 0, 0, time.UTC),
 		ProfilePicture: "https://cdn4.iconfinder.com/data/icons/web-ui-color/128/Account-512.png",
 		Balance:        decimal.NewFromInt(0),
 		WalletPin:      "123456",
+		SallerBalance:  decimal.NewFromInt(90000),
 	}).Error
 
 	if err != nil {
@@ -89,7 +107,7 @@ func seeding() {
 		Email:          "satoni@mail.com",
 		PhoneNumber:    "089828738222",
 		Password:       "$2a$14$ggRGSX9uKrEfapylGVadWee/P1yCOKduFFqnzNdq7U3ble5nxtNqC",
-		WalletNumber:   "7770000000002",
+		WalletNumber:   "4200000000002",
 		Gender:         "male",
 		Birthdate:      time.Date(1990, 10, 10, 0, 0, 0, 0, time.UTC),
 		ProfilePicture: "https://cdn4.iconfinder.com/data/icons/web-ui-color/128/Account-512.png",
@@ -145,6 +163,7 @@ func seeding() {
 			InternalSKU:       "OAKO OEasEF",
 			ViewCount:         0,
 			IsActive:          true,
+			SellerID:          1,
 		},
 		{
 			Name:              "Schneider Electric Leona Saklar Lampu - 2 Gang 2 Arah - LNA0600321",
@@ -157,6 +176,7 @@ func seeding() {
 			InternalSKU:       "OAKO OEKFOEF",
 			ViewCount:         0,
 			IsActive:          true,
+			SellerID:          1,
 		},
 		{
 			Name:              "Magsafe 2 Charger macbook 45w l 60w AIR l PRO - 45W",
@@ -169,6 +189,7 @@ func seeding() {
 			InternalSKU:       "OAKO",
 			ViewCount:         0,
 			IsActive:          true,
+			SellerID:          1,
 		},
 	}
 
@@ -330,6 +351,74 @@ func seeding() {
 	}
 
 	err = db.Create(productVariantSelectionCombinations).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Create(&model.Couriers{
+		Name:        "jne",
+		Description: "layanan JNE courier",
+	}).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Create(&model.Couriers{
+		Name:        "tiki",
+		Description: "layanan TIKI courier",
+	}).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Create(&model.ProductOrders{
+		CourierID:     1,
+		AccountID:     2,
+		DeliveryFee:   decimal.NewFromInt(15000),
+		Province:      "Jawa Barat",
+		District:      "Kabupaten Bandung",
+		SubDistrict:   "Bojongsoang",
+		Kelurahan:     "Sukapura",
+		ZipCode:       "40851",
+		AddressDetail: "Jl Telekomunikasi No 1 Bojongsoang",
+		Status:        constant.StatusWaitingSellerConfirmation,
+	}).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Create(&model.ProductOrderDetails{
+		ProductOrderID:                       1,
+		ProductVariantSelectionCombinationID: 1,
+		Quantity:                             2,
+		IndividualPrice:                      decimal.NewFromInt(20000),
+	}).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Create(&model.ProductOrderDetails{
+		ProductOrderID:                       1,
+		ProductVariantSelectionCombinationID: 3,
+		Quantity:                             1,
+		IndividualPrice:                      decimal.NewFromInt(50000),
+	}).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Create(&model.SaleWalletTransactionHistories{
+		ProductOrderID: 1,
+		AccountID:      1,
+		Type:           constant.SaleMoneyIncomeType,
+		Amount:         decimal.NewFromInt(90000),
+	}).Error
 
 	if err != nil {
 		panic(err)

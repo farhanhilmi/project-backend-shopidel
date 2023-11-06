@@ -15,6 +15,7 @@ type accountRepository struct {
 	db                         *gorm.DB
 	usedEmailRepo              usedEmailRepository
 	walletTransactionHistories walletTransactionHistoryRepository
+	saleTransactionHistories   saleWalletTransactionHistoryRepository
 }
 type AccountRepository interface {
 	ActivateWalletByID(ctx context.Context, userId int, walletPin string) (model.Accounts, error)
@@ -25,6 +26,8 @@ type AccountRepository interface {
 	FindByEmail(ctx context.Context, req dtorepository.GetAccountRequest) (dtorepository.GetAccountResponse, error)
 	TopUpWalletBalanceByID(ctx context.Context, req dtorepository.TopUpWalletRequest) (dtorepository.WalletResponse, error)
 	FindByUsername(ctx context.Context, req dtorepository.GetAccountRequest) (dtorepository.GetAccountResponse, error)
+	RefundBalance(ctx context.Context, tx *gorm.DB, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error)
+	DecreaseBalanceSellerWithTx(ctx context.Context, tx *gorm.DB, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error)
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
@@ -121,6 +124,70 @@ func (r *accountRepository) UpdateWalletPINByID(ctx context.Context, req dtorepo
 	}, nil
 }
 
+func (r *accountRepository) RefundBalance(ctx context.Context, tx *gorm.DB, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error) {
+	account := model.Accounts{}
+
+	err := tx.WithContext(ctx).Clauses(clause.Locking{
+		Strength: "UPDATE",
+		Table: clause.Table{
+			Name: clause.CurrentTable,
+		}}).Model(&account).Where("id = ?", req.UserID).Update("balance", gorm.Expr("balance + ?", req.Balance)).Error
+
+	if err != nil {
+		tx.Rollback()
+		return dtorepository.WalletResponse{}, err
+	}
+
+	_, err = r.walletTransactionHistories.CreateWithTx(ctx, tx, dtorepository.MyWalletTransactionHistoriesRequest{
+		AccountID: req.UserID,
+		Amount:    req.Balance,
+		Type:      "Refund",
+	})
+
+	if err != nil {
+		tx.Rollback()
+		return dtorepository.WalletResponse{}, err
+	}
+
+	return dtorepository.WalletResponse{
+		UserID:       account.ID,
+		WalletNumber: account.WalletNumber,
+		Balance:      account.Balance,
+	}, nil
+}
+
+func (r *accountRepository) DecreaseBalanceSellerWithTx(ctx context.Context, tx *gorm.DB, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error) {
+	account := model.Accounts{}
+
+	err := tx.WithContext(ctx).Clauses(clause.Locking{
+		Strength: "UPDATE",
+		Table: clause.Table{
+			Name: clause.CurrentTable,
+		}}).Model(&account).Where("id = ?", req.UserID).Update("saller_balance", gorm.Expr("saller_balance - ?", req.Balance)).Error
+
+	if err != nil {
+		tx.Rollback()
+		return dtorepository.WalletResponse{}, err
+	}
+
+	_, err = r.saleTransactionHistories.CreateWithTx(ctx, tx, dtorepository.SaleWalletTransactionHistoriesRequest{
+		AccountID: req.UserID,
+		Amount:    req.Balance.Neg(),
+		Type:      "Refund",
+	})
+
+	if err != nil {
+		tx.Rollback()
+		return dtorepository.WalletResponse{}, err
+	}
+
+	return dtorepository.WalletResponse{
+		UserID:       account.ID,
+		WalletNumber: account.WalletNumber,
+		Balance:      account.Balance,
+	}, nil
+}
+
 func (r *accountRepository) TopUpWalletBalanceByID(ctx context.Context, req dtorepository.TopUpWalletRequest) (dtorepository.WalletResponse, error) {
 	account := model.Accounts{}
 	tx := r.db.Begin()
@@ -139,7 +206,7 @@ func (r *accountRepository) TopUpWalletBalanceByID(ctx context.Context, req dtor
 	_, err = r.walletTransactionHistories.CreateWithTx(ctx, tx, dtorepository.MyWalletTransactionHistoriesRequest{
 		AccountID: req.UserID,
 		Amount:    req.Amount,
-		Type:      "TOP UP",
+		Type:      req.Type,
 	})
 
 	if err != nil {
@@ -206,6 +273,7 @@ func (r *accountRepository) FindByEmail(ctx context.Context, req dtorepository.G
 	res.Password = account.Password
 	res.WalletPin = account.WalletPin
 	res.ID = account.ID
+	res.ShopName = account.ShopName
 	res.ForgetPasswordExpiredAt = account.ForgetPasswordExpiredAt
 	res.ForgetPasswordToken = account.ForgetPasswordToken
 

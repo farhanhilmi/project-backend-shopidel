@@ -57,7 +57,12 @@ func (u *accountUsecase) Login(ctx context.Context, req dtousecase.LoginRequest)
 		return nil, util.ErrInvalidPassword
 	}
 
-	token, err := util.GenerateJWT(userAccount.ID)
+	role := "buyer"
+	if userAccount.ShopName != "" {
+		role = "seller"
+	}
+
+	token, err := util.GenerateJWT(userAccount.ID, role)
 	if err != nil {
 		return nil, err
 	}
@@ -325,6 +330,7 @@ func (u *accountUsecase) TopUpBalanceWallet(ctx context.Context, walletReq dtous
 	acc, err := u.accountRepository.TopUpWalletBalanceByID(ctx, dtorepository.TopUpWalletRequest{
 		UserID: walletReq.UserID,
 		Amount: walletReq.Amount,
+		Type:   "TOP UP",
 	})
 
 	if errors.Is(err, util.ErrNoRecordFound) {
