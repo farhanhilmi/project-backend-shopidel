@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -57,7 +56,6 @@ func (h *AccountHandler) EditProfile(c *gin.Context) {
 	err := c.ShouldBindJSON(&req)
 
 	if err != nil {
-		fmt.Println(err)
 		c.Error(util.ErrInvalidInput)
 		return
 	}
