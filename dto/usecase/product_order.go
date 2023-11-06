@@ -58,8 +58,15 @@ type CheckoutOrderResponse struct {
 }
 
 type CheckDeliveryFeeRequest struct {
-	Origin      string `json:"origin"`
-	Destination string `json:"destination"`
+	ID          int    `json:"id"`
+	Origin      string `json:"origin" binding:"required"`
+	Destination string `json:"destination" binding:"required"`
 	Weight      string `json:"weight" binding:"required"`
 	Courier     string `json:"courier" binding:"required"`
+}
+
+type CourierFeeResponse struct {
+	Cost      int    `json:"cost"`
+	Estimated string `json:"estimated"`
+	Note      string `json:"note"`
 }

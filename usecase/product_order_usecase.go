@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
@@ -19,7 +18,7 @@ type ProductOrderUsecase interface {
 	CancelOrderBySeller(ctx context.Context, req dtousecase.ProductOrderRequest) (*dtousecase.ProductOrderResponse, error)
 	ProcessedOrder(ctx context.Context, req dtousecase.ProductOrderRequest) (*dtousecase.ProductOrderResponse, error)
 	CheckoutOrder(ctx context.Context, req dtousecase.CheckoutOrderRequest) (*dtousecase.CheckoutOrderResponse, error)
-	CheckDeliveryFee(ctx context.Context, req dtousecase.CheckDeliveryFeeRequest) ([]dtousecase.DeliveryFeeResponse, error)
+	CheckDeliveryFee(ctx context.Context, req dtousecase.CheckDeliveryFeeRequest) (*dtousecase.CourierFeeResponse, error)
 	GetCouriers(ctx context.Context) ([]model.Couriers, error)
 }
 
@@ -239,8 +238,8 @@ func (u *productOrderUsecase) ProcessedOrder(ctx context.Context, req dtousecase
 	}, nil
 }
 
-func (u *productOrderUsecase) CheckDeliveryFee(ctx context.Context, req dtousecase.CheckDeliveryFeeRequest) ([]dtousecase.DeliveryFeeResponse, error) {
-	_, err := u.courierRepository.FindByName(ctx, dtorepository.CourierData{Name: strings.ToLower(req.Courier)})
+func (u *productOrderUsecase) CheckDeliveryFee(ctx context.Context, req dtousecase.CheckDeliveryFeeRequest) (*dtousecase.CourierFeeResponse, error) {
+	courier, err := u.courierRepository.FindById(ctx, dtorepository.CourierData{ID: req.ID})
 	if errors.Is(err, util.ErrNoRecordFound) {
 		return nil, err
 	}
@@ -248,12 +247,27 @@ func (u *productOrderUsecase) CheckDeliveryFee(ctx context.Context, req dtouseca
 		return nil, err
 	}
 
+	req.Courier = courier.Name
 	response, err := util.GetRajaOngkirCost(req)
 	if err != nil {
 		return nil, err
 	}
 
-	return response, nil
+	courierRes := dtousecase.CourierFeeResponse{}
+
+	for _, r := range response {
+		for _, c := range r.Costs {
+			if c.Service == "REG" {
+				courierRes = dtousecase.CourierFeeResponse{
+					Cost:      c.Cost[0].Value,
+					Estimated: c.Cost[0].Etd,
+					Note:      c.Cost[0].Note,
+				}
+			}
+		}
+	}
+
+	return &courierRes, nil
 }
 
 func (u *productOrderUsecase) GetCouriers(ctx context.Context) ([]model.Couriers, error) {

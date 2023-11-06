@@ -17,6 +17,7 @@ type courierRepository struct {
 type CourierRepository interface {
 	FindByName(ctx context.Context, req dtorepository.CourierData) (dtorepository.CourierData, error)
 	FindAll(ctx context.Context) ([]model.Couriers, error)
+	FindById(ctx context.Context, req dtorepository.CourierData) (dtorepository.CourierData, error)
 }
 
 func NewCourierRepository(db *gorm.DB) CourierRepository {
@@ -30,6 +31,29 @@ func (r *courierRepository) FindByName(ctx context.Context, req dtorepository.Co
 	res := dtorepository.CourierData{}
 
 	err := r.db.WithContext(ctx).Where("name = ?", req.Name).First(&courier).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
+	}
+
+	res.ID = courier.ID
+	res.Name = courier.Name
+	res.Description = courier.Description
+	res.CreatedAt = courier.CreatedAt
+	res.DeletedAt = courier.DeletedAt
+	res.UpdatedAt = courier.UpdatedAt
+
+	return res, nil
+}
+
+func (r *courierRepository) FindById(ctx context.Context, req dtorepository.CourierData) (dtorepository.CourierData, error) {
+	courier := model.Couriers{}
+	res := dtorepository.CourierData{}
+
+	err := r.db.WithContext(ctx).Where("id = ?", req.ID).First(&courier).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound
