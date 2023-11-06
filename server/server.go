@@ -26,15 +26,21 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 
 	accountRepo := repository.NewAccountRepository(db)
 	usedEmailRepo := repository.NewUsedEmailRepository(db)
+	productRepo := repository.NewProductRepository(db)
 
 	auc := usecase.AccountUsecaseConfig{
 		AccountRepository:   accountRepo,
 		UsedEmailRepository: usedEmailRepo,
 	}
+	puc := usecase.ProductUsecaseConfig{
+		ProductRepository: productRepo,
+	}
 
+	productUsecase := usecase.NewProductUsecase(puc)
 	accountUsecase := usecase.NewAccountUsecase(auc)
 
 	accountHandler := handler.NewAccountHandler(accountUsecase)
+	productHandler := handler.NewProductHandler(productUsecase)
 
 	configCors := cors.DefaultConfig()
 	configCors.AllowAllOrigins = true
@@ -45,6 +51,7 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 	router.NewAccountRouter(accountHandler, gin)
 	router.NewPingRouter(gin)
 	router.NewAuthRouter(accountHandler, gin)
+	router.NewProductRouter(productHandler, gin)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", config.GetEnv("PORT")),
