@@ -444,6 +444,7 @@ func seeding() {
 			RajaOngkirDistrictId: "153",
 			Detail:               "Sopo Del Tower, Jalan Mega Kuningan Barat III Lot 10.1-6, RT.03/RW.03",
 			IsBuyerDefault:       true,
+			IsSellerDefault:      false,
 		},
 		{
 			AccountID:            2,
@@ -464,6 +465,20 @@ func seeding() {
 			RajaOngkirDistrictId: "151",
 			ZipCode:              "11610",
 			Detail:               "Puri Mansion Estate, Jl. Puri",
+			IsBuyerDefault:       false,
+			IsSellerDefault:      true,
+		},
+		{
+			AccountID:            1,
+			Province:             "Jawa Barat",
+			District:             "Kabupaten Bandung",
+			SubDistrict:          "Bojongsoang",
+			Kelurahan:            "Sukapura",
+			ZipCode:              "40851",
+			Detail:               "Jl Telekomunikasi No 1 Bojongsoang",
+			RajaOngkirDistrictId: "10",
+			IsBuyerDefault:       false,
+			IsSellerDefault:      true,
 		},
 	}).Error
 

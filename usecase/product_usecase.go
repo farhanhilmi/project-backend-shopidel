@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
@@ -58,17 +57,23 @@ func (u *productUsecase) GetProductDetail(ctx context.Context, req dtousecase.Ge
 		return res, err
 	}
 
+	options, err := u.convertVariantOptions(ctx, rRes2)
+	if err != nil {
+		return res, err
+	}
+
 	res.Id = rRes.ID
 	res.ProductName = rRes.Name
 	res.Description = rRes.Description
 	res.Variants = variants
+	res.VariantOptions = options
 
 	return res, nil
 }
 
 func (u *productUsecase) convertProductVariants(ctx context.Context, productName string, req dtorepository.FindProductVariantResponse) ([]dtousecase.ProductVariant, error) {
 	res := []dtousecase.ProductVariant{}
-	fmt.Println(req)
+
 	for _, data := range req.Variants {
 		pv := dtousecase.ProductVariant{}
 		pv.VariantId = data.VariantId
@@ -92,6 +97,52 @@ func (u *productUsecase) convertProductVariants(ctx context.Context, productName
 
 		res = append(res, pv)
 	}
-	fmt.Println(res)
+
+	return res, nil
+}
+
+func (u *productUsecase) convertVariantOptions(ctx context.Context, req dtorepository.FindProductVariantResponse) ([]dtousecase.VariantOption, error) {
+	res := []dtousecase.VariantOption{}
+	m := map[string]map[string]string{}
+
+	for _, data := range req.Variants {
+		if data.SelectionName1 != "default_reserved_keyword" {
+			if m[data.VariantName1] != nil {
+				if m[data.VariantName1][data.SelectionName1] == "" {
+					m[data.VariantName1][data.SelectionName1] = data.SelectionName1
+				}
+			} else {
+				m[data.VariantName1] = map[string]string{
+					data.SelectionName1: data.SelectionName1,
+				}
+			}
+
+			if data.SelectionId2 != 0 {
+				if m[data.VariantName2] != nil {
+					if m[data.VariantName2][data.SelectionName2] == "" {
+						m[data.VariantName2][data.SelectionName2] = data.SelectionName2
+					}
+				} else {
+					m[data.VariantName2] = map[string]string{
+						data.SelectionName2: data.SelectionName2,
+					}
+				}
+			}
+		}
+	}
+
+	for key, value := range m {
+		vos := []string{}
+
+		for key2 := range value {
+			vos = append(vos, key2)
+		}
+
+		res = append(res, dtousecase.VariantOption{
+			VariantOptionName: key,
+			Childs:            vos,
+		})
+	}
+
 	return res, nil
 }

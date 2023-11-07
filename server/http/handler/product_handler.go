@@ -29,9 +29,7 @@ func (h *ProductHandler) GetProductDetail(c *gin.Context) {
 	}
 
 	uReq := dtousecase.GetProductDetailRequest{
-		ProductId:  productId,
-		Variant1Id: 1,
-		Variant2Id: 2,
+		ProductId: productId,
 	}
 
 	uRes, err := h.productUsecase.GetProductDetail(c.Request.Context(), uReq)

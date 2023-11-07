@@ -15,6 +15,7 @@ type productOrdersRepository struct {
 	db                                  *gorm.DB
 	accountRepository                   accountRepository
 	productVariantCombinationRepository productVariantCombinationRepository
+	productDetailRepository             productDetailRepository
 }
 
 type ProductOrdersRepository interface {
@@ -23,6 +24,7 @@ type ProductOrdersRepository interface {
 	UpdateOrderStatusByIDAndAccountID(ctx context.Context, req dtorepository.ReceiveOrderRequest) (dtorepository.ProductOrderResponse, error)
 	FindByIDAndSellerID(ctx context.Context, req dtorepository.ProductOrderRequest) ([]model.ProductOrderSeller, error)
 	ProcessedOrder(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error)
+	Create(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error)
 }
 
 func NewProductOrdersRepository(db *gorm.DB) ProductOrdersRepository {
@@ -153,7 +155,7 @@ func (r *productOrdersRepository) UpdateOrderStatusByIDAndAccountID(ctx context.
 		return res, err
 	}
 
-	_, err = r.productVariantCombinationRepository.IncreaseStockWithTx(ctx, tx, req.Products)
+	_, err = r.productVariantCombinationRepository.UpdateStockWithTx(ctx, tx, req.Products)
 	if err != nil {
 		tx.Rollback()
 		return res, err
@@ -212,4 +214,96 @@ func (r *productOrdersRepository) ProcessedOrder(ctx context.Context, req dtorep
 	res.UpdatedAt = order.UpdatedAt
 
 	return res, nil
+}
+
+func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error) {
+	res := dtorepository.ProductOrderResponse{}
+	tx := r.db.Begin()
+
+	a := model.ProductOrders{
+		CourierID:     req.CourierID,
+		AccountID:     req.AccountID,
+		DeliveryFee:   req.DeliveryFee,
+		District:      req.District,
+		Province:      req.Province,
+		SubDistrict:   req.SubDistrict,
+		Kelurahan:     req.Kelurahan,
+		Notes:         req.Notes,
+		Status:        req.Status,
+		ZipCode:       req.ZipCode,
+		AddressDetail: req.AddressDetail,
+	}
+
+	err := tx.WithContext(ctx).Create(&a).Scan(&res).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	orderDetailReq := []model.ProductOrderDetails{}
+	productVariants := []model.ProductCombinationVariant{}
+
+	for _, o := range req.ProductVariants {
+		variant := model.ProductCombinationVariant{
+			ID:    o.ProductVariantSelectionCombinationID,
+			Stock: o.Quantity,
+		}
+		product := model.ProductOrderDetails{
+			ProductOrderID:                       res.ID,
+			ProductVariantSelectionCombinationID: o.ProductVariantSelectionCombinationID,
+			Quantity:                             o.Quantity,
+			IndividualPrice:                      o.IndividualPrice,
+		}
+		productVariants = append(productVariants, variant)
+		orderDetailReq = append(orderDetailReq, product)
+	}
+
+	_, err = r.productDetailRepository.CreateWithTx(ctx, tx, orderDetailReq)
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	_, err = r.accountRepository.DecreaseBalanceBuyerWithTx(ctx, tx, dtorepository.MyWalletRequest{
+		UserID:          req.AccountID,
+		Balance:         req.TotalAmount,
+		TransactionType: "Checkout",
+	})
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+	_, err = r.accountRepository.IncreaseBalanceSallerWithTx(ctx, tx, dtorepository.MyWalletRequest{
+		UserID:          req.AccountID,
+		Balance:         req.TotalSellerAmount,
+		TransactionType: "Sale",
+	})
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	_, err = r.productVariantCombinationRepository.DecreaseStockWithTx(ctx, tx, productVariants)
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	tx.Commit()
+
+	res.ID = a.ID
+	res.AccountID = a.AccountID
+	res.CourierID = a.CourierID
+	res.DeliveryFee = a.DeliveryFee
+	res.Province = a.Province
+	res.SubDistrict = a.SubDistrict
+	res.Kelurahan = a.Kelurahan
+	res.Status = a.Status
+	res.ZipCode = a.ZipCode
+	res.District = a.District
+	res.CreatedAt = a.CreatedAt
+	res.DeletedAt = a.DeletedAt
+	res.UpdatedAt = a.UpdatedAt
+
+	return res, err
 }

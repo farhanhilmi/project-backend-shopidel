@@ -58,6 +58,7 @@ type FindProductVariantResponse struct {
 }
 
 type ProductVariant struct {
+	ID             int
 	VariantId      int
 	SelectionId1   int
 	SelectionId2   int
@@ -67,4 +68,19 @@ type ProductVariant struct {
 	VariantName2   string
 	Price          decimal.Decimal
 	Stock          int
+}
+
+type ProductCombinationVariantListRequest struct {
+	ID []int
+}
+
+type ProductCombinationVariantRequest struct {
+	ID int
+}
+
+type ProductCombinationVariantRespponse struct {
+	ID              int
+	IndividualPrice decimal.Decimal
+	Stock           int
+	ProductID       int
 }

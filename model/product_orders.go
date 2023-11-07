@@ -25,12 +25,12 @@ type ProductOrders struct {
 }
 
 type Couriers struct {
-	ID          int       `gorm:"primaryKey;not null,autoIncrement;serial"`
-	Name        string    `gorm:"type:varchar;not null"`
-	Description string    `gorm:"type:text"`
-	CreatedAt   time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
-	UpdatedAt   time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
-	DeletedAt   time.Time `gorm:"type:timestamp;default:null"`
+	ID          int       `gorm:"primaryKey;not null,autoIncrement;serial" json:"id"`
+	Name        string    `gorm:"type:varchar;not null" json:"name"`
+	Description string    `gorm:"type:text" json:"description"`
+	CreatedAt   time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp" json:"-"`
+	UpdatedAt   time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp" json:"-"`
+	DeletedAt   time.Time `gorm:"type:timestamp;default:null" json:"-"`
 }
 
 type ProductOrderDetails struct {
