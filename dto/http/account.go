@@ -46,6 +46,19 @@ type AddressRequest struct {
 	UserId int `json:"id"`
 }
 
+type CreateAddressRequest struct {
+	AccountID            int
+	Province             string
+	District             string
+	RajaOngkirDistrictId string
+	SubDistrict          string
+	Kelurahan            string
+	ZipCode              string
+	Detail               string
+	IsBuyerDefault       bool
+	IsSellerDefault      bool
+}
+
 type GetAccountResponse struct {
 	ID                      int             `json:"id"`
 	FullName                string          `json:"full_name,omitempty"`
@@ -93,4 +106,14 @@ type AddressResponse struct {
 	FullAddress     string `json:"full_address"`
 	IsBuyerDefault  bool   `json:"is_buyer_default"`
 	IsSellerDefault bool   `json:"is_seller_default"`
+}
+
+type RegisterSellerRequest struct {
+	ShopName      string `json:"shop_name"`
+	AddressId     int    `json:"address_id"`
+	ListCourierId []int  `json:"list_courier_id"`
+}
+
+type RegisterSellerResponse struct {
+	ShopName string
 }

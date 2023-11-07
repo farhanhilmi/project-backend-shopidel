@@ -149,7 +149,12 @@ func (r *productOrdersRepository) UpdateOrderStatusByIDAndAccountID(ctx context.
 		return res, err
 	}
 
-	_, err = r.accountRepository.RefundBalance(ctx, tx, dtorepository.MyWalletRequest{UserID: req.AccountID, Balance: req.TotalAmount})
+	buyerAccount, err := r.accountRepository.RefundBalance(ctx, tx, dtorepository.MyWalletRequest{
+		UserID:         req.AccountID,
+		Balance:        req.TotalAmount,
+		WalletNumber:   req.SellerWalletNumber,
+		ProductOrderID: req.ID,
+	})
 	if err != nil {
 		tx.Rollback()
 		return res, err
@@ -161,7 +166,7 @@ func (r *productOrdersRepository) UpdateOrderStatusByIDAndAccountID(ctx context.
 		return res, err
 	}
 
-	_, err = r.accountRepository.DecreaseBalanceSellerWithTx(ctx, tx, dtorepository.MyWalletRequest{UserID: req.SellerID, Balance: req.TotalAmount})
+	_, err = r.accountRepository.DecreaseBalanceSellerWithTx(ctx, tx, dtorepository.MyWalletRequest{UserID: req.SellerID, Balance: req.TotalAmount, WalletNumber: buyerAccount.WalletNumber, ProductOrderID: req.ID})
 	if err != nil {
 		tx.Rollback()
 		return res, err
@@ -268,15 +273,19 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 		UserID:          req.AccountID,
 		Balance:         req.TotalAmount,
 		TransactionType: "Checkout",
+		ProductOrderID:  res.ID,
+		WalletNumber:    req.SellerWalletNumber,
 	})
 	if err != nil {
 		tx.Rollback()
 		return res, err
 	}
 	_, err = r.accountRepository.IncreaseBalanceSallerWithTx(ctx, tx, dtorepository.MyWalletRequest{
-		UserID:          req.AccountID,
+		UserID:          req.SellerID,
 		Balance:         req.TotalSellerAmount,
 		TransactionType: "Sale",
+		ProductOrderID:  res.ID,
+		WalletNumber:    req.BuyerWalletNumber,
 	})
 	if err != nil {
 		tx.Rollback()

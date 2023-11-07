@@ -8,33 +8,36 @@ import (
 )
 
 type ProductOrderRequest struct {
-	ID                int
-	Province          string
-	District          string
-	SubDistrict       string
-	Kelurahan         string
-	ZipCode           string
-	AddressDetail     string
-	AccountID         int
-	SellerID          int
-	CourierID         int
-	Status            string
-	Notes             string
-	DeliveryFee       decimal.Decimal
-	TotalAmount       decimal.Decimal
-	TotalSellerAmount decimal.Decimal
-	ProductVariants   []ProductOrderDetailRequest
+	ID                 int
+	Province           string
+	District           string
+	SubDistrict        string
+	Kelurahan          string
+	ZipCode            string
+	AddressDetail      string
+	AccountID          int
+	SellerID           int
+	CourierID          int
+	Status             string
+	Notes              string
+	SellerWalletNumber string
+	BuyerWalletNumber  string
+	DeliveryFee        decimal.Decimal
+	TotalAmount        decimal.Decimal
+	TotalSellerAmount  decimal.Decimal
+	ProductVariants    []ProductOrderDetailRequest
 }
 
 type ReceiveOrderRequest struct {
-	ID          int
-	AccountID   int
-	SellerID    int
-	CourierID   int
-	Status      string
-	Notes       string
-	TotalAmount decimal.Decimal
-	Products    []model.ProductCombinationVariant
+	ID                 int
+	AccountID          int
+	SellerID           int
+	CourierID          int
+	Status             string
+	Notes              string
+	TotalAmount        decimal.Decimal
+	Products           []model.ProductCombinationVariant
+	SellerWalletNumber string
 }
 
 type ProductOrderResponse struct {

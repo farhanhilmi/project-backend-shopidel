@@ -26,3 +26,14 @@ type TopUpBalanceWalletResponse struct {
 	WalletNumber string
 	Balance      decimal.Decimal
 }
+
+type WalletHistoriesParams struct {
+	AccountID       int
+	SortBy          string
+	Sort            string
+	Limit           int
+	Page            int
+	StartDate       string
+	EndDate         string
+	TransactionType string
+}

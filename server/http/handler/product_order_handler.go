@@ -38,9 +38,10 @@ func (h *ProductOrderHandler) CanceledOrderBySeller(c *gin.Context) {
 	}
 
 	uReq := dtousecase.ProductOrderRequest{
-		ID:       id,
-		SellerID: c.GetInt("userId"),
-		Notes:    req.Notes,
+		ID:                 id,
+		SellerID:           c.GetInt("userId"),
+		Notes:              req.Notes,
+		SellerWalletNumber: c.GetString("walletNumber"),
 	}
 
 	uRes, err := h.productOrderUsecase.CancelOrderBySeller(c.Request.Context(), uReq)

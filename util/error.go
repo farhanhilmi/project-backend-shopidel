@@ -55,4 +55,6 @@ var (
 	ErrInsufficientBalance     = &CustomError{Message: "Your wallet balance is insufficient, please top up first to proceed with order checkout", Code: BadRequest}
 	ErrQtyInputZero            = &CustomError{Message: "Quantity must be minimum one", Code: BadRequest}
 	ErrCourierNotAvailable     = &CustomError{Message: "courier not found or not available", Code: BadRequest}
+	ErrInvalidDateFormat       = &CustomError{Message: "invalid date format. the date format is YYYY-MM-DD, e.g: 2023-09-10", Code: BadRequest}
+	ErrWalletHistorySortBy     = &CustomError{Message: "sortBy should be one of 'amount', 'type', 'date'", Code: BadRequest}
 )

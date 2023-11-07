@@ -36,12 +36,65 @@ type AccountRepository interface {
 	FindAccountCartItems(ctx context.Context, req dtorepository.GetAccountCartItemsRequest) (dtorepository.GetAccountCartItemsResponse, error)
 	AddProductToCart(ctx context.Context, req dtorepository.AddProductToCartRequest) (dtorepository.AddProductToCartResponse, error)
 	GetAddresses(ctx context.Context, req dtorepository.AddressRequest) (*[]dtorepository.AddressResponse, error)
+	CreateSeller(ctx context.Context, req dtorepository.RegisterSellerRequest) (*dtorepository.RegisterSellerResponse, error)
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
 	return &accountRepository{
 		db: db,
 	}
+}
+
+func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.RegisterSellerRequest) (*dtorepository.RegisterSellerResponse, error) {
+	res := dtorepository.RegisterSellerResponse{}
+	account := model.Accounts{}
+	var seller_couriers []model.SellerCouriers
+
+	for _, seller_courier_id := range req.ListCourierId {
+		seller_couriers = append(seller_couriers, model.SellerCouriers{
+			AccountID: req.UserId,
+			CourierID: seller_courier_id,
+		})
+	}
+
+	tx := r.db.Begin()
+
+	err := tx.WithContext(ctx).Clauses(clause.Locking{
+		Strength: "UPDATE",
+		Table: clause.Table{
+			Name: clause.CurrentTable,
+		}}).Model(&account).Where("id = ?", req.UserId).Update("shop_name", req.ShopName).Error
+
+	if err != nil {
+		tx.Rollback()
+		return &res, err
+	}
+
+	err = tx.WithContext(ctx).Clauses(clause.Locking{
+		Strength: "UPDATE",
+		Table: clause.Table{
+			Name: clause.CurrentTable,
+		}}).Model(&model.AccountAddress{}).Where("id = ?", req.AddressId).Updates(
+		model.AccountAddress{
+			IsBuyerDefault:  false,
+			IsSellerDefault: true,
+		}).Error
+	if err != nil {
+		tx.Rollback()
+		return &res, err
+	}
+
+	err = tx.WithContext(ctx).Create(&seller_couriers).Error
+	if err != nil {
+		tx.Rollback()
+		return &res, err
+	}
+
+	tx.Commit()
+
+	res.ShopName = req.ShopName
+
+	return &res, nil
 }
 
 func (r *accountRepository) GetAddresses(ctx context.Context, req dtorepository.AddressRequest) (*[]dtorepository.AddressResponse, error) {
@@ -203,17 +256,19 @@ func (r *accountRepository) RefundBalance(ctx context.Context, tx *gorm.DB, req 
 		Strength: "UPDATE",
 		Table: clause.Table{
 			Name: clause.CurrentTable,
-		}}).Model(&account).Where("id = ?", req.UserID).Update("balance", gorm.Expr("balance + ?", req.Balance)).Error
+		}}).Model(&account).Where("id = ?", req.UserID).Update("balance", gorm.Expr("balance + ?", req.Balance)).Scan(&account).Error
 
 	if err != nil {
 		tx.Rollback()
 		return dtorepository.WalletResponse{}, err
 	}
 
-	_, err = r.walletTransactionHistories.CreateWithTx(ctx, tx, dtorepository.MyWalletTransactionHistoriesRequest{
-		AccountID: req.UserID,
-		Amount:    req.Balance,
-		Type:      "Refund",
+	_, err = r.walletTransactionHistories.CreateWithTx(ctx, tx, model.MyWalletTransactionHistories{
+		AccountID:      req.UserID,
+		Amount:         req.Balance,
+		Type:           "Refund",
+		From:           req.WalletNumber,
+		ProductOrderID: req.ProductOrderID,
 	})
 
 	if err != nil {
@@ -235,17 +290,19 @@ func (r *accountRepository) DecreaseBalanceSellerWithTx(ctx context.Context, tx 
 		Strength: "UPDATE",
 		Table: clause.Table{
 			Name: clause.CurrentTable,
-		}}).Model(&account).Where("id = ?", req.UserID).Update("saller_balance", gorm.Expr("saller_balance - ?", req.Balance)).Error
+		}}).Model(&account).Where("id = ?", req.UserID).Update("seller_balance", gorm.Expr("seller_balance - ?", req.Balance)).Error
 
 	if err != nil {
 		tx.Rollback()
 		return dtorepository.WalletResponse{}, err
 	}
 
-	_, err = r.saleTransactionHistories.CreateWithTx(ctx, tx, dtorepository.SaleWalletTransactionHistoriesRequest{
-		AccountID: req.UserID,
-		Amount:    req.Balance.Neg(),
-		Type:      "Refund",
+	_, err = r.saleTransactionHistories.CreateWithTx(ctx, tx, model.SaleWalletTransactionHistories{
+		AccountID:      req.UserID,
+		Amount:         req.Balance.Neg(),
+		Type:           "Refund",
+		To:             req.WalletNumber,
+		ProductOrderID: req.ProductOrderID,
 	})
 
 	if err != nil {
@@ -274,10 +331,12 @@ func (r *accountRepository) DecreaseBalanceBuyerWithTx(ctx context.Context, tx *
 		return dtorepository.WalletResponse{}, err
 	}
 
-	_, err = r.walletTransactionHistories.CreateWithTx(ctx, tx, dtorepository.MyWalletTransactionHistoriesRequest{
-		AccountID: req.UserID,
-		Amount:    req.Balance.Neg(),
-		Type:      req.TransactionType,
+	_, err = r.walletTransactionHistories.CreateWithTx(ctx, tx, model.MyWalletTransactionHistories{
+		AccountID:      req.UserID,
+		Amount:         req.Balance.Neg(),
+		Type:           req.TransactionType,
+		ProductOrderID: req.ProductOrderID,
+		To:             req.WalletNumber,
 	})
 
 	if err != nil {
@@ -299,17 +358,19 @@ func (r *accountRepository) IncreaseBalanceSallerWithTx(ctx context.Context, tx 
 		Strength: "UPDATE",
 		Table: clause.Table{
 			Name: clause.CurrentTable,
-		}}).Model(&account).Where("id = ?", req.UserID).Update("saller_balance", gorm.Expr("saller_balance + ?", req.Balance)).Error
+		}}).Model(&account).Where("id = ?", req.UserID).Update("seller_balance", gorm.Expr("seller_balance + ?", req.Balance)).Error
 
 	if err != nil {
 		tx.Rollback()
 		return dtorepository.WalletResponse{}, err
 	}
 
-	_, err = r.saleTransactionHistories.CreateWithTx(ctx, tx, dtorepository.SaleWalletTransactionHistoriesRequest{
-		AccountID: req.UserID,
-		Amount:    req.Balance,
-		Type:      req.TransactionType,
+	_, err = r.saleTransactionHistories.CreateWithTx(ctx, tx, model.SaleWalletTransactionHistories{
+		AccountID:      req.UserID,
+		Amount:         req.Balance,
+		Type:           req.TransactionType,
+		ProductOrderID: req.ProductOrderID,
+		From:           req.WalletNumber,
 	})
 
 	if err != nil {
@@ -339,10 +400,11 @@ func (r *accountRepository) TopUpWalletBalanceByID(ctx context.Context, req dtor
 		return dtorepository.WalletResponse{}, err
 	}
 
-	_, err = r.walletTransactionHistories.CreateWithTx(ctx, tx, dtorepository.MyWalletTransactionHistoriesRequest{
+	_, err = r.walletTransactionHistories.CreateWithTx(ctx, tx, model.MyWalletTransactionHistories{
 		AccountID: req.UserID,
 		Amount:    req.Amount,
 		Type:      req.Type,
+		From:      "5550000012345",
 	})
 
 	if err != nil {

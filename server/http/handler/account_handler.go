@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto"
@@ -11,16 +13,47 @@ import (
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/exp/slices"
 )
 
 type AccountHandler struct {
-	accountUsecase usecase.AccountUsecase
+	accountUsecase             usecase.AccountUsecase
+	myWalletTransactionUsecase usecase.MyWalletTransactionUsecase
 }
 
-func NewAccountHandler(accountUsecase usecase.AccountUsecase) *AccountHandler {
+func NewAccountHandler(accountUsecase usecase.AccountUsecase, myWalletTransactionUsecase usecase.MyWalletTransactionUsecase) *AccountHandler {
 	return &AccountHandler{
-		accountUsecase: accountUsecase,
+		accountUsecase:             accountUsecase,
+		myWalletTransactionUsecase: myWalletTransactionUsecase,
 	}
+}
+
+func (h *AccountHandler) RegisterSeller(c *gin.Context) {
+	res := dtohttp.RegisterSellerResponse{}
+	var req dtohttp.RegisterSellerRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.RegisterSellerRequest{
+		UserId:        c.GetInt("userId"),
+		ShopName:      req.ShopName,
+		AddressId:     req.AddressId,
+		ListCourierId: req.ListCourierId,
+	}
+
+	uRes, err := h.accountUsecase.RegisterSeller(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res.ShopName = uRes.ShopName
+
+	convertMessage := fmt.Sprintf("Merchant %s registered successfully", res.ShopName)
+	c.JSON(http.StatusCreated, dtogeneral.JSONResponse{Message: convertMessage})
 }
 
 func (h *AccountHandler) GetAddresses(c *gin.Context) {
@@ -33,7 +66,7 @@ func (h *AccountHandler) GetAddresses(c *gin.Context) {
 		return
 	}
 
-	uReq := dtousecase.AddressRequest {
+	uReq := dtousecase.AddressRequest{
 		UserId: req.UserId,
 	}
 
@@ -45,9 +78,9 @@ func (h *AccountHandler) GetAddresses(c *gin.Context) {
 
 	for _, data := range *uRes {
 		res = append(res, dtohttp.AddressResponse{
-			ID: data.ID,
-			FullAddress: data.FullAddress,
-			IsBuyerDefault: data.IsBuyerDefault,
+			ID:              data.ID,
+			FullAddress:     data.FullAddress,
+			IsBuyerDefault:  data.IsBuyerDefault,
 			IsSellerDefault: data.IsSellerDefault,
 		})
 	}
@@ -341,13 +374,70 @@ func (h *AccountHandler) AddProductToCart(c *gin.Context) {
 	}
 
 	uRes, err := h.accountUsecase.AddProductToCart(c.Request.Context(), uReq)
+	res.ProductId = uRes.ProductId
+	res.Quantity = uRes.Quantity
+
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	res.ProductId = uRes.ProductId
-	res.Quantity = uRes.Quantity
-
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
+}
+
+func (h *AccountHandler) GetListTransactions(c *gin.Context) {
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	sortBy := c.DefaultQuery("sortBy", "date")
+	sort := c.DefaultQuery("sort", "desc")
+	startDate := c.DefaultQuery("startDate", "")
+	endDate := c.DefaultQuery("endDate", "")
+	transactionType := c.DefaultQuery("type", "")
+
+	if valid := util.IsDateValid(startDate); !valid && startDate != "" {
+		c.Error(util.ErrInvalidDateFormat)
+		return
+	}
+	if valid := util.IsDateValid(endDate); !valid && endDate != "" {
+		c.Error(util.ErrInvalidDateFormat)
+		return
+	}
+
+	if !slices.Contains([]string{"date", "amount", "type"}, sortBy) {
+		c.Error(util.ErrWalletHistorySortBy)
+		return
+	}
+
+	switch sortBy {
+	case "date":
+		sortBy = "created_at"
+	}
+
+	reqWallet := dtousecase.WalletHistoriesParams{
+		SortBy:          sortBy,
+		Sort:            sort,
+		Limit:           limit,
+		Page:            page,
+		StartDate:       startDate,
+		EndDate:         endDate,
+		AccountID:       c.GetInt("userId"),
+		TransactionType: transactionType,
+	}
+
+	transactions, pagination, err := h.myWalletTransactionUsecase.GetTransactions(c.Request.Context(), reqWallet)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONWithPagination{Data: transactions, Pagination: *pagination})
 }
