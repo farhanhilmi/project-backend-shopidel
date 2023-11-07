@@ -48,7 +48,7 @@ func (h *AccountHandler) RegisterSeller(c *gin.Context) {
 
 	res.ShopName = uRes.ShopName
 
-	convertMessage := fmt.Sprintf("merchant %s registered", res.ShopName)
+	convertMessage := fmt.Sprintf("Merchant %s registered successfully", res.ShopName)
 	c.JSON(http.StatusCreated, dtogeneral.JSONResponse{Message: convertMessage})
 }
 

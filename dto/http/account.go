@@ -46,6 +46,19 @@ type AddressRequest struct {
 	UserId int `json:"id"`
 }
 
+type CreateAddressRequest struct {
+	AccountID            int    
+	Province             string 
+	District             string 
+	RajaOngkirDistrictId string 
+	SubDistrict          string 
+	Kelurahan            string 
+	ZipCode              string 
+	Detail               string 
+	IsBuyerDefault       bool   
+	IsSellerDefault      bool   
+}
+
 type GetAccountResponse struct {
 	ID                      int             `json:"id"`
 	FullName                string          `json:"full_name,omitempty"`

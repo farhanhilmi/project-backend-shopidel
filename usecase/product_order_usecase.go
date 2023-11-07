@@ -286,8 +286,6 @@ func (u *productOrderUsecase) CheckDeliveryFee(ctx context.Context, req dtouseca
 		return nil, err
 	}
 
-	fmt.Println("response", response)
-
 	courierRes := dtousecase.CourierFeeResponse{}
 
 	for _, r := range response {
