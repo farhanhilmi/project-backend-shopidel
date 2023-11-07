@@ -274,7 +274,7 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 		return res, err
 	}
 	_, err = r.accountRepository.IncreaseBalanceSallerWithTx(ctx, tx, dtorepository.MyWalletRequest{
-		UserID:          req.AccountID,
+		UserID:          req.SellerID,
 		Balance:         req.TotalSellerAmount,
 		TransactionType: "Sale",
 	})

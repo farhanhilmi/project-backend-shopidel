@@ -51,7 +51,7 @@ func NewAccountUsecase(config AccountUsecaseConfig) AccountUsecase {
 func (u *accountUsecase) GetAddresses(ctx context.Context, req dtousecase.AddressRequest) (*[]dtousecase.AddressResponse, error) {
 	res := []dtousecase.AddressResponse{}
 
-	rReq := dtorepository.AddressRequest {
+	rReq := dtorepository.AddressRequest{
 		UserId: req.UserId,
 	}
 	addresses, err := u.accountRepository.GetAddresses(ctx, rReq)
@@ -61,9 +61,9 @@ func (u *accountUsecase) GetAddresses(ctx context.Context, req dtousecase.Addres
 
 	for _, data := range *addresses {
 		res = append(res, dtousecase.AddressResponse{
-			ID: data.ID,
-			FullAddress: data.FullAddress,
-			IsBuyerDefault: data.IsBuyerDefault,
+			ID:              data.ID,
+			FullAddress:     data.FullAddress,
+			IsBuyerDefault:  data.IsBuyerDefault,
 			IsSellerDefault: data.IsSellerDefault,
 		})
 	}
