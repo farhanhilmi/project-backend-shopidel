@@ -62,7 +62,31 @@ func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.
 
 	tx := r.db.Begin()
 
-	err := tx.WithContext(ctx).Where("id = ?", req.UserId).First(&account).Error
+	err := tx.WithContext(ctx).Where("id = ?", req.AddressId).First(&model.AccountAddress{}).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		tx.Rollback()
+		return &res, util.ErrAddressNotAvailable
+	}
+
+	if err != nil {
+		tx.Rollback()
+		return &res, err
+	}
+
+	err = r.db.WithContext(ctx).Model(&model.Couriers{}).Where("id IN ?", req.ListCourierId).Scan(&couriers).Error
+
+	if len(couriers) < len(req.ListCourierId) {
+		tx.Rollback()
+		return &res, util.ErrCourierNotAvailable
+	}
+
+	if err != nil {
+		tx.Rollback()
+		return &res, err
+	}
+
+	err = tx.WithContext(ctx).Where("id = ?", req.UserId).First(&account).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		tx.Rollback()
@@ -90,18 +114,6 @@ func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.
 		return &res, err
 	}
 
-	err = tx.WithContext(ctx).Where("id = ?", req.AddressId).First(&model.AccountAddress{}).Error
-
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		tx.Rollback()
-		return &res, util.ErrAddressNotAvailable
-	}
-
-	if err != nil {
-		tx.Rollback()
-		return &res, err
-	}
-
 	err = tx.WithContext(ctx).Clauses(clause.Locking{
 		Strength: "UPDATE",
 		Table: clause.Table{
@@ -111,18 +123,6 @@ func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.
 			IsBuyerDefault:  false,
 			IsSellerDefault: true,
 		}).Error
-
-	if err != nil {
-		tx.Rollback()
-		return &res, err
-	}
-
-	err = r.db.WithContext(ctx).Model(&model.Couriers{}).Where("id IN ?", req.ListCourierId).Scan(&couriers).Error
-
-	if len(couriers) < len(req.ListCourierId) {
-		tx.Rollback()
-		return &res, util.ErrCourierNotAvailable
-	}
 
 	if err != nil {
 		tx.Rollback()
