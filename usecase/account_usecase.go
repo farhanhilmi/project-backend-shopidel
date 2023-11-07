@@ -25,18 +25,22 @@ type AccountUsecase interface {
 	Login(ctx context.Context, req dtousecase.LoginRequest) (*dtousecase.LoginResponse, error)
 	TopUpBalanceWallet(ctx context.Context, walletReq dtousecase.TopUpBalanceWalletRequest) (*dtousecase.TopUpBalanceWalletResponse, error)
 	GetCart(ctx context.Context, req dtousecase.GetCartRequest) (dtousecase.GetCartResponse, error)
+	AddProductToCart(ctx context.Context, req dtousecase.AddProductToCartRequest) (dtousecase.AddProductToCartResponse, error)
 	GetAddresses(ctx context.Context, req dtousecase.AddressRequest) (*[]dtousecase.AddressResponse, error)
 	RegisterSeller(ctx context.Context, req dtousecase.RegisterSellerRequest) (*dtousecase.RegisterSellerResponse, error)
+	UpdateCartQuantity(ctx context.Context, req dtousecase.UpdateCartRequest) (*dtousecase.UpdateCartResponse, error)
 }
 
 type accountUsecase struct {
 	accountRepository   repository.AccountRepository
 	usedEmailRepository repository.UsedEmailRepository
+	productRepository   repository.ProductRepository
 }
 
 type AccountUsecaseConfig struct {
 	AccountRepository   repository.AccountRepository
 	UsedEmailRepository repository.UsedEmailRepository
+	ProductRepository   repository.ProductRepository
 }
 
 func NewAccountUsecase(config AccountUsecaseConfig) AccountUsecase {
@@ -44,6 +48,9 @@ func NewAccountUsecase(config AccountUsecaseConfig) AccountUsecase {
 	if config.AccountRepository != nil {
 		au.accountRepository = config.AccountRepository
 		au.usedEmailRepository = config.UsedEmailRepository
+	}
+	if config.ProductRepository != nil {
+		au.productRepository = config.ProductRepository
 	}
 
 	return au
@@ -487,6 +494,54 @@ func (u *accountUsecase) convertCartItems(ctx context.Context, rRes dtorepositor
 	if cs.ShopId != 0 {
 		res = append(res, cs)
 	}
+
+	return res, nil
+}
+
+func (u *accountUsecase) UpdateCartQuantity(ctx context.Context, req dtousecase.UpdateCartRequest) (*dtousecase.UpdateCartResponse, error) {
+	product, err := u.productRepository.FindProductVariantByID(ctx, dtorepository.ProductCart{ProductID: req.ProductID})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if req.Quantity > product.Quantity {
+		return nil, util.ErrQtyExceed
+	}
+
+	cart, err := u.accountRepository.UpdateCartQuantity(ctx, dtorepository.UpdateCart{ProductID: req.ProductID, Quantity: req.Quantity})
+	if err != nil {
+		return nil, err
+	}
+
+	if cart.ProductID == 0 {
+		return nil, util.ErrProductCartNotFound
+	}
+
+	return &dtousecase.UpdateCartResponse{
+		ProductID: cart.ProductID,
+		Quantity:  cart.Quantity,
+	}, nil
+}
+
+func (u *accountUsecase) AddProductToCart(ctx context.Context, req dtousecase.AddProductToCartRequest) (dtousecase.AddProductToCartResponse, error) {
+	res := dtousecase.AddProductToCartResponse{}
+
+	rReq := dtorepository.AddProductToCartRequest{
+		AccountId:                   req.UserId,
+		ProductVariantCombinationId: req.ProductVariantId,
+		Quantity:                    req.Quantity,
+	}
+
+	rRes, err := u.accountRepository.AddProductToCart(ctx, rReq)
+	if err != nil {
+		return res, err
+	}
+
+	res.ProductId = rRes.ProductVariantCombinationId
+	res.Quantity = rRes.Quantity
 
 	return res, nil
 }

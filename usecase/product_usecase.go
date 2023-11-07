@@ -28,6 +28,7 @@ func NewProductUsecase(config ProductUsecaseConfig) ProductUsecase {
 	}
 
 	return au
+
 }
 
 func (u *productUsecase) GetProductDetail(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductDetailResponse, error) {

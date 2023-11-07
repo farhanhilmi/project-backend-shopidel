@@ -2,10 +2,12 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
 	"gorm.io/gorm"
 )
 
@@ -16,12 +18,32 @@ type productRepository struct {
 type ProductRepository interface {
 	First(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error)
 	FindProductVariant(ctx context.Context, req dtorepository.FindProductVariantRequest) (dtorepository.FindProductVariantResponse, error)
+	FindProductVariantByID(ctx context.Context, req dtorepository.ProductCart) (dtorepository.ProductCart, error)
 }
 
 func NewProductRepository(db *gorm.DB) ProductRepository {
 	return &productRepository{
 		db: db,
 	}
+}
+
+func (r *productRepository) FindProductVariantByID(ctx context.Context, req dtorepository.ProductCart) (dtorepository.ProductCart, error) {
+	account := model.ProductVariantSelectionCombinations{}
+
+	err := r.db.WithContext(ctx).Model(&account).Where("id = ?", req.ProductID).First(&account).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return dtorepository.ProductCart{}, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return dtorepository.ProductCart{}, err
+	}
+
+	return dtorepository.ProductCart{
+		ProductID: req.ProductID,
+		Quantity:  account.Stock,
+		ID:        account.ID,
+	}, nil
 }
 
 func (r *productRepository) First(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error) {

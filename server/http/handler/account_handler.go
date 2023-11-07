@@ -358,6 +358,33 @@ func (h *AccountHandler) GetCart(c *gin.Context) {
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes})
 }
 
+func (h *AccountHandler) AddProductToCart(c *gin.Context) {
+	req := dtohttp.AddProductToCartRequest{}
+	res := dtohttp.AddProductToCartResponse{}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
+		return
+	}
+
+	uReq := dtousecase.AddProductToCartRequest{
+		UserId:           c.GetInt("userId"),
+		ProductVariantId: req.ProductId,
+		Quantity:         req.Quantity,
+	}
+
+	uRes, err := h.accountUsecase.AddProductToCart(c.Request.Context(), uReq)
+	res.ProductId = uRes.ProductId
+	res.Quantity = uRes.Quantity
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
+}
+
 func (h *AccountHandler) GetListTransactions(c *gin.Context) {
 	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	if err != nil {
@@ -374,10 +401,6 @@ func (h *AccountHandler) GetListTransactions(c *gin.Context) {
 	startDate := c.DefaultQuery("startDate", "")
 	endDate := c.DefaultQuery("endDate", "")
 	transactionType := c.DefaultQuery("type", "")
-	if err != nil {
-		c.Error(err)
-		return
-	}
 
 	if valid := util.IsDateValid(startDate); !valid && startDate != "" {
 		c.Error(util.ErrInvalidDateFormat)
@@ -417,4 +440,28 @@ func (h *AccountHandler) GetListTransactions(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, dtogeneral.JSONWithPagination{Data: transactions, Pagination: *pagination})
+}
+
+func (h *AccountHandler) UpdateCart(c *gin.Context) {
+	var payload dtohttp.UpdateCartRequest
+
+	err := c.ShouldBindJSON(&payload)
+
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.UpdateCartRequest{
+		ProductID: payload.ProductID,
+		Quantity:  payload.Quantity,
+	}
+
+	uRes, err := h.accountUsecase.UpdateCartQuantity(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes})
 }
