@@ -117,3 +117,7 @@ type RegisterSellerRequest struct {
 type RegisterSellerResponse struct {
 	ShopName string
 }
+
+type DeleteCartProductRequest struct {
+	ListProductID []int `json:"list_product_id" binding:"required"`
+}

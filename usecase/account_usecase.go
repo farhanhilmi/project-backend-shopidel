@@ -9,6 +9,7 @@ import (
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
 	"github.com/shopspring/decimal"
@@ -29,6 +30,7 @@ type AccountUsecase interface {
 	GetAddresses(ctx context.Context, req dtousecase.AddressRequest) (*[]dtousecase.AddressResponse, error)
 	RegisterSeller(ctx context.Context, req dtousecase.RegisterSellerRequest) (*dtousecase.RegisterSellerResponse, error)
 	UpdateCartQuantity(ctx context.Context, req dtousecase.UpdateCartRequest) (*dtousecase.UpdateCartResponse, error)
+	DeleteProductCart(ctx context.Context, req dtousecase.DeleteCartProductRequest) ([]model.AccountCarts, error)
 }
 
 type accountUsecase struct {
@@ -539,6 +541,18 @@ func (u *accountUsecase) AddProductToCart(ctx context.Context, req dtousecase.Ad
 
 	res.ProductId = rRes.ProductVariantCombinationId
 	res.Quantity = rRes.Quantity
+
+	return res, nil
+}
+
+func (u *accountUsecase) DeleteProductCart(ctx context.Context, req dtousecase.DeleteCartProductRequest) ([]model.AccountCarts, error) {
+
+	res, err := u.accountRepository.DeleteCartProduct(ctx, dtorepository.DeleteCartProductRequest{
+		ListProductID: req.ListProductID,
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	return res, nil
 }
