@@ -35,12 +35,65 @@ type AccountRepository interface {
 	IncreaseBalanceSallerWithTx(ctx context.Context, tx *gorm.DB, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error)
 	FindAccountCartItems(ctx context.Context, req dtorepository.GetAccountCartItemsRequest) (dtorepository.GetAccountCartItemsResponse, error)
 	GetAddresses(ctx context.Context, req dtorepository.AddressRequest) (*[]dtorepository.AddressResponse, error)
+	CreateSeller(ctx context.Context, req dtorepository.RegisterSellerRequest) (*dtorepository.RegisterSellerResponse, error)
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
 	return &accountRepository{
 		db: db,
 	}
+}
+
+func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.RegisterSellerRequest) (*dtorepository.RegisterSellerResponse, error) {
+	res := dtorepository.RegisterSellerResponse{}
+	account := model.Accounts{}
+	var seller_couriers []model.SellerCouriers
+
+	for _, seller_courier_id := range req.ListCourierId {
+		seller_couriers = append(seller_couriers, model.SellerCouriers{
+			AccountID: req.UserId,
+			CourierID: seller_courier_id,
+		})
+	}
+
+	tx := r.db.Begin()
+
+	err := tx.WithContext(ctx).Clauses(clause.Locking{
+		Strength: "UPDATE",
+		Table: clause.Table{
+			Name: clause.CurrentTable,
+		}}).Model(&account).Where("id = ?", req.UserId).Update("shop_name", req.ShopName).Error
+
+	if err != nil {
+		tx.Rollback()
+		return &res, err
+	}
+
+	err = tx.WithContext(ctx).Clauses(clause.Locking{
+		Strength: "UPDATE",
+		Table: clause.Table{
+			Name: clause.CurrentTable,
+		}}).Model(&model.AccountAddress{}).Where("id = ?", req.AddressId).Updates(
+		model.AccountAddress{
+			IsBuyerDefault:  false,
+			IsSellerDefault: true,
+		}).Error
+	if err != nil {
+		tx.Rollback()
+		return &res, err
+	}
+
+	err = tx.WithContext(ctx).Create(&seller_couriers).Error
+	if err != nil {
+		tx.Rollback()
+		return &res, err
+	}
+
+	tx.Commit()
+
+	res.ShopName = req.ShopName
+
+	return &res, nil
 }
 
 func (r *accountRepository) GetAddresses(ctx context.Context, req dtorepository.AddressRequest) (*[]dtorepository.AddressResponse, error) {

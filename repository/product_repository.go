@@ -38,7 +38,6 @@ func (r *productRepository) First(ctx context.Context, req dtorepository.Product
 	if err != nil {
 		return res, err
 	}
-	fmt.Println(p)
 	res.ID = p.ID
 	res.Name = p.Name
 	res.Description = p.Description
