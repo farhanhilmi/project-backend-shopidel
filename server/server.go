@@ -45,6 +45,7 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 	auc := usecase.AccountUsecaseConfig{
 		AccountRepository:   accountRepo,
 		UsedEmailRepository: usedEmailRepo,
+		ProductRepository:   productRepo,
 	}
 	puc := usecase.ProductUsecaseConfig{
 		ProductRepository: productRepo,

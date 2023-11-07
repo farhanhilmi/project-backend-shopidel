@@ -418,3 +418,27 @@ func (h *AccountHandler) GetListTransactions(c *gin.Context) {
 
 	c.JSON(http.StatusOK, dtogeneral.JSONWithPagination{Data: transactions, Pagination: *pagination})
 }
+
+func (h *AccountHandler) UpdateCart(c *gin.Context) {
+	var payload dtohttp.UpdateCartRequest
+
+	err := c.ShouldBindJSON(&payload)
+
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.UpdateCartRequest{
+		ProductID: payload.ProductID,
+		Quantity:  payload.Quantity,
+	}
+
+	uRes, err := h.accountUsecase.UpdateCartQuantity(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes})
+}

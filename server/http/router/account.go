@@ -13,6 +13,7 @@ func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 		account.GET("/carts", h.GetCart)
 		account.POST("/check-password", h.CheckISPasswordCorrect)
 		account.GET("/address", h.GetAddresses)
+		account.PUT("/carts", h.UpdateCart)
 
 		profile := account.Group("profile")
 		{

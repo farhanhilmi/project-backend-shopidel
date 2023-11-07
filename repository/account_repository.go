@@ -36,6 +36,7 @@ type AccountRepository interface {
 	FindAccountCartItems(ctx context.Context, req dtorepository.GetAccountCartItemsRequest) (dtorepository.GetAccountCartItemsResponse, error)
 	GetAddresses(ctx context.Context, req dtorepository.AddressRequest) (*[]dtorepository.AddressResponse, error)
 	CreateSeller(ctx context.Context, req dtorepository.RegisterSellerRequest) (*dtorepository.RegisterSellerResponse, error)
+	UpdateCartQuantity(ctx context.Context, req dtorepository.UpdateCart) (dtorepository.UpdateCart, error)
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
@@ -227,6 +228,21 @@ func (r *accountRepository) ActivateWalletByID(ctx context.Context, userId int, 
 	}
 
 	return account, nil
+}
+
+func (r *accountRepository) UpdateCartQuantity(ctx context.Context, req dtorepository.UpdateCart) (dtorepository.UpdateCart, error) {
+	account := model.AccountCarts{}
+
+	err := r.db.WithContext(ctx).Model(&account).Where("product_variant_selection_combination_id = ?", req.ProductID).Update("quantity", req.Quantity).Scan(&account).Error
+
+	if err != nil {
+		return dtorepository.UpdateCart{}, err
+	}
+
+	return dtorepository.UpdateCart{
+		ProductID: account.ProductVariantSelectionCombinationId,
+		Quantity:  account.Quantity,
+	}, nil
 }
 
 func (r *accountRepository) UpdateWalletPINByID(ctx context.Context, req dtorepository.UpdateWalletPINRequest) (dtorepository.UpdateWalletPINResponse, error) {
