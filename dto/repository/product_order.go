@@ -27,14 +27,15 @@ type ProductOrderRequest struct {
 }
 
 type ReceiveOrderRequest struct {
-	ID          int
-	AccountID   int
-	SellerID    int
-	CourierID   int
-	Status      string
-	Notes       string
-	TotalAmount decimal.Decimal
-	Products    []model.ProductCombinationVariant
+	ID                 int
+	AccountID          int
+	SellerID           int
+	CourierID          int
+	Status             string
+	Notes              string
+	TotalAmount        decimal.Decimal
+	Products           []model.ProductCombinationVariant
+	SellerWalletNumber string
 }
 
 type ProductOrderResponse struct {

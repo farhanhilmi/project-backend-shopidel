@@ -202,7 +202,7 @@ func (r *accountRepository) RefundBalance(ctx context.Context, tx *gorm.DB, req 
 		Strength: "UPDATE",
 		Table: clause.Table{
 			Name: clause.CurrentTable,
-		}}).Model(&account).Where("id = ?", req.UserID).Update("balance", gorm.Expr("balance + ?", req.Balance)).Error
+		}}).Model(&account).Where("id = ?", req.UserID).Update("balance", gorm.Expr("balance + ?", req.Balance)).Scan(&account).Error
 
 	if err != nil {
 		tx.Rollback()
@@ -213,6 +213,7 @@ func (r *accountRepository) RefundBalance(ctx context.Context, tx *gorm.DB, req 
 		AccountID: req.UserID,
 		Amount:    req.Balance,
 		Type:      "Refund",
+		From:      req.WalletNumber,
 	})
 
 	if err != nil {
@@ -234,7 +235,7 @@ func (r *accountRepository) DecreaseBalanceSellerWithTx(ctx context.Context, tx 
 		Strength: "UPDATE",
 		Table: clause.Table{
 			Name: clause.CurrentTable,
-		}}).Model(&account).Where("id = ?", req.UserID).Update("saller_balance", gorm.Expr("saller_balance - ?", req.Balance)).Error
+		}}).Model(&account).Where("id = ?", req.UserID).Update("seller_balance", gorm.Expr("seller_balance - ?", req.Balance)).Error
 
 	if err != nil {
 		tx.Rollback()
@@ -245,6 +246,7 @@ func (r *accountRepository) DecreaseBalanceSellerWithTx(ctx context.Context, tx 
 		AccountID: req.UserID,
 		Amount:    req.Balance.Neg(),
 		Type:      "Refund",
+		To:        req.WalletNumber,
 	})
 
 	if err != nil {
@@ -274,9 +276,10 @@ func (r *accountRepository) DecreaseBalanceBuyerWithTx(ctx context.Context, tx *
 	}
 
 	_, err = r.walletTransactionHistories.CreateWithTx(ctx, tx, dtorepository.MyWalletTransactionHistoriesRequest{
-		AccountID: req.UserID,
-		Amount:    req.Balance.Neg(),
-		Type:      req.TransactionType,
+		AccountID:      req.UserID,
+		Amount:         req.Balance.Neg(),
+		Type:           req.TransactionType,
+		ProductOrderID: req.ProductOrderID,
 	})
 
 	if err != nil {
@@ -306,9 +309,10 @@ func (r *accountRepository) IncreaseBalanceSallerWithTx(ctx context.Context, tx 
 	}
 
 	_, err = r.saleTransactionHistories.CreateWithTx(ctx, tx, dtorepository.SaleWalletTransactionHistoriesRequest{
-		AccountID: req.UserID,
-		Amount:    req.Balance,
-		Type:      req.TransactionType,
+		AccountID:      req.UserID,
+		Amount:         req.Balance,
+		Type:           req.TransactionType,
+		ProductOrderID: req.ProductOrderID,
 	})
 
 	if err != nil {

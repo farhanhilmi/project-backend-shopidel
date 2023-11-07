@@ -212,13 +212,14 @@ func (u *productOrderUsecase) CancelOrderBySeller(ctx context.Context, req dtous
 	}
 
 	data, err := u.productOrderRepository.UpdateOrderStatusByIDAndAccountID(ctx, dtorepository.ReceiveOrderRequest{
-		ID:          req.ID,
-		SellerID:    req.SellerID,
-		Status:      constant.StatusCanceled,
-		Notes:       req.Notes,
-		TotalAmount: refundedAmount,
-		AccountID:   order[0].AccountID,
-		Products:    increseProductsStock,
+		ID:                 req.ID,
+		SellerID:           req.SellerID,
+		Status:             constant.StatusCanceled,
+		Notes:              req.Notes,
+		TotalAmount:        refundedAmount,
+		AccountID:          order[0].AccountID,
+		Products:           increseProductsStock,
+		SellerWalletNumber: req.SellerWalletNumber,
 	})
 
 	if err != nil {

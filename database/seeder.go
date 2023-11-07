@@ -96,7 +96,7 @@ func seeding() {
 			Birthdate:     time.Date(2000, 10, 10, 0, 0, 0, 0, time.UTC),
 			Balance:       decimal.NewFromInt(0),
 			WalletPin:     "123456",
-			SallerBalance: decimal.NewFromInt(90000),
+			SellerBalance: decimal.NewFromInt(90000),
 		},
 		{
 			Username:     "satoni",
@@ -121,7 +121,7 @@ func seeding() {
 			Birthdate:     time.Date(2000, 10, 10, 0, 0, 0, 0, time.UTC),
 			Balance:       decimal.NewFromInt(0),
 			WalletPin:     "123456",
-			SallerBalance: decimal.NewFromInt(0),
+			SellerBalance: decimal.NewFromInt(0),
 		},
 	}
 	err := db.Create(accounts).Error
@@ -424,6 +424,7 @@ func seeding() {
 		AccountID:      1,
 		Type:           constant.SaleMoneyIncomeType,
 		Amount:         decimal.NewFromInt(90000),
+		From:           "4200913923913",
 	}).Error
 
 	if err != nil {

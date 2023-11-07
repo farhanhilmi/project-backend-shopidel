@@ -46,6 +46,7 @@ func AuthenticateJWT() gin.HandlerFunc {
 		}
 		c.Set("userId", claims.UserId)
 		c.Set("role", claims.Role)
+		c.Set("walletNumber", claims.WalletNumber)
 		c.Next()
 	}
 }

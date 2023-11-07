@@ -32,6 +32,7 @@ func (r *saleWalletTransactionHistoryRepository) CreateWithTx(ctx context.Contex
 		Type:           req.Type,
 		Amount:         req.Amount,
 		ProductOrderID: req.ProductOrderID,
+		To:             req.To,
 	}
 
 	err := tx.WithContext(ctx).Model(&walletTx).Create(&walletTx).Error

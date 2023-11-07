@@ -31,6 +31,8 @@ type MyWalletTransactionHistoriesRequest struct {
 	Type           string
 	Amount         decimal.Decimal
 	ProductOrderID int
+	From           string
+	To             string
 }
 
 type MyWalletTransactionHistoriesResponse struct {
@@ -46,6 +48,8 @@ type SaleWalletTransactionHistoriesRequest struct {
 	Type           string
 	Amount         decimal.Decimal
 	ProductOrderID int
+	From           string
+	To             string
 }
 
 type SaleWalletTransactionHistoriesResponse struct {
@@ -61,6 +65,7 @@ type MyWalletRequest struct {
 	WalletNumber    string
 	Balance         decimal.Decimal
 	TransactionType string
+	ProductOrderID  int
 }
 
 type MyWalletResponse struct {

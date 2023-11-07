@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"log"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -149,7 +150,7 @@ func (r *productOrdersRepository) UpdateOrderStatusByIDAndAccountID(ctx context.
 		return res, err
 	}
 
-	_, err = r.accountRepository.RefundBalance(ctx, tx, dtorepository.MyWalletRequest{UserID: req.AccountID, Balance: req.TotalAmount})
+	buyerAccount, err := r.accountRepository.RefundBalance(ctx, tx, dtorepository.MyWalletRequest{UserID: req.AccountID, Balance: req.TotalAmount, WalletNumber: req.SellerWalletNumber})
 	if err != nil {
 		tx.Rollback()
 		return res, err
@@ -161,7 +162,8 @@ func (r *productOrdersRepository) UpdateOrderStatusByIDAndAccountID(ctx context.
 		return res, err
 	}
 
-	_, err = r.accountRepository.DecreaseBalanceSellerWithTx(ctx, tx, dtorepository.MyWalletRequest{UserID: req.SellerID, Balance: req.TotalAmount})
+	log.Println("buyerAccount", buyerAccount)
+	_, err = r.accountRepository.DecreaseBalanceSellerWithTx(ctx, tx, dtorepository.MyWalletRequest{UserID: req.SellerID, Balance: req.TotalAmount, WalletNumber: buyerAccount.WalletNumber})
 	if err != nil {
 		tx.Rollback()
 		return res, err
@@ -268,6 +270,7 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 		UserID:          req.AccountID,
 		Balance:         req.TotalAmount,
 		TransactionType: "Checkout",
+		ProductOrderID:  res.ID,
 	})
 	if err != nil {
 		tx.Rollback()
@@ -277,6 +280,7 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 		UserID:          req.SellerID,
 		Balance:         req.TotalSellerAmount,
 		TransactionType: "Sale",
+		ProductOrderID:  res.ID,
 	})
 	if err != nil {
 		tx.Rollback()
