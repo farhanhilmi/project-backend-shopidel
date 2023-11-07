@@ -48,6 +48,12 @@ func NewAccountUsecase(config AccountUsecaseConfig) AccountUsecase {
 	return au
 }
 
+func (u *accountUsecase) RegisterSeller(ctx context.Context, req dtousecase.RegisterSellerRequest) (*[]dtousecase.RegisterSellerResponse, error) {
+	res := []dtousecase.RegisterSellerResponse{}
+
+	return &res, nil
+}
+
 func (u *accountUsecase) GetAddresses(ctx context.Context, req dtousecase.AddressRequest) (*[]dtousecase.AddressResponse, error) {
 	res := []dtousecase.AddressResponse{}
 

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -23,6 +24,12 @@ func NewAccountHandler(accountUsecase usecase.AccountUsecase) *AccountHandler {
 	}
 }
 
+func (h *AccountHandler) RegisterSeller(c *gin.Context) {
+	res := dtohttp.RegisterSellerResponse{}
+
+	c.JSON(http.StatusCreated, dtogeneral.JSONResponse{Message: fmt.Sprintf("merchant %s registered", res.ShopName), Data: res})
+}
+
 func (h *AccountHandler) GetAddresses(c *gin.Context) {
 	res := []dtohttp.AddressResponse{}
 	var req dtohttp.AddressRequest
@@ -33,7 +40,7 @@ func (h *AccountHandler) GetAddresses(c *gin.Context) {
 		return
 	}
 
-	uReq := dtousecase.AddressRequest {
+	uReq := dtousecase.AddressRequest{
 		UserId: req.UserId,
 	}
 
@@ -45,9 +52,9 @@ func (h *AccountHandler) GetAddresses(c *gin.Context) {
 
 	for _, data := range *uRes {
 		res = append(res, dtohttp.AddressResponse{
-			ID: data.ID,
-			FullAddress: data.FullAddress,
-			IsBuyerDefault: data.IsBuyerDefault,
+			ID:              data.ID,
+			FullAddress:     data.FullAddress,
+			IsBuyerDefault:  data.IsBuyerDefault,
 			IsSellerDefault: data.IsSellerDefault,
 		})
 	}

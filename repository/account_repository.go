@@ -41,11 +41,17 @@ func NewAccountRepository(db *gorm.DB) AccountRepository {
 	}
 }
 
+func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.RegisterSellerRequest) (*dtorepository.RegisterSellerResponse, error) {
+	res := dtorepository.RegisterSellerResponse{}
+
+	return &res, nil
+}
+
 func (r *accountRepository) GetAddresses(ctx context.Context, req dtorepository.AddressRequest) (*[]dtorepository.AddressResponse, error) {
 	res := []dtorepository.AddressResponse{}
 	addresses := []model.AccountAddress{}
 
-	err := r.db.WithContext(ctx).Find(&addresses).Where("account_id = ?", req.UserId).Error 
+	err := r.db.WithContext(ctx).Find(&addresses).Where("account_id = ?", req.UserId).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return &res, util.ErrNoRecordFound
 	}
@@ -59,9 +65,9 @@ func (r *accountRepository) GetAddresses(ctx context.Context, req dtorepository.
 			address.Province,
 		)
 		res = append(res, dtorepository.AddressResponse{
-			ID: address.ID,
-			FullAddress: convertedFullAddress,
-			IsBuyerDefault: address.IsBuyerDefault,
+			ID:              address.ID,
+			FullAddress:     convertedFullAddress,
+			IsBuyerDefault:  address.IsBuyerDefault,
 			IsSellerDefault: address.IsSellerDefault,
 		})
 	}

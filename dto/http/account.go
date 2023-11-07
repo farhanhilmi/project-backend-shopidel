@@ -81,6 +81,16 @@ type CheckPasswordResponse struct {
 type AddressResponse struct {
 	ID              int    `json:"id"`
 	FullAddress     string `json:"full_address"`
-	IsBuyerDefault  bool `json:"is_buyer_default"`
-	IsSellerDefault bool `json:"is_seller_default"`
+	IsBuyerDefault  bool   `json:"is_buyer_default"`
+	IsSellerDefault bool   `json:"is_seller_default"`
+}
+
+type RegisterSellerRequest struct {
+	ShopName      string `json:"shop_name"`
+	AddressId     int    `json:"address_id"`
+	ListCourierId []int  `json:"list_courier_id"`
+}
+
+type RegisterSellerResponse struct {
+	ShopName string
 }

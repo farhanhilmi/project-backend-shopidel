@@ -95,3 +95,13 @@ type AddressResponse struct {
 	IsBuyerDefault  bool
 	IsSellerDefault bool
 }
+
+type RegisterSellerRequest struct {
+	ShopName   string
+	AddressId  int
+	CouriersId []int
+}
+
+type RegisterSellerResponse struct {
+	ShopName string
+}
