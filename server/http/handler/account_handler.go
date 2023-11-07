@@ -26,8 +26,30 @@ func NewAccountHandler(accountUsecase usecase.AccountUsecase) *AccountHandler {
 
 func (h *AccountHandler) RegisterSeller(c *gin.Context) {
 	res := dtohttp.RegisterSellerResponse{}
+	var req dtohttp.RegisterSellerRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
 
-	c.JSON(http.StatusCreated, dtogeneral.JSONResponse{Message: fmt.Sprintf("merchant %s registered", res.ShopName), Data: res})
+	uReq := dtousecase.RegisterSellerRequest{
+		UserId:        c.GetInt("userId"),
+		ShopName:      req.ShopName,
+		AddressId:     req.AddressId,
+		ListCourierId: req.ListCourierId,
+	}
+
+	uRes, err := h.accountUsecase.RegisterSeller(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res.ShopName = uRes.ShopName
+
+	convertMessage := fmt.Sprintf("merchant %s registered", res.ShopName)
+	c.JSON(http.StatusCreated, dtogeneral.JSONResponse{Message: convertMessage})
 }
 
 func (h *AccountHandler) GetAddresses(c *gin.Context) {

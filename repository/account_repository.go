@@ -33,6 +33,7 @@ type AccountRepository interface {
 	DecreaseBalanceSellerWithTx(ctx context.Context, tx *gorm.DB, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error)
 	FindAccountCartItems(ctx context.Context, req dtorepository.GetAccountCartItemsRequest) (dtorepository.GetAccountCartItemsResponse, error)
 	GetAddresses(ctx context.Context, req dtorepository.AddressRequest) (*[]dtorepository.AddressResponse, error)
+	CreateSeller(ctx context.Context, req dtorepository.RegisterSellerRequest) (*dtorepository.RegisterSellerResponse, error)
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {

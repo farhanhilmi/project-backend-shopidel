@@ -37,7 +37,9 @@ func dropTable() {
 			product_order_details,
 			couriers,
 			account_addresses,
-			account_carts;
+			account_carts,
+			seller_couriers
+			;
 	`
 
 	err := db.Exec(sql).Error
@@ -73,6 +75,7 @@ func createTable() {
 		&model.ProductOrderDetails{},
 		&model.AccountAddress{},
 		&model.AccountCarts{},
+		&model.SellerCouriers{},
 	)
 
 	if err != nil {
@@ -432,35 +435,35 @@ func seeding() {
 
 	err = db.Create(&[]model.AccountAddress{
 		{
-			AccountID: 2,
-			Province: "DKI Jakarta",
-			District: "Jakarta Selatan",
-			SubDistrict: "Setiabudi",
-			Kelurahan: "Setiabudi",
-			ZipCode: "12230",
+			AccountID:            2,
+			Province:             "DKI Jakarta",
+			District:             "Jakarta Selatan",
+			SubDistrict:          "Setiabudi",
+			Kelurahan:            "Setiabudi",
+			ZipCode:              "12230",
 			RajaOngkirDistrictId: "153",
-			Detail: "Sopo Del Tower, Jalan Mega Kuningan Barat III Lot 10.1-6, RT.03/RW.03",
-			IsBuyerDefault: true,
+			Detail:               "Sopo Del Tower, Jalan Mega Kuningan Barat III Lot 10.1-6, RT.03/RW.03",
+			IsBuyerDefault:       true,
 		},
 		{
-			AccountID: 2,
-			Province: "DKI Jakarta",
-			District: "Jakarta Timur",
-			SubDistrict: "Jatinegara",
-			Kelurahan: "Cipinang Besar Sel",
-			ZipCode: "14738",
+			AccountID:            2,
+			Province:             "DKI Jakarta",
+			District:             "Jakarta Timur",
+			SubDistrict:          "Jatinegara",
+			Kelurahan:            "Cipinang Besar Sel",
+			ZipCode:              "14738",
 			RajaOngkirDistrictId: "154",
-			Detail: "Jl. Jend. Basuki Rachmat No.1A",
+			Detail:               "Jl. Jend. Basuki Rachmat No.1A",
 		},
 		{
-			AccountID: 2,
-			Province: "DKI Jakarta",
-			District: "Jakarta Barat",
-			SubDistrict: "Kembangan",
-			Kelurahan: "Lingkar Luar",
+			AccountID:            2,
+			Province:             "DKI Jakarta",
+			District:             "Jakarta Barat",
+			SubDistrict:          "Kembangan",
+			Kelurahan:            "Lingkar Luar",
 			RajaOngkirDistrictId: "151",
-			ZipCode: "11610",
-			Detail: "Puri Mansion Estate, Jl. Puri",
+			ZipCode:              "11610",
+			Detail:               "Puri Mansion Estate, Jl. Puri",
 		},
 	}).Error
 
@@ -487,6 +490,21 @@ func seeding() {
 	}
 
 	err = db.Create(accountCarts).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Create(&[]model.SellerCouriers{
+		{
+			AccountID: 1,
+			CourierID: 1,
+		},
+		{
+			AccountID: 1,
+			CourierID: 2,
+		},
+	}).Error
 
 	if err != nil {
 		panic(err)

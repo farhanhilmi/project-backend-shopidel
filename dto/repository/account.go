@@ -97,9 +97,10 @@ type AddressResponse struct {
 }
 
 type RegisterSellerRequest struct {
-	ShopName   string
-	AddressId  int
-	CouriersId []int
+	UserId        int
+	ShopName      string
+	AddressId     int
+	ListCourierId []int
 }
 
 type RegisterSellerResponse struct {
