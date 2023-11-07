@@ -35,3 +35,8 @@ type CheckDeliveryFeeRequest struct {
 	Weight      string `json:"weight" binding:"required"`
 	CourierID   int    `json:"courier_id" binding:"required"`
 }
+
+type UpdateCartRequest struct {
+	ProductID int `json:"product_id" binding:"required"`
+	Quantity  int `json:"quantity" binding:"required"`
+}

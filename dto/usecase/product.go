@@ -65,3 +65,20 @@ type ProductSelection struct {
 	SelectionVariantName string `json:"selection_variant_name,omitempty"`
 	SelectionName        string `json:"selection_name,omitempty"`
 }
+
+type UpdateCartRequest struct {
+	ProductID int
+	Quantity  int
+}
+
+type UpdateCartResponse struct {
+	ProductID int `json:"product_id"`
+	Quantity  int `json:"quantity"`
+}
+
+type ProductCart struct {
+	ID        int
+	ProductID int
+	Quantity  int
+	AccountID int
+}

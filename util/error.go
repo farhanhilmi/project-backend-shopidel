@@ -57,4 +57,6 @@ var (
 	ErrCourierNotAvailable     = &CustomError{Message: "courier not found or not available", Code: BadRequest}
 	ErrInvalidDateFormat       = &CustomError{Message: "invalid date format. the date format is YYYY-MM-DD, e.g: 2023-09-10", Code: BadRequest}
 	ErrWalletHistorySortBy     = &CustomError{Message: "sortBy should be one of 'amount', 'type', 'date'", Code: BadRequest}
+	ErrQtyExceed               = &CustomError{Message: "The quantity of product available currently is less than the quantity you requested", Code: BadRequest}
+	ErrProductCartNotFound     = &CustomError{Message: "Product not found", Code: BadRequest}
 )

@@ -84,3 +84,15 @@ type ProductCombinationVariantRespponse struct {
 	Stock           int
 	ProductID       int
 }
+
+type UpdateCart struct {
+	ProductID int
+	Quantity  int
+}
+
+type ProductCart struct {
+	ID        int
+	ProductID int
+	Quantity  int
+	AccountID int
+}
