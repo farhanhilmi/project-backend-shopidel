@@ -15,7 +15,7 @@ type saleWalletTransactionHistoryRepository struct {
 }
 
 type SaleWalletTransactionHistoryRepository interface {
-	CreateWithTx(ctx context.Context, tx *gorm.DB, req dtorepository.SaleWalletTransactionHistoriesRequest) (dtorepository.SaleWalletTransactionHistoriesResponse, error)
+	CreateWithTx(ctx context.Context, tx *gorm.DB, req model.SaleWalletTransactionHistories) (dtorepository.SaleWalletTransactionHistoriesResponse, error)
 }
 
 func NewSaleWalletTransactionHistoryRepository(db *gorm.DB) SaleWalletTransactionHistoryRepository {
@@ -24,27 +24,27 @@ func NewSaleWalletTransactionHistoryRepository(db *gorm.DB) SaleWalletTransactio
 	}
 }
 
-func (r *saleWalletTransactionHistoryRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, req dtorepository.SaleWalletTransactionHistoriesRequest) (dtorepository.SaleWalletTransactionHistoriesResponse, error) {
+func (r *saleWalletTransactionHistoryRepository) CreateWithTx(ctx context.Context, tx *gorm.DB, req model.SaleWalletTransactionHistories) (dtorepository.SaleWalletTransactionHistoriesResponse, error) {
 	res := dtorepository.SaleWalletTransactionHistoriesResponse{}
 
-	walletTx := model.SaleWalletTransactionHistories{
-		AccountID:      req.AccountID,
-		Type:           req.Type,
-		Amount:         req.Amount,
-		ProductOrderID: req.ProductOrderID,
-		To:             req.To,
-	}
+	// walletTx := model.SaleWalletTransactionHistories{
+	// 	AccountID:      req.AccountID,
+	// 	Type:           req.Type,
+	// 	Amount:         req.Amount,
+	// 	ProductOrderID: req.ProductOrderID,
+	// 	To:             req.To,
+	// }
 
-	err := tx.WithContext(ctx).Model(&walletTx).Create(&walletTx).Error
+	err := tx.WithContext(ctx).Model(&model.SaleWalletTransactionHistories{}).Create(&req).Scan(&res).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound
 	}
 
-	res.AccountID = walletTx.AccountID
-	res.Amount = walletTx.Amount
-	res.Type = walletTx.Type
-	res.ID = walletTx.ID
-	res.ProductOrderID = walletTx.ProductOrderID
+	// res.AccountID = walletTx.AccountID
+	// res.Amount = walletTx.Amount
+	// res.Type = walletTx.Type
+	// res.ID = walletTx.ID
+	// res.ProductOrderID = walletTx.ProductOrderID
 
 	return res, err
 }

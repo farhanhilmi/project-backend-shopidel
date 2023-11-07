@@ -150,7 +150,12 @@ func (r *productOrdersRepository) UpdateOrderStatusByIDAndAccountID(ctx context.
 		return res, err
 	}
 
-	buyerAccount, err := r.accountRepository.RefundBalance(ctx, tx, dtorepository.MyWalletRequest{UserID: req.AccountID, Balance: req.TotalAmount, WalletNumber: req.SellerWalletNumber})
+	buyerAccount, err := r.accountRepository.RefundBalance(ctx, tx, dtorepository.MyWalletRequest{
+		UserID:         req.AccountID,
+		Balance:        req.TotalAmount,
+		WalletNumber:   req.SellerWalletNumber,
+		ProductOrderID: req.ID,
+	})
 	if err != nil {
 		tx.Rollback()
 		return res, err
@@ -162,8 +167,7 @@ func (r *productOrdersRepository) UpdateOrderStatusByIDAndAccountID(ctx context.
 		return res, err
 	}
 
-	log.Println("buyerAccount", buyerAccount)
-	_, err = r.accountRepository.DecreaseBalanceSellerWithTx(ctx, tx, dtorepository.MyWalletRequest{UserID: req.SellerID, Balance: req.TotalAmount, WalletNumber: buyerAccount.WalletNumber})
+	_, err = r.accountRepository.DecreaseBalanceSellerWithTx(ctx, tx, dtorepository.MyWalletRequest{UserID: req.SellerID, Balance: req.TotalAmount, WalletNumber: buyerAccount.WalletNumber, ProductOrderID: req.ID})
 	if err != nil {
 		tx.Rollback()
 		return res, err
@@ -235,6 +239,7 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 		ZipCode:       req.ZipCode,
 		AddressDetail: req.AddressDetail,
 	}
+	log.Println("REQ", req)
 
 	err := tx.WithContext(ctx).Create(&a).Scan(&res).Error
 	if err != nil {
@@ -271,6 +276,7 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 		Balance:         req.TotalAmount,
 		TransactionType: "Checkout",
 		ProductOrderID:  res.ID,
+		WalletNumber:    req.SellerWalletNumber,
 	})
 	if err != nil {
 		tx.Rollback()
@@ -281,6 +287,7 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 		Balance:         req.TotalSellerAmount,
 		TransactionType: "Sale",
 		ProductOrderID:  res.ID,
+		WalletNumber:    req.BuyerWalletNumber,
 	})
 	if err != nil {
 		tx.Rollback()

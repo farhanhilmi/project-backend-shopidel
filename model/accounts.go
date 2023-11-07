@@ -41,7 +41,7 @@ type MyWalletTransactionHistories struct {
 	ID             int             `gorm:"primaryKey;not null,autoIncrement;serial"`
 	AccountID      int             `gorm:"foreignKey:AccountID;type:bigint;not null"`
 	Type           string          `gorm:"type:varchar"`
-	From           string          `gorm:"type:varchar;default:5550000012345"`
+	From           string          `gorm:"type:varchar;default:null"`
 	To             string          `gorm:"type:varchar;default:null"`
 	Amount         decimal.Decimal `gorm:"type:decimal"`
 	ProductOrderID int             `gorm:"foreignKey:AccountID;type:bigint;default:null"`
