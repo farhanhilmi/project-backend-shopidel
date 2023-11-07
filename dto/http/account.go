@@ -73,3 +73,13 @@ type EditAccountResponse struct {
 type CheckPasswordResponse struct {
 	IsCorrect bool `json:"isCorrect"`
 }
+
+type AddProductToCartRequest struct {
+	ProductId int `json:"product_id" binding:"required"`
+	Quantity  int `json:"quantity" binding:"required"`
+}
+
+type AddProductToCartResponse struct {
+	ProductId int `json:"product_id"`
+	Quantity  int `json:"quantity"`
+}

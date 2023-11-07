@@ -292,3 +292,30 @@ func (h *AccountHandler) GetCart(c *gin.Context) {
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes})
 }
+
+func (h *AccountHandler) AddProductToCart(c *gin.Context) {
+	req := dtohttp.AddProductToCartRequest{}
+	res := dtohttp.AddProductToCartResponse{}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
+		return
+	}
+
+	uReq := dtousecase.AddProductToCartRequest{
+		UserId:           c.GetInt("userId"),
+		ProductVariantId: req.ProductId,
+		Quantity:         req.Quantity,
+	}
+
+	uRes, err := h.accountUsecase.AddProductToCart(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res.ProductId = uRes.ProductId
+	res.Quantity = uRes.Quantity
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
+}

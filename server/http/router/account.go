@@ -15,6 +15,7 @@ func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 	group.GET("/wallets", h.GetWallet)
 	group.POST("/wallets/topup", h.TopUpBalanceWallet)
 	group.GET("/carts", h.GetCart)
+	group.POST("/carts", h.AddProductToCart)
 
 	group.POST("/check-password", h.CheckISPasswordCorrect)
 

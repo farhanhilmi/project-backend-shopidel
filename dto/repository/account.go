@@ -84,3 +84,15 @@ type CartItem struct {
 	ProductPrice decimal.Decimal
 	Quantity     int
 }
+
+type AddProductToCartRequest struct {
+	AccountId                   int
+	ProductVariantCombinationId int
+	Quantity                    int
+}
+
+type AddProductToCartResponse struct {
+	AccountId                   int
+	ProductVariantCombinationId int
+	Quantity                    int
+}

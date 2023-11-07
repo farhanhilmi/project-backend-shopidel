@@ -31,6 +31,7 @@ type AccountRepository interface {
 	RefundBalance(ctx context.Context, tx *gorm.DB, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error)
 	DecreaseBalanceSellerWithTx(ctx context.Context, tx *gorm.DB, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error)
 	FindAccountCartItems(ctx context.Context, req dtorepository.GetAccountCartItemsRequest) (dtorepository.GetAccountCartItemsResponse, error)
+	AddProductToCart(ctx context.Context, req dtorepository.AddProductToCartRequest) (dtorepository.AddProductToCartResponse, error)
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
@@ -422,6 +423,38 @@ func (r *accountRepository) FindAccountCartItems(ctx context.Context, req dtorep
 	if err != nil {
 		return res, err
 	}
+
+	return res, nil
+}
+
+func (r *accountRepository) AddProductToCart(ctx context.Context, req dtorepository.AddProductToCartRequest) (dtorepository.AddProductToCartResponse, error) {
+	res := dtorepository.AddProductToCartResponse{}
+
+	pvc := model.ProductVariantSelectionCombinations{}
+
+	err := r.db.WithContext(ctx).Where("id = ?", req.ProductVariantCombinationId).First(&pvc).Error
+	if err != nil {
+		return res, err
+	}
+
+	if pvc.ID == 0 {
+		return res, errors.New("product not found")
+	}
+
+	c := model.AccountCarts{
+		AccountID:                            req.AccountId,
+		ProductVariantSelectionCombinationId: req.ProductVariantCombinationId,
+		Quantity:                             req.Quantity,
+	}
+
+	err = r.db.WithContext(ctx).Create(&c).Error
+	if err != nil {
+		return res, err
+	}
+
+	res.AccountId = req.AccountId
+	res.Quantity = c.Quantity
+	res.ProductVariantCombinationId = c.ProductVariantSelectionCombinationId
 
 	return res, nil
 }
