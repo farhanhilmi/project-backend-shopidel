@@ -7,12 +7,13 @@ import (
 )
 
 type ProductOrderRequest struct {
-	ID        int
-	AccountID int
-	CourierID int
-	SellerID  int
-	Notes     string
-	Status    string
+	ID                 int
+	AccountID          int
+	CourierID          int
+	SellerID           int
+	Notes              string
+	Status             string
+	SellerWalletNumber string
 }
 
 type ProductOrderResponse struct {

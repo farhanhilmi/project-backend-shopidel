@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto"
@@ -12,15 +13,18 @@ import (
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/exp/slices"
 )
 
 type AccountHandler struct {
-	accountUsecase usecase.AccountUsecase
+	accountUsecase             usecase.AccountUsecase
+	myWalletTransactionUsecase usecase.MyWalletTransactionUsecase
 }
 
-func NewAccountHandler(accountUsecase usecase.AccountUsecase) *AccountHandler {
+func NewAccountHandler(accountUsecase usecase.AccountUsecase, myWalletTransactionUsecase usecase.MyWalletTransactionUsecase) *AccountHandler {
 	return &AccountHandler{
-		accountUsecase: accountUsecase,
+		accountUsecase:             accountUsecase,
+		myWalletTransactionUsecase: myWalletTransactionUsecase,
 	}
 }
 
@@ -352,4 +356,65 @@ func (h *AccountHandler) GetCart(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes})
+}
+
+func (h *AccountHandler) GetListTransactions(c *gin.Context) {
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	sortBy := c.DefaultQuery("sortBy", "date")
+	sort := c.DefaultQuery("sort", "desc")
+	startDate := c.DefaultQuery("startDate", "")
+	endDate := c.DefaultQuery("endDate", "")
+	transactionType := c.DefaultQuery("type", "")
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	if valid := util.IsDateValid(startDate); !valid && startDate != "" {
+		c.Error(util.ErrInvalidDateFormat)
+		return
+	}
+	if valid := util.IsDateValid(endDate); !valid && endDate != "" {
+		c.Error(util.ErrInvalidDateFormat)
+		return
+	}
+
+	if !slices.Contains([]string{"date", "amount", "type"}, sortBy) {
+		c.Error(util.ErrWalletHistorySortBy)
+		return
+	}
+
+	switch sortBy {
+	case "date":
+		sortBy = "created_at"
+	}
+
+	reqWallet := dtousecase.WalletHistoriesParams{
+		SortBy:          sortBy,
+		Sort:            sort,
+		Limit:           limit,
+		Page:            page,
+		StartDate:       startDate,
+		EndDate:         endDate,
+		AccountID:       c.GetInt("userId"),
+		TransactionType: transactionType,
+	}
+
+	transactions, pagination, err := h.myWalletTransactionUsecase.GetTransactions(c.Request.Context(), reqWallet)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONWithPagination{Data: transactions, Pagination: *pagination})
 }

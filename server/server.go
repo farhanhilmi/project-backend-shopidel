@@ -31,6 +31,7 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 	productVariantCombinationRepo := repository.NewProductVariantCombinationRepository(db)
 	accountAddressRepo := repository.NewAccountAddressRepository(db)
 	courierRepo := repository.NewCourierRepository(db)
+	myWalletRepo := repository.NewWalletTransactionHistoryRepository(db)
 
 	pouc := usecase.ProductOrderUsecaseConfig{
 		ProductOrderRepository:              productOrderRepo,
@@ -49,11 +50,17 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 		ProductRepository: productRepo,
 	}
 
+	wuc := usecase.MyWalletTransactionUsecaseConfig{
+		WalletTransactionRepo: myWalletRepo,
+		AccountRepository:     accountRepo,
+	}
+
 	productUsecase := usecase.NewProductUsecase(puc)
 	accountUsecase := usecase.NewAccountUsecase(auc)
 	productOrderUsecase := usecase.NewProductOrderUsecase(pouc)
+	walletTransactionUsecase := usecase.NewMyWalletTransactionUsecase(wuc)
 
-	accountHandler := handler.NewAccountHandler(accountUsecase)
+	accountHandler := handler.NewAccountHandler(accountUsecase, walletTransactionUsecase)
 	productOrderHandler := handler.NewProductOrderHandler(productOrderUsecase)
 	productHandler := handler.NewProductHandler(productUsecase)
 

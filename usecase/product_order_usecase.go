@@ -149,22 +149,34 @@ func (u *productOrderUsecase) CheckoutOrder(ctx context.Context, req dtousecase.
 		return nil, util.ErrInsufficientBalance
 	}
 
+	seller, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{
+		UserId: req.SellerID,
+	})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	orderRequest := dtorepository.ProductOrderRequest{
-		Province:          address.Province,
-		District:          address.District,
-		SubDistrict:       address.SubDistrict,
-		Kelurahan:         address.Kelurahan,
-		AddressDetail:     address.Detail,
-		ZipCode:           address.ZipCode,
-		AccountID:         req.UserID,
-		SellerID:          req.SellerID,
-		CourierID:         req.CourierID,
-		Status:            constant.StatusWaitingSellerConfirmation,
-		Notes:             req.Notes,
-		DeliveryFee:       deliveryFee,
-		TotalAmount:       totalPayment,
-		TotalSellerAmount: totalPayment.Sub(deliveryFee),
-		ProductVariants:   orderDetails,
+		Province:           address.Province,
+		District:           address.District,
+		SubDistrict:        address.SubDistrict,
+		Kelurahan:          address.Kelurahan,
+		AddressDetail:      address.Detail,
+		ZipCode:            address.ZipCode,
+		AccountID:          req.UserID,
+		SellerID:           req.SellerID,
+		CourierID:          req.CourierID,
+		Status:             constant.StatusWaitingSellerConfirmation,
+		Notes:              req.Notes,
+		DeliveryFee:        deliveryFee,
+		TotalAmount:        totalPayment,
+		TotalSellerAmount:  totalPayment.Sub(deliveryFee),
+		ProductVariants:    orderDetails,
+		BuyerWalletNumber:  account.WalletNumber,
+		SellerWalletNumber: seller.WalletNumber,
 	}
 
 	order, err := u.productOrderRepository.Create(ctx, orderRequest)
@@ -212,13 +224,14 @@ func (u *productOrderUsecase) CancelOrderBySeller(ctx context.Context, req dtous
 	}
 
 	data, err := u.productOrderRepository.UpdateOrderStatusByIDAndAccountID(ctx, dtorepository.ReceiveOrderRequest{
-		ID:          req.ID,
-		SellerID:    req.SellerID,
-		Status:      constant.StatusCanceled,
-		Notes:       req.Notes,
-		TotalAmount: refundedAmount,
-		AccountID:   order[0].AccountID,
-		Products:    increseProductsStock,
+		ID:                 req.ID,
+		SellerID:           req.SellerID,
+		Status:             constant.StatusCanceled,
+		Notes:              req.Notes,
+		TotalAmount:        refundedAmount,
+		AccountID:          order[0].AccountID,
+		Products:           increseProductsStock,
+		SellerWalletNumber: req.SellerWalletNumber,
 	})
 
 	if err != nil {

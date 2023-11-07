@@ -9,7 +9,7 @@ import (
 func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 	account := gin.Group("accounts")
 	{
-		account.Use(middleware.AuthenticateJWT())	
+		account.Use(middleware.AuthenticateJWT())
 		account.GET("/carts", h.GetCart)
 		account.POST("/check-password", h.CheckISPasswordCorrect)
 		account.GET("/address", h.GetAddresses)
@@ -25,9 +25,11 @@ func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 			wallet.POST("/activate", h.ActivateMyWallet)
 			wallet.PUT("/change-pin", h.ChangeWalletPIN)
 			wallet.GET("", h.GetWallet)
+			wallet.GET("/histories", h.GetListTransactions)
+
 			wallet.POST("/topup", h.TopUpBalanceWallet)
 		}
 	}
-	
+
 	return gin
 }

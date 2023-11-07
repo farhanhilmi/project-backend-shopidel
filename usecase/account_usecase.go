@@ -109,7 +109,7 @@ func (u *accountUsecase) Login(ctx context.Context, req dtousecase.LoginRequest)
 		role = "seller"
 	}
 
-	token, err := util.GenerateJWT(userAccount.ID, role)
+	token, err := util.GenerateJWT(userAccount.ID, role, userAccount.WalletNumber)
 	if err != nil {
 		return nil, err
 	}
