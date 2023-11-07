@@ -49,6 +49,7 @@ func NewAccountRepository(db *gorm.DB) AccountRepository {
 func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.RegisterSellerRequest) (*dtorepository.RegisterSellerResponse, error) {
 	res := dtorepository.RegisterSellerResponse{}
 	account := model.Accounts{}
+	couriers := []model.Couriers{}
 
 	var seller_couriers []model.SellerCouriers
 
@@ -93,7 +94,7 @@ func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		tx.Rollback()
-		return &res, util.ErrNoRecordFound
+		return &res, util.ErrAddressNotAvailable
 	}
 
 	if err != nil {
@@ -110,6 +111,19 @@ func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.
 			IsBuyerDefault:  false,
 			IsSellerDefault: true,
 		}).Error
+
+	if err != nil {
+		tx.Rollback()
+		return &res, err
+	}
+
+	err = r.db.WithContext(ctx).Model(&model.Couriers{}).Where("id IN ?", req.ListCourierId).Scan(&couriers).Error
+
+	if len(couriers) < len(req.ListCourierId) {
+		tx.Rollback()
+		return &res, util.ErrCourierNotAvailable
+	}
+
 	if err != nil {
 		tx.Rollback()
 		return &res, err

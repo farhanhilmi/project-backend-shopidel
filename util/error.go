@@ -60,4 +60,5 @@ var (
 	ErrQtyExceed                 = &CustomError{Message: "The quantity of product available currently is less than the quantity you requested", Code: BadRequest}
 	ErrProductCartNotFound       = &CustomError{Message: "Product not found", Code: BadRequest}
 	ErrAlreadyRegisteredAsSeller = &CustomError{Message: "already registered as seller", Code: BadRequest}
+	ErrAddressNotAvailable       = &CustomError{Message: "address not found or available", Code: BadRequest}
 )
