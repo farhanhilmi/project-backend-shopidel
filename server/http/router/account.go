@@ -16,6 +16,7 @@ func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 		account.POST("/check-password", h.CheckISPasswordCorrect)
 		account.GET("/address", h.GetAddresses)
 		account.PUT("/carts", h.UpdateCart)
+		account.DELETE("/carts", h.DeleteCartProduct)
 
 		profile := account.Group("profile")
 		{

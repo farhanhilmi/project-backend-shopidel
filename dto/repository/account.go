@@ -118,3 +118,11 @@ type RegisterSellerRequest struct {
 type RegisterSellerResponse struct {
 	ShopName string
 }
+
+type DeleteCartProductRequest struct {
+	ListProductID []int
+}
+
+type DeleteCartProductResponse struct {
+	ListProductID []int
+}
