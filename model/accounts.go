@@ -13,7 +13,7 @@ type Accounts struct {
 	Email                   string    `gorm:"type:varchar;not null"`
 	PhoneNumber             string    `gorm:"type:varchar"`
 	Password                string    `gorm:"type:varchar"`
-	ShopName                string    `gorm:"type:varchar"`
+	ShopName                string    `gorm:"type:varchar;unique"`
 	Gender                  string    `gorm:"type:varchar"`
 	Birthdate               time.Time `gorm:"type:timestamp"`
 	ProfilePicture          string    `gorm:"type:varchar"`
