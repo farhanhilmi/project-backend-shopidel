@@ -51,4 +51,8 @@ var (
 	ErrOrderStatusNotWaiting   = &CustomError{Message: "you can only cancel orders that are still awaiting seller confirmation", Code: BadRequest}
 	ErrWeakPassword            = &CustomError{Message: "password should have at least one uppercase, one lowercase with minimum length is 8", Code: BadRequest}
 	ErrOrderNotFound           = &CustomError{Message: "We could not find the order you are looking for or the order has been processed previously"}
+	ErrInsufficientStock       = &CustomError{Message: "Insufficient product stock", Code: BadRequest}
+	ErrInsufficientBalance     = &CustomError{Message: "Your wallet balance is insufficient, please top up first to proceed with order checkout", Code: BadRequest}
+	ErrQtyInputZero            = &CustomError{Message: "Quantity must be minimum one", Code: BadRequest}
+	ErrCourierNotAvailable     = &CustomError{Message: "courier not found or not available", Code: BadRequest}
 )

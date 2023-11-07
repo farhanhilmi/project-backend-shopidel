@@ -32,3 +32,42 @@ type ProductOrderResponse struct {
 	UpdatedAt     time.Time
 	DeletedAt     time.Time
 }
+
+type ProductVariantOrder struct {
+	ID       int `json:"id" binding:"required"`
+	Quantity int `json:"quantity" binding:"required"`
+}
+
+type CheckoutOrderRequest struct {
+	ProductVariant       []ProductVariantOrder
+	DestinationAddressID string
+	VoucherID            int
+	UserID               int
+	CourierID            int
+	SellerID             int
+	Notes                string
+	Weight               string
+}
+
+type CheckoutOrderResponse struct {
+	ID                   int
+	ProductVariant       []ProductVariantOrder
+	DestinationAddressID int
+	VoucherID            int
+	CourierID            int
+	UserID               int
+}
+
+type CheckDeliveryFeeRequest struct {
+	ID          int    `json:"id"`
+	Origin      string `json:"origin" binding:"required"`
+	Destination string `json:"destination" binding:"required"`
+	Weight      string `json:"weight" binding:"required"`
+	Courier     string `json:"courier" binding:"required"`
+}
+
+type CourierFeeResponse struct {
+	Cost      int    `json:"cost"`
+	Estimated string `json:"estimated"`
+	Note      string `json:"note"`
+}

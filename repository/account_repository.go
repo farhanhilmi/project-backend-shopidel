@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -30,14 +31,45 @@ type AccountRepository interface {
 	UpdateAccountWithoutEmail(ctx context.Context, req dtorepository.EditAccountRequest) (*dtorepository.EditAccountResponse, error)
 	RefundBalance(ctx context.Context, tx *gorm.DB, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error)
 	DecreaseBalanceSellerWithTx(ctx context.Context, tx *gorm.DB, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error)
+	DecreaseBalanceBuyerWithTx(ctx context.Context, tx *gorm.DB, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error)
+	IncreaseBalanceSallerWithTx(ctx context.Context, tx *gorm.DB, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error)
 	FindAccountCartItems(ctx context.Context, req dtorepository.GetAccountCartItemsRequest) (dtorepository.GetAccountCartItemsResponse, error)
 	AddProductToCart(ctx context.Context, req dtorepository.AddProductToCartRequest) (dtorepository.AddProductToCartResponse, error)
+	GetAddresses(ctx context.Context, req dtorepository.AddressRequest) (*[]dtorepository.AddressResponse, error)
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
 	return &accountRepository{
 		db: db,
 	}
+}
+
+func (r *accountRepository) GetAddresses(ctx context.Context, req dtorepository.AddressRequest) (*[]dtorepository.AddressResponse, error) {
+	res := []dtorepository.AddressResponse{}
+	addresses := []model.AccountAddress{}
+
+	err := r.db.WithContext(ctx).Find(&addresses).Where("account_id = ?", req.UserId).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return &res, util.ErrNoRecordFound
+	}
+
+	for _, address := range addresses {
+		convertedFullAddress := fmt.Sprintf("%s, %s, %s, %s, %s.",
+			address.Detail,
+			address.Kelurahan,
+			address.SubDistrict,
+			address.District,
+			address.Province,
+		)
+		res = append(res, dtorepository.AddressResponse{
+			ID:              address.ID,
+			FullAddress:     convertedFullAddress,
+			IsBuyerDefault:  address.IsBuyerDefault,
+			IsSellerDefault: address.IsSellerDefault,
+		})
+	}
+
+	return &res, nil
 }
 
 func (r *accountRepository) UpdateAccount(ctx context.Context, req dtorepository.EditAccountRequest) (*dtorepository.EditAccountResponse, error) {
@@ -214,6 +246,70 @@ func (r *accountRepository) DecreaseBalanceSellerWithTx(ctx context.Context, tx 
 		AccountID: req.UserID,
 		Amount:    req.Balance.Neg(),
 		Type:      "Refund",
+	})
+
+	if err != nil {
+		tx.Rollback()
+		return dtorepository.WalletResponse{}, err
+	}
+
+	return dtorepository.WalletResponse{
+		UserID:       account.ID,
+		WalletNumber: account.WalletNumber,
+		Balance:      account.Balance,
+	}, nil
+}
+
+func (r *accountRepository) DecreaseBalanceBuyerWithTx(ctx context.Context, tx *gorm.DB, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error) {
+	account := model.Accounts{}
+
+	err := tx.WithContext(ctx).Clauses(clause.Locking{
+		Strength: "UPDATE",
+		Table: clause.Table{
+			Name: clause.CurrentTable,
+		}}).Model(&account).Where("id = ?", req.UserID).Update("balance", gorm.Expr("balance - ?", req.Balance)).Error
+
+	if err != nil {
+		tx.Rollback()
+		return dtorepository.WalletResponse{}, err
+	}
+
+	_, err = r.walletTransactionHistories.CreateWithTx(ctx, tx, dtorepository.MyWalletTransactionHistoriesRequest{
+		AccountID: req.UserID,
+		Amount:    req.Balance.Neg(),
+		Type:      req.TransactionType,
+	})
+
+	if err != nil {
+		tx.Rollback()
+		return dtorepository.WalletResponse{}, err
+	}
+
+	return dtorepository.WalletResponse{
+		UserID:       account.ID,
+		WalletNumber: account.WalletNumber,
+		Balance:      account.Balance,
+	}, nil
+}
+
+func (r *accountRepository) IncreaseBalanceSallerWithTx(ctx context.Context, tx *gorm.DB, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error) {
+	account := model.Accounts{}
+
+	err := tx.WithContext(ctx).Clauses(clause.Locking{
+		Strength: "UPDATE",
+		Table: clause.Table{
+			Name: clause.CurrentTable,
+		}}).Model(&account).Where("id = ?", req.UserID).Update("saller_balance", gorm.Expr("saller_balance + ?", req.Balance)).Error
+
+	if err != nil {
+		tx.Rollback()
+		return dtorepository.WalletResponse{}, err
+	}
+
+	_, err = r.saleTransactionHistories.CreateWithTx(ctx, tx, dtorepository.SaleWalletTransactionHistoriesRequest{
+		AccountID: req.UserID,
+		Amount:    req.Balance,
+		Type:      req.TransactionType,
 	})
 
 	if err != nil {

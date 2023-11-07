@@ -432,42 +432,59 @@ func seeding() {
 
 	err = db.Create(&[]model.AccountAddress{
 		{
-			AccountID: 2,
-			Province: "DKI Jakarta",
-			District: "Jakarta Selatan",
-			SubDistrict: "Sub District 1",
-			Kelurahan: "lurahan skuy living",
-			ZipCode: "12230",
+			AccountID:            2,
+			Province:             "DKI Jakarta",
+			District:             "Jakarta Selatan",
+			SubDistrict:          "Setiabudi",
+			Kelurahan:            "Setiabudi",
+			ZipCode:              "12230",
 			RajaOngkirDistrictId: "153",
-			Detail: "mambo jambo",
+			Detail:               "Sopo Del Tower, Jalan Mega Kuningan Barat III Lot 10.1-6, RT.03/RW.03",
+			IsBuyerDefault:       true,
+			IsSellerDefault:      false,
 		},
 		{
-			AccountID: 2,
-			Province: "DKI Jakarta",
-			District: "Jakarta Timur",
-			SubDistrict: "Sub District 2",
-			Kelurahan: "lurahan teranjay",
-			ZipCode: "14738",
+			AccountID:            2,
+			Province:             "DKI Jakarta",
+			District:             "Jakarta Timur",
+			SubDistrict:          "Jatinegara",
+			Kelurahan:            "Cipinang Besar Sel",
+			ZipCode:              "14738",
 			RajaOngkirDistrictId: "154",
-			Detail: "rujak cireng",
-			IsBuyerDefault: true,
+			Detail:               "Jl. Jend. Basuki Rachmat No.1A",
+			IsBuyerDefault:       true,
+			IsSellerDefault:      false,
 		},
 		{
-			AccountID: 2,
-			Province: "DKI Jakarta",
-			District: "Jakarta Barat",
-			SubDistrict: "Sub District 3",
-			Kelurahan: "lurahan skuy living",
+			AccountID:            1,
+			Province:             "DKI Jakarta",
+			District:             "Jakarta Barat",
+			SubDistrict:          "Kembangan",
+			Kelurahan:            "Lingkar Luar",
 			RajaOngkirDistrictId: "151",
-			ZipCode: "15405",
-			Detail: "es jambu",
+			ZipCode:              "11610",
+			Detail:               "Puri Mansion Estate, Jl. Puri",
+			IsBuyerDefault:       false,
+			IsSellerDefault:      true,
 		},
 	}).Error
-		
+
 	if err != nil {
 		panic(err)
 	}
 
+	err = db.Create(&model.AccountAddress{
+		AccountID:            1,
+		Province:             "Jawa Barat",
+		District:             "Kabupaten Bandung",
+		SubDistrict:          "Bojongsoang",
+		Kelurahan:            "Sukapura",
+		ZipCode:              "40851",
+		Detail:               "Jl Telekomunikasi No 1 Bojongsoang",
+		RajaOngkirDistrictId: "10",
+		IsBuyerDefault:       false,
+		IsSellerDefault:      true,
+	}).Error
 	accountCarts := []*model.AccountCarts{
 		{
 			AccountID:                            2,

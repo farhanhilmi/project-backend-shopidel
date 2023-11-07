@@ -3,6 +3,7 @@ package dtohttp
 import (
 	"time"
 
+	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"github.com/shopspring/decimal"
 )
 
@@ -34,4 +35,14 @@ type ProductOrderReceiveResponse struct {
 	ID     int    `json:"id,omitempty"`
 	Notes  string `json:"notes,omitempty"`
 	Status string `json:"status,omitempty"`
+}
+
+type CheckoutOrderRequest struct {
+	SellerID             int                              `json:"seller_id" binding:"required"`
+	ProductVariant       []dtousecase.ProductVariantOrder `json:"product_variant" binding:"required"`
+	DestinationAddressID string                           `json:"destination_address_id" binding:"required"`
+	VoucherID            int                              `json:"voucher_id"`
+	Notes                string                           `json:"notes"`
+	Weight               string                           `json:"weight" binding:"required"`
+	CourierID            int                              `json:"courier_id" binding:"required"`
 }

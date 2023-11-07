@@ -23,6 +23,38 @@ func NewAccountHandler(accountUsecase usecase.AccountUsecase) *AccountHandler {
 	}
 }
 
+func (h *AccountHandler) GetAddresses(c *gin.Context) {
+	res := []dtohttp.AddressResponse{}
+	var req dtohttp.AddressRequest
+	req.UserId = c.GetInt("userId")
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.AddressRequest {
+		UserId: req.UserId,
+	}
+
+	uRes, err := h.accountUsecase.GetAddresses(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	for _, data := range *uRes {
+		res = append(res, dtohttp.AddressResponse{
+			ID: data.ID,
+			FullAddress: data.FullAddress,
+			IsBuyerDefault: data.IsBuyerDefault,
+			IsSellerDefault: data.IsSellerDefault,
+		})
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "successfully get addresses", Data: res})
+}
+
 func (h *AccountHandler) Login(c *gin.Context) {
 	var req dtohttp.LoginRequest
 

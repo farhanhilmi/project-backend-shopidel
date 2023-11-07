@@ -28,9 +28,16 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 	accountRepo := repository.NewAccountRepository(db)
 	usedEmailRepo := repository.NewUsedEmailRepository(db)
 	productOrderRepo := repository.NewProductOrdersRepository(db)
+	productVariantCombinationRepo := repository.NewProductVariantCombinationRepository(db)
+	accountAddressRepo := repository.NewAccountAddressRepository(db)
+	courierRepo := repository.NewCourierRepository(db)
 
 	pouc := usecase.ProductOrderUsecaseConfig{
-		ProductOrderRepository: productOrderRepo,
+		ProductOrderRepository:              productOrderRepo,
+		ProductVariantCombinationRepository: productVariantCombinationRepo,
+		AccountRepository:                   accountRepo,
+		AccountAddressRepository:            accountAddressRepo,
+		CourierRepository:                   courierRepo,
 	}
 	productRepo := repository.NewProductRepository(db)
 
@@ -61,6 +68,7 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 	router.NewAuthRouter(accountHandler, gin)
 	router_seller.NewProductOrderRouter(productOrderHandler, gin)
 	router.NewProductRouter(productHandler, gin)
+	router.NewProductOrderRouter(productOrderHandler, gin)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", config.GetEnv("PORT")),

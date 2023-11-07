@@ -38,6 +38,10 @@ type GetAccountRequest struct {
 	PhoneNumber string
 }
 
+type AddressRequest struct {
+	UserId int
+}
+
 type GetAccountResponse struct {
 	ID                      int
 	FullName                string
@@ -95,4 +99,11 @@ type AddProductToCartResponse struct {
 	AccountId                   int
 	ProductVariantCombinationId int
 	Quantity                    int
+}
+
+type AddressResponse struct {
+	ID              int
+	FullAddress     string
+	IsBuyerDefault  bool
+	IsSellerDefault bool
 }

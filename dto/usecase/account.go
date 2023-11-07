@@ -80,6 +80,10 @@ type LoginRequest struct {
 	Password string
 }
 
+type AddressRequest struct {
+	UserId int
+}
+
 type GetAccountResponse struct {
 	ID                      int
 	FullName                string
@@ -144,4 +148,11 @@ type AddProductToCartRequest struct {
 type AddProductToCartResponse struct {
 	ProductId int
 	Quantity  int
+}
+
+type AddressResponse struct {
+	ID              int
+	FullAddress     string
+	IsBuyerDefault  bool
+	IsSellerDefault bool
 }
