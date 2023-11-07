@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"log"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -239,7 +238,6 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 		ZipCode:       req.ZipCode,
 		AddressDetail: req.AddressDetail,
 	}
-	log.Println("REQ", req)
 
 	err := tx.WithContext(ctx).Create(&a).Scan(&res).Error
 	if err != nil {
