@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -25,6 +26,34 @@ func NewAccountHandler(accountUsecase usecase.AccountUsecase, myWalletTransactio
 		accountUsecase:             accountUsecase,
 		myWalletTransactionUsecase: myWalletTransactionUsecase,
 	}
+}
+
+func (h *AccountHandler) RegisterSeller(c *gin.Context) {
+	res := dtohttp.RegisterSellerResponse{}
+	var req dtohttp.RegisterSellerRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.RegisterSellerRequest{
+		UserId:        c.GetInt("userId"),
+		ShopName:      req.ShopName,
+		AddressId:     req.AddressId,
+		ListCourierId: req.ListCourierId,
+	}
+
+	uRes, err := h.accountUsecase.RegisterSeller(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res.ShopName = uRes.ShopName
+
+	convertMessage := fmt.Sprintf("Merchant %s registered successfully", res.ShopName)
+	c.JSON(http.StatusCreated, dtogeneral.JSONResponse{Message: convertMessage})
 }
 
 func (h *AccountHandler) GetAddresses(c *gin.Context) {

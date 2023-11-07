@@ -7,21 +7,29 @@ import (
 )
 
 func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
-	group := gin.Group("accounts")
-	group.Use(middleware.AuthenticateJWT())
+	account := gin.Group("accounts")
+	{
+		account.Use(middleware.AuthenticateJWT())
+		account.GET("/carts", h.GetCart)
+		account.POST("/check-password", h.CheckISPasswordCorrect)
+		account.GET("/address", h.GetAddresses)
 
-	group.POST("/wallets/activate", h.ActivateMyWallet)
-	group.PUT("/wallets/change-pin", h.ChangeWalletPIN)
-	group.GET("/wallets", h.GetWallet)
-	group.GET("/wallets/histories", h.GetListTransactions)
-	group.POST("/wallets/topup", h.TopUpBalanceWallet)
+		profile := account.Group("profile")
+		{
+			profile.GET("", h.GetProfile)
+			profile.PUT("", h.EditProfile)
+		}
 
-	group.GET("/carts", h.GetCart)
+		wallet := account.Group("wallets")
+		{
+			wallet.POST("/activate", h.ActivateMyWallet)
+			wallet.PUT("/change-pin", h.ChangeWalletPIN)
+			wallet.GET("", h.GetWallet)
+			wallet.GET("/histories", h.GetListTransactions)
 
-	group.POST("/check-password", h.CheckISPasswordCorrect)
+			wallet.POST("/topup", h.TopUpBalanceWallet)
+		}
+	}
 
-	group.GET("", h.GetProfile)
-	group.PUT("", h.EditProfile)
-	group.GET("/address", h.GetAddresses)
 	return gin
 }

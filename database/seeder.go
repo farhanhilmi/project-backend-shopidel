@@ -37,7 +37,9 @@ func dropTable() {
 			product_order_details,
 			couriers,
 			account_addresses,
-			account_carts;
+			account_carts,
+			seller_couriers
+			;
 	`
 
 	err := db.Exec(sql).Error
@@ -73,6 +75,7 @@ func createTable() {
 		&model.ProductOrderDetails{},
 		&model.AccountAddress{},
 		&model.AccountCarts{},
+		&model.SellerCouriers{},
 	)
 
 	if err != nil {
@@ -453,11 +456,9 @@ func seeding() {
 			ZipCode:              "14738",
 			RajaOngkirDistrictId: "154",
 			Detail:               "Jl. Jend. Basuki Rachmat No.1A",
-			IsBuyerDefault:       true,
-			IsSellerDefault:      false,
 		},
 		{
-			AccountID:            1,
+			AccountID:            2,
 			Province:             "DKI Jakarta",
 			District:             "Jakarta Barat",
 			SubDistrict:          "Kembangan",
@@ -468,24 +469,24 @@ func seeding() {
 			IsBuyerDefault:       false,
 			IsSellerDefault:      true,
 		},
+		{
+			AccountID:            1,
+			Province:             "Jawa Barat",
+			District:             "Kabupaten Bandung",
+			SubDistrict:          "Bojongsoang",
+			Kelurahan:            "Sukapura",
+			ZipCode:              "40851",
+			Detail:               "Jl Telekomunikasi No 1 Bojongsoang",
+			RajaOngkirDistrictId: "10",
+			IsBuyerDefault:       false,
+			IsSellerDefault:      true,
+		},
 	}).Error
 
 	if err != nil {
 		panic(err)
 	}
 
-	err = db.Create(&model.AccountAddress{
-		AccountID:            1,
-		Province:             "Jawa Barat",
-		District:             "Kabupaten Bandung",
-		SubDistrict:          "Bojongsoang",
-		Kelurahan:            "Sukapura",
-		ZipCode:              "40851",
-		Detail:               "Jl Telekomunikasi No 1 Bojongsoang",
-		RajaOngkirDistrictId: "10",
-		IsBuyerDefault:       false,
-		IsSellerDefault:      true,
-	}).Error
 	accountCarts := []*model.AccountCarts{
 		{
 			AccountID:                            2,
@@ -505,6 +506,21 @@ func seeding() {
 	}
 
 	err = db.Create(accountCarts).Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Create(&[]model.SellerCouriers{
+		{
+			AccountID: 1,
+			CourierID: 1,
+		},
+		{
+			AccountID: 1,
+			CourierID: 2,
+		},
+	}).Error
 
 	if err != nil {
 		panic(err)

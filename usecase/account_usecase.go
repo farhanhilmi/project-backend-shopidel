@@ -26,6 +26,7 @@ type AccountUsecase interface {
 	TopUpBalanceWallet(ctx context.Context, walletReq dtousecase.TopUpBalanceWalletRequest) (*dtousecase.TopUpBalanceWalletResponse, error)
 	GetCart(ctx context.Context, req dtousecase.GetCartRequest) (dtousecase.GetCartResponse, error)
 	GetAddresses(ctx context.Context, req dtousecase.AddressRequest) (*[]dtousecase.AddressResponse, error)
+	RegisterSeller(ctx context.Context, req dtousecase.RegisterSellerRequest) (*dtousecase.RegisterSellerResponse, error)
 }
 
 type accountUsecase struct {
@@ -46,6 +47,26 @@ func NewAccountUsecase(config AccountUsecaseConfig) AccountUsecase {
 	}
 
 	return au
+}
+
+func (u *accountUsecase) RegisterSeller(ctx context.Context, req dtousecase.RegisterSellerRequest) (*dtousecase.RegisterSellerResponse, error) {
+	res := dtousecase.RegisterSellerResponse{}
+
+	rReq := dtorepository.RegisterSellerRequest{
+		UserId:        req.UserId,
+		ShopName:      req.ShopName,
+		AddressId:     req.AddressId,
+		ListCourierId: req.ListCourierId,
+	}
+
+	registeredSeller, err := u.accountRepository.CreateSeller(ctx, rReq)
+	if err != nil {
+		return nil, err
+	}
+
+	res.ShopName = registeredSeller.ShopName
+
+	return &res, nil
 }
 
 func (u *accountUsecase) GetAddresses(ctx context.Context, req dtousecase.AddressRequest) (*[]dtousecase.AddressResponse, error) {
