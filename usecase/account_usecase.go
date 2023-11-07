@@ -69,6 +69,14 @@ func (u *accountUsecase) RegisterSeller(ctx context.Context, req dtousecase.Regi
 	}
 
 	registeredSeller, err := u.accountRepository.CreateSeller(ctx, rReq)
+	if errors.Is(err, util.ErrCourierNotAvailable) {
+		return nil, util.ErrCourierNotAvailable
+	}
+
+	if errors.Is(err, util.ErrAddressNotAvailable) {
+		return nil, util.ErrAddressNotAvailable
+	}
+
 	if err != nil {
 		return nil, err
 	}

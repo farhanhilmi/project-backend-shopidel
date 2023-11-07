@@ -6,9 +6,9 @@ import (
 )
 
 func NewProductRouter(h *handler.ProductHandler, gin *gin.Engine) *gin.Engine {
-	group := gin.Group("/products")
+	product := gin.Group("/products")
 
-	group.GET("/:productId", h.GetProductDetail)
+	product.GET("/:productId", h.GetProductDetail)
 
 	return gin
 }
