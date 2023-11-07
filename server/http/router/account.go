@@ -11,6 +11,8 @@ func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 	{
 		account.Use(middleware.AuthenticateJWT())
 		account.GET("/carts", h.GetCart)
+		account.POST("/carts", h.AddProductToCart)
+
 		account.POST("/check-password", h.CheckISPasswordCorrect)
 		account.GET("/address", h.GetAddresses)
 		account.PUT("/carts", h.UpdateCart)

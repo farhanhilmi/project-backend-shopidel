@@ -89,6 +89,18 @@ type CartItem struct {
 	Quantity     int
 }
 
+type AddProductToCartRequest struct {
+	AccountId                   int
+	ProductVariantCombinationId int
+	Quantity                    int
+}
+
+type AddProductToCartResponse struct {
+	AccountId                   int
+	ProductVariantCombinationId int
+	Quantity                    int
+}
+
 type AddressResponse struct {
 	ID              int
 	FullAddress     string

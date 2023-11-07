@@ -139,6 +139,17 @@ type CartItem struct {
 	ProductTotalPrice decimal.Decimal `json:"product_total_price"`
 }
 
+type AddProductToCartRequest struct {
+	UserId           int
+	ProductVariantId int
+	Quantity         int
+}
+
+type AddProductToCartResponse struct {
+	ProductId int
+	Quantity  int
+}
+
 type AddressResponse struct {
 	ID              int
 	FullAddress     string
