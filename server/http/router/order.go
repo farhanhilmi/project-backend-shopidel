@@ -7,11 +7,11 @@ import (
 )
 
 func NewProductOrderRouter(h *handler.ProductOrderHandler, gin *gin.Engine) *gin.Engine {
-	group := gin.Group("orders")
-	group.Use(middleware.AuthenticateJWT())
-	group.POST("/checkout", h.CheckoutOrder)
-	group.POST("/cost/check", h.CheckDeveliryFee)
-	group.GET("/couriers", h.GetCouriers)
+	order := gin.Group("orders")
+	order.Use(middleware.AuthenticateJWT())
+	order.POST("/checkout", h.CheckoutOrder)
+	order.POST("/cost/check", h.CheckDeveliryFee)
+	order.GET("/couriers", h.GetCouriers)
 
 	return gin
 }

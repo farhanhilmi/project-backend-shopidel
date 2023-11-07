@@ -50,6 +50,8 @@ func NewAccountRepository(db *gorm.DB) AccountRepository {
 func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.RegisterSellerRequest) (*dtorepository.RegisterSellerResponse, error) {
 	res := dtorepository.RegisterSellerResponse{}
 	account := model.Accounts{}
+	couriers := []model.Couriers{}
+
 	var seller_couriers []model.SellerCouriers
 
 	for _, seller_courier_id := range req.ListCourierId {
@@ -61,7 +63,48 @@ func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.
 
 	tx := r.db.Begin()
 
-	err := tx.WithContext(ctx).Clauses(clause.Locking{
+	err := tx.WithContext(ctx).Where("id = ?", req.AddressId).First(&model.AccountAddress{}).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		tx.Rollback()
+		return &res, util.ErrAddressNotAvailable
+	}
+
+	if err != nil {
+		tx.Rollback()
+		return &res, err
+	}
+
+	err = r.db.WithContext(ctx).Model(&model.Couriers{}).Where("id IN ?", req.ListCourierId).Scan(&couriers).Error
+
+	if len(couriers) < len(req.ListCourierId) {
+		tx.Rollback()
+		return &res, util.ErrCourierNotAvailable
+	}
+
+	if err != nil {
+		tx.Rollback()
+		return &res, err
+	}
+
+	err = tx.WithContext(ctx).Where("id = ?", req.UserId).First(&account).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		tx.Rollback()
+		return &res, util.ErrNoRecordFound
+	}
+
+	if err != nil {
+		tx.Rollback()
+		return &res, err
+	}
+
+	if account.ShopName != "" {
+		tx.Rollback()
+		return &res, util.ErrAlreadyRegisteredAsSeller
+	}
+
+	err = tx.WithContext(ctx).Clauses(clause.Locking{
 		Strength: "UPDATE",
 		Table: clause.Table{
 			Name: clause.CurrentTable,
@@ -81,6 +124,7 @@ func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.
 			IsBuyerDefault:  false,
 			IsSellerDefault: true,
 		}).Error
+
 	if err != nil {
 		tx.Rollback()
 		return &res, err
