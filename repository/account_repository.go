@@ -47,6 +47,7 @@ func NewAccountRepository(db *gorm.DB) AccountRepository {
 func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.RegisterSellerRequest) (*dtorepository.RegisterSellerResponse, error) {
 	res := dtorepository.RegisterSellerResponse{}
 	account := model.Accounts{}
+
 	var seller_couriers []model.SellerCouriers
 
 	for _, seller_courier_id := range req.ListCourierId {
@@ -58,7 +59,19 @@ func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.
 
 	tx := r.db.Begin()
 
-	err := tx.WithContext(ctx).Clauses(clause.Locking{
+	err := tx.WithContext(ctx).Where("id = ?", req.UserId).First(&account).Error
+
+	if err != nil {
+		tx.Rollback()
+		return &res, err
+	}
+
+	if account.ShopName != "" {
+		tx.Rollback()
+		return &res, util.ErrAlreadyRegisteredAsSeller
+	}
+
+	err = tx.WithContext(ctx).Clauses(clause.Locking{
 		Strength: "UPDATE",
 		Table: clause.Table{
 			Name: clause.CurrentTable,
