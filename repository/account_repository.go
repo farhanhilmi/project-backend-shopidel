@@ -43,6 +43,9 @@ type AccountRepository interface {
 	UpdateShopNameAndSellerDefaultAddress(ctx context.Context, tx *gorm.DB, req dtorepository.RegisterSellerRequest) error
 	ConvertListCourierIdToListCourierModel(ctx context.Context, req dtorepository.RegisterSellerRequest) []model.SellerCouriers
 	DeleteCartProduct(ctx context.Context, req dtorepository.DeleteCartProductRequest) ([]model.AccountCarts, error)
+	CreateAddress(ctx context.Context, req dtorepository.RegisterAddressRequest) (dtorepository.RegisterAddressResponse, error)
+	FindProvinces(ctx context.Context) ([]model.Province, error)
+	FindDistrictsByProvinceId(ctx context.Context, ProvinceId int) ([]model.District, error)
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
@@ -753,4 +756,63 @@ func (r *accountRepository) AddProductToCart(ctx context.Context, req dtoreposit
 	res.ProductVariantCombinationId = c.ProductVariantSelectionCombinationId
 
 	return res, nil
+}
+
+func (r *accountRepository) CreateAddress(ctx context.Context, req dtorepository.RegisterAddressRequest) (dtorepository.RegisterAddressResponse, error) {
+	res := dtorepository.RegisterAddressResponse{}
+
+	p := model.Province{}
+	if err := r.db.WithContext(ctx).Where("id = ?", req.ProvinceId).Find(&p).Error; err != nil {
+		return res, err
+	}
+
+	d := model.District{}
+	if err := r.db.WithContext(ctx).Where("id = ?", req.DistrictId).Find(&d).Error; err != nil {
+		return res, err
+	}
+
+	ad := model.AccountAddress{
+		AccountID:            req.AccountId,
+		Province:             p.Name,
+		District:             d.Name,
+		RajaOngkirDistrictId: d.RajaOngkirDistrictId,
+		SubDistrict:          req.SubDistrict,
+		Kelurahan:            req.Kelurahan,
+		ZipCode:              req.ZipCode,
+		Detail:               req.Detail,
+	}
+
+	if err := r.db.WithContext(ctx).Create(&ad).Error; err != nil {
+		return res, err
+	}
+
+	res.AccountId = req.AccountId
+	res.ProvinceId = req.ProvinceId
+	res.DistrictId = req.DistrictId
+	res.Kelurahan = req.Kelurahan
+	res.SubDistrict = req.SubDistrict
+	res.ZipCode = req.ZipCode
+	res.Detail = req.Detail
+
+	return res, nil
+}
+
+func (r *accountRepository) FindProvinces(ctx context.Context) ([]model.Province, error) {
+	p := []model.Province{}
+	err := r.db.WithContext(ctx).Order("id asc").Find(&p).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return p, nil
+}
+
+func (r *accountRepository) FindDistrictsByProvinceId(ctx context.Context, ProvinceId int) ([]model.District, error) {
+	d := []model.District{}
+	err := r.db.WithContext(ctx).Order("id asc").Where("province_id = ?", ProvinceId).Find(&d).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return d, nil
 }

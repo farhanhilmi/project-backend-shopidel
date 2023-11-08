@@ -19,3 +19,23 @@ type AccountAddressResponse struct {
 	IsBuyerDefault       bool
 	IsSellerDefault      bool
 }
+
+type RegisterAddressRequest struct {
+	AccountId   int
+	ProvinceId  int
+	DistrictId  int
+	SubDistrict string
+	Kelurahan   string
+	ZipCode     string
+	Detail      string
+}
+
+type RegisterAddressResponse struct {
+	AccountId   int
+	ProvinceId  int
+	DistrictId  int
+	SubDistrict string
+	Kelurahan   string
+	ZipCode     string
+	Detail      string
+}

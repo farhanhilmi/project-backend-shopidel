@@ -181,3 +181,45 @@ type DeleteCartProductRequest struct {
 type DeleteCartProductResponse struct {
 	ListProductID []int
 }
+
+type RegisterAddressRequest struct {
+	AccountId   int
+	ProvinceId  int
+	DistrictId  int
+	SubDistrict string
+	Kelurahan   string
+	ZipCode     string
+	Detail      string
+}
+
+type RegisterAddressResponse struct {
+	AccountId   int
+	ProvinceId  int
+	DistrictId  int
+	SubDistrict string
+	Kelurahan   string
+	ZipCode     string
+	Detail      string
+}
+
+type GetProvincesResponse struct {
+	Provinces []Province `json:"provinces"`
+}
+
+type Province struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+type GetDistrictRequest struct {
+	ProvinceId int
+}
+
+type GetDistrictResponse struct {
+	Districts []District
+}
+
+type District struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
+}

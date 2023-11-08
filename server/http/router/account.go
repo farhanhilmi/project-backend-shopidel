@@ -16,7 +16,6 @@ func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 		account.POST("/carts", h.AddProductToCart)
 
 		account.POST("/check-password", h.CheckISPasswordCorrect)
-		account.GET("/address", h.GetAddresses)
 		account.PUT("/carts", h.UpdateCart)
 		account.POST("/carts/delete", h.DeleteCartProduct)
 
@@ -36,6 +35,18 @@ func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 
 			wallet.POST("/topup", h.TopUpBalanceWallet)
 		}
+
+		address := account.Group("address")
+		{
+			address.GET("", h.GetAddresses)
+			address.POST("", h.RegisterAdress)
+		}
+	}
+
+	address := gin.Group("/address")
+	{
+		address.GET("/provinces", h.GetProvinces)
+		address.GET("/provinces/:provinceId/districts", h.GetDistricts)
 	}
 
 	return gin
