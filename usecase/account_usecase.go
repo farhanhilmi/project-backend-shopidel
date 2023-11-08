@@ -102,6 +102,11 @@ func (u *accountUsecase) GetAddresses(ctx context.Context, req dtousecase.Addres
 		res = append(res, dtousecase.AddressResponse{
 			ID:              data.ID,
 			FullAddress:     data.FullAddress,
+			Detail:          data.Detail,
+			Kelurahan:       data.Kelurahan,
+			SubDistrict:     data.SubDistrict,
+			District:        data.District,
+			Province:        data.Province,
 			IsBuyerDefault:  data.IsBuyerDefault,
 			IsSellerDefault: data.IsSellerDefault,
 		})
