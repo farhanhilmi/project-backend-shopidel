@@ -93,3 +93,11 @@ type CourierData struct {
 	UpdatedAt   time.Time
 	DeletedAt   time.Time
 }
+
+type SellerCourier struct {
+	SellerID int
+}
+
+type SellerCourierResponse struct {
+	CourierID int
+}

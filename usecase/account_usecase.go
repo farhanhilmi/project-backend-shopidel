@@ -32,11 +32,13 @@ type AccountUsecase interface {
 	UpdateCartQuantity(ctx context.Context, req dtousecase.UpdateCartRequest) (*dtousecase.UpdateCartResponse, error)
 	DeleteProductCart(ctx context.Context, req dtousecase.DeleteCartProductRequest) ([]model.AccountCarts, error)
 	ValidateWalletPIN(ctx context.Context, req dtousecase.ValidateWAlletPINRequest) (*dtousecase.ValidateWAlletPINResponse, error)
+	GetCouriers(ctx context.Context) ([]model.Couriers, error)
 }
 
 type accountUsecase struct {
 	accountRepository   repository.AccountRepository
 	usedEmailRepository repository.UsedEmailRepository
+	courierRepository   repository.CourierRepository
 	productRepository   repository.ProductRepository
 }
 
@@ -44,6 +46,7 @@ type AccountUsecaseConfig struct {
 	AccountRepository   repository.AccountRepository
 	UsedEmailRepository repository.UsedEmailRepository
 	ProductRepository   repository.ProductRepository
+	CourierRepository   repository.CourierRepository
 }
 
 func NewAccountUsecase(config AccountUsecaseConfig) AccountUsecase {
@@ -54,6 +57,10 @@ func NewAccountUsecase(config AccountUsecaseConfig) AccountUsecase {
 	}
 	if config.ProductRepository != nil {
 		au.productRepository = config.ProductRepository
+	}
+
+	if config.CourierRepository != nil {
+		au.courierRepository = config.CourierRepository
 	}
 
 	return au
@@ -582,6 +589,15 @@ func (u *accountUsecase) AddProductToCart(ctx context.Context, req dtousecase.Ad
 	res.Quantity = rRes.Quantity
 
 	return res, nil
+}
+
+func (u *accountUsecase) GetCouriers(ctx context.Context) ([]model.Couriers, error) {
+	response, err := u.courierRepository.FindAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }
 
 func (u *accountUsecase) DeleteProductCart(ctx context.Context, req dtousecase.DeleteCartProductRequest) ([]model.AccountCarts, error) {

@@ -18,6 +18,7 @@ type CourierRepository interface {
 	FindByName(ctx context.Context, req dtorepository.CourierData) (dtorepository.CourierData, error)
 	FindAll(ctx context.Context) ([]model.Couriers, error)
 	FindById(ctx context.Context, req dtorepository.CourierData) (dtorepository.CourierData, error)
+	FindAllByShop(ctx context.Context, req dtorepository.SellerCourier) ([]model.Couriers, error)
 }
 
 func NewCourierRepository(db *gorm.DB) CourierRepository {
@@ -77,6 +78,22 @@ func (r *courierRepository) FindAll(ctx context.Context) ([]model.Couriers, erro
 
 	err := r.db.WithContext(ctx).Model(&model.Couriers{}).Find(&res).Error
 
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (r *courierRepository) FindAllByShop(ctx context.Context, req dtorepository.SellerCourier) ([]model.Couriers, error) {
+	res := []model.Couriers{}
+	q := `
+	select c.* from seller_couriers sc
+		left join couriers c on sc.courier_id = c.id
+	where sc.account_id = ?;
+	`
+
+	err := r.db.WithContext(ctx).Raw(q, req.SellerID).Scan(&res).Error
 	if err != nil {
 		return res, err
 	}

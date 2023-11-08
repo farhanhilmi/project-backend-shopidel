@@ -518,3 +518,13 @@ func (h *AccountHandler) DeleteCartProduct(c *gin.Context) {
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Successfully delete cart"})
 }
+
+func (h *AccountHandler) GetCouriers(c *gin.Context) {
+	response, err := h.accountUsecase.GetCouriers(c.Request.Context())
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
+}
