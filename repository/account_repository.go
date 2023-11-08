@@ -707,15 +707,31 @@ func (r *accountRepository) AddProductToCart(ctx context.Context, req dtoreposit
 		return res, errors.New("product not found")
 	}
 
-	c := model.AccountCarts{
-		AccountID:                            req.AccountId,
-		ProductVariantSelectionCombinationId: req.ProductVariantCombinationId,
-		Quantity:                             req.Quantity,
+	c := model.AccountCarts{}
+
+	err = r.db.WithContext(ctx).Where("account_id = $1 and product_variant_selection_combination_id = $2", req.AccountId, req.ProductVariantCombinationId).First(&c).Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, err
 	}
 
-	err = r.db.WithContext(ctx).Create(&c).Error
-	if err != nil {
-		return res, err
+	if c.ID == 0 {
+		c = model.AccountCarts{
+			AccountID:                            req.AccountId,
+			ProductVariantSelectionCombinationId: req.ProductVariantCombinationId,
+			Quantity:                             req.Quantity,
+		}
+
+		err = r.db.WithContext(ctx).Create(&c).Error
+		if err != nil {
+			return res, err
+		}
+	} else {
+		c.Quantity += req.Quantity
+
+		err = r.db.WithContext(ctx).Save(&c).Error
+		if err != nil {
+			return res, err
+		}
 	}
 
 	res.AccountId = req.AccountId
