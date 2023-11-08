@@ -153,6 +153,11 @@ type AddProductToCartResponse struct {
 type AddressResponse struct {
 	ID              int
 	FullAddress     string
+	Detail          string
+	Kelurahan       string
+	SubDistrict     string
+	District        string
+	Province        string
 	IsBuyerDefault  bool
 	IsSellerDefault bool
 }

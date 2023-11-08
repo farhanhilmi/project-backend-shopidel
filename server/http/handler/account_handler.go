@@ -80,6 +80,11 @@ func (h *AccountHandler) GetAddresses(c *gin.Context) {
 		res = append(res, dtohttp.AddressResponse{
 			ID:              data.ID,
 			FullAddress:     data.FullAddress,
+			Detail:          data.Detail,
+			Kelurahan:       data.Kelurahan,
+			SubDistrict:     data.SubDistrict,
+			District:        data.District,
+			Province:        data.Province,
 			IsBuyerDefault:  data.IsBuyerDefault,
 			IsSellerDefault: data.IsSellerDefault,
 		})

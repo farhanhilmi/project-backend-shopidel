@@ -198,6 +198,11 @@ func (r *accountRepository) GetAddresses(ctx context.Context, req dtorepository.
 		res = append(res, dtorepository.AddressResponse{
 			ID:              address.ID,
 			FullAddress:     convertedFullAddress,
+			Detail:          address.Detail,
+			Kelurahan:       address.Kelurahan,
+			SubDistrict:     address.SubDistrict,
+			District:        address.District,
+			Province:        address.Province,
 			IsBuyerDefault:  address.IsBuyerDefault,
 			IsSellerDefault: address.IsSellerDefault,
 		})
