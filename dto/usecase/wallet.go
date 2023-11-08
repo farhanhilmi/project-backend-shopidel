@@ -37,3 +37,12 @@ type WalletHistoriesParams struct {
 	EndDate         string
 	TransactionType string
 }
+
+type ValidateWAlletPINRequest struct {
+	WalletPIN string
+	UserID    int
+}
+
+type ValidateWAlletPINResponse struct {
+	IsCorrect bool
+}

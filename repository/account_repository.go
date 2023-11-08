@@ -42,6 +42,7 @@ type AccountRepository interface {
 	AlreadyRegisteredAsSeller(ctx context.Context, tx *gorm.DB, req dtorepository.RegisterSellerRequest) error
 	UpdateShopNameAndSellerDefaultAddress(ctx context.Context, tx *gorm.DB, req dtorepository.RegisterSellerRequest) error
 	ConvertListCourierIdToListCourierModel(ctx context.Context, req dtorepository.RegisterSellerRequest) []model.SellerCouriers
+	DeleteCartProduct(ctx context.Context, req dtorepository.DeleteCartProductRequest) ([]model.AccountCarts, error)
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
@@ -323,6 +324,18 @@ func (r *accountRepository) UpdateCartQuantity(ctx context.Context, req dtorepos
 		ProductID: account.ProductVariantSelectionCombinationId,
 		Quantity:  account.Quantity,
 	}, nil
+}
+
+func (r *accountRepository) DeleteCartProduct(ctx context.Context, req dtorepository.DeleteCartProductRequest) ([]model.AccountCarts, error) {
+	account := []model.AccountCarts{}
+
+	err := r.db.WithContext(ctx).Where("product_variant_selection_combination_id IN ?", req.ListProductID).Delete(&account).Scan(&account).Error
+
+	if err != nil {
+		return account, err
+	}
+
+	return account, nil
 }
 
 func (r *accountRepository) UpdateWalletPINByID(ctx context.Context, req dtorepository.UpdateWalletPINRequest) (dtorepository.UpdateWalletPINResponse, error) {

@@ -24,3 +24,11 @@ type WalletResponse struct {
 type TopUpBalanceWalletRequest struct {
 	Amount decimal.Decimal `json:"amount" binding:"required"`
 }
+
+type ValidateWAlletPINRequest struct {
+	WalletPIN string `json:"wallet_pin" binding:"required"`
+}
+
+type ValidateWAlletPINResponse struct {
+	IsCorrect bool `json:"isCorrect"`
+}

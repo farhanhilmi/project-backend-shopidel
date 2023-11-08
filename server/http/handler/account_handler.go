@@ -291,6 +291,30 @@ func (h *AccountHandler) CheckISPasswordCorrect(c *gin.Context) {
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: dtohttp.CheckPasswordResponse{IsCorrect: result.IsCorrect}})
 }
 
+func (h *AccountHandler) ValidateWalletPIN(c *gin.Context) {
+	var payload dtohttp.ValidateWAlletPINRequest
+
+	err := c.ShouldBindJSON(&payload)
+
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.ValidateWAlletPINRequest{
+		UserID:    c.GetInt("userId"),
+		WalletPIN: strings.TrimSpace(payload.WalletPIN),
+	}
+
+	result, err := h.accountUsecase.ValidateWalletPIN(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: dtohttp.ValidateWAlletPINResponse{IsCorrect: result.IsCorrect}})
+}
+
 func (h *AccountHandler) GetWallet(c *gin.Context) {
 	uReq := dtousecase.AccountRequest{
 		ID: c.GetInt("userId"),
@@ -464,4 +488,27 @@ func (h *AccountHandler) UpdateCart(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes})
+}
+
+func (h *AccountHandler) DeleteCartProduct(c *gin.Context) {
+	var payload dtohttp.DeleteCartProductRequest
+
+	err := c.ShouldBindJSON(&payload)
+
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.DeleteCartProductRequest{
+		ListProductID: payload.ListProductID,
+	}
+
+	_, err = h.accountUsecase.DeleteProductCart(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Successfully delete cart"})
 }
