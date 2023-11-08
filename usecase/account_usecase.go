@@ -110,6 +110,7 @@ func (u *accountUsecase) GetAddresses(ctx context.Context, req dtousecase.Addres
 			ID:              data.ID,
 			FullAddress:     data.FullAddress,
 			Detail:          data.Detail,
+			ZipCode:         data.ZipCode,
 			Kelurahan:       data.Kelurahan,
 			SubDistrict:     data.SubDistrict,
 			District:        data.District,

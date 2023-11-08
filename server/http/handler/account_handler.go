@@ -81,6 +81,7 @@ func (h *AccountHandler) GetAddresses(c *gin.Context) {
 			ID:              data.ID,
 			FullAddress:     data.FullAddress,
 			Detail:          data.Detail,
+			ZipCode:         data.ZipCode,
 			Kelurahan:       data.Kelurahan,
 			SubDistrict:     data.SubDistrict,
 			District:        data.District,
