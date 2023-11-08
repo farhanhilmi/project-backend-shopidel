@@ -199,6 +199,7 @@ func (r *accountRepository) GetAddresses(ctx context.Context, req dtorepository.
 			ID:              address.ID,
 			FullAddress:     convertedFullAddress,
 			Detail:          address.Detail,
+			ZipCode:         address.ZipCode,
 			Kelurahan:       address.Kelurahan,
 			SubDistrict:     address.SubDistrict,
 			District:        address.District,

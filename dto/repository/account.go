@@ -105,6 +105,7 @@ type AddressResponse struct {
 	ID              int
 	FullAddress     string
 	Detail          string
+	ZipCode         string
 	Kelurahan       string
 	SubDistrict     string
 	District        string
