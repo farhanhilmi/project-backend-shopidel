@@ -676,17 +676,25 @@ func (r *accountRepository) FindAccountCartItems(ctx context.Context, req dtorep
 			seller.shop_name as "ShopName",
 			pvsc.id as "ProductId",
 			pvsc.picture_url as "ProductUrl",
-			p."name" as "ProductName",
+			case 
+				when pvs."name" = 'default_reserved_keyword' then p."name"
+				when pvs2."name" is null then concat(p."name", ' - ', pvs."name")
+				when pvs2."name" is not null then concat(p."name", ' - ', pvs."name", ', ', pvs2."name")
+			end as "ProductName",
 			pvsc.price as "ProductPrice",
 			ac.quantity as "Quantity"
 		from account_carts ac 
 			left join product_variant_selection_combinations pvsc 
 				on pvsc.id = ac.product_variant_selection_combination_id 
+			left join product_variant_selections pvs
+				on pvs.id = pvsc.product_variant_selection_id1 
+			left join product_variant_selections pvs2 
+				on pvs2.id = pvsc.product_variant_selection_id2 
 			left join products p 
 				on p.id = pvsc.product_id 
 			left join accounts seller
 				on seller.id = p.seller_id 
-		where ac.account_id = ?
+		where ac.account_id = 2
 		order by seller.id asc
 	`
 
@@ -713,15 +721,31 @@ func (r *accountRepository) AddProductToCart(ctx context.Context, req dtoreposit
 		return res, errors.New("product not found")
 	}
 
-	c := model.AccountCarts{
-		AccountID:                            req.AccountId,
-		ProductVariantSelectionCombinationId: req.ProductVariantCombinationId,
-		Quantity:                             req.Quantity,
+	c := model.AccountCarts{}
+
+	err = r.db.WithContext(ctx).Where("account_id = $1 and product_variant_selection_combination_id = $2", req.AccountId, req.ProductVariantCombinationId).First(&c).Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, err
 	}
 
-	err = r.db.WithContext(ctx).Create(&c).Error
-	if err != nil {
-		return res, err
+	if c.ID == 0 {
+		c = model.AccountCarts{
+			AccountID:                            req.AccountId,
+			ProductVariantSelectionCombinationId: req.ProductVariantCombinationId,
+			Quantity:                             req.Quantity,
+		}
+
+		err = r.db.WithContext(ctx).Create(&c).Error
+		if err != nil {
+			return res, err
+		}
+	} else {
+		c.Quantity += req.Quantity
+
+		err = r.db.WithContext(ctx).Save(&c).Error
+		if err != nil {
+			return res, err
+		}
 	}
 
 	res.AccountId = req.AccountId
