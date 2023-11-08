@@ -782,6 +782,14 @@ func (r *accountRepository) CreateAddress(ctx context.Context, req dtorepository
 		Detail:               req.Detail,
 	}
 
+	ads := []model.AccountAddress{}
+	if err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountId).Find(&ads).Error; err != nil {
+		return res, err
+	}
+	if len(ads) == 0 {
+		ad.IsBuyerDefault = true
+	}
+
 	if err := r.db.WithContext(ctx).Create(&ad).Error; err != nil {
 		return res, err
 	}
