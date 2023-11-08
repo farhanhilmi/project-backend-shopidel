@@ -80,6 +80,12 @@ func (h *AccountHandler) GetAddresses(c *gin.Context) {
 		res = append(res, dtohttp.AddressResponse{
 			ID:              data.ID,
 			FullAddress:     data.FullAddress,
+			Detail:          data.Detail,
+			ZipCode:         data.ZipCode,
+			Kelurahan:       data.Kelurahan,
+			SubDistrict:     data.SubDistrict,
+			District:        data.District,
+			Province:        data.Province,
 			IsBuyerDefault:  data.IsBuyerDefault,
 			IsSellerDefault: data.IsSellerDefault,
 		})
@@ -511,4 +517,14 @@ func (h *AccountHandler) DeleteCartProduct(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Successfully delete cart"})
+}
+
+func (h *AccountHandler) GetCouriers(c *gin.Context) {
+	response, err := h.accountUsecase.GetCouriers(c.Request.Context())
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
 }

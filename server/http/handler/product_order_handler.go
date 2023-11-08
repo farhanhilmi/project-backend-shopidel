@@ -140,7 +140,17 @@ func (h *ProductOrderHandler) CheckDeveliryFee(c *gin.Context) {
 }
 
 func (h *ProductOrderHandler) GetCouriers(c *gin.Context) {
-	response, err := h.productOrderUsecase.GetCouriers(c.Request.Context())
+	id := c.Param("sellerId")
+	sellerId, err := strconv.Atoi(id)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	uReq := dtousecase.SellerCourier{
+		SellerID: sellerId,
+	}
+
+	response, err := h.productOrderUsecase.GetCouriers(c.Request.Context(), uReq)
 	if err != nil {
 		c.Error(err)
 		return

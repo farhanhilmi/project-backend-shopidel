@@ -11,7 +11,7 @@ func NewProductOrderRouter(h *handler.ProductOrderHandler, gin *gin.Engine) *gin
 	order.Use(middleware.AuthenticateJWT())
 	order.POST("/checkout", h.CheckoutOrder)
 	order.POST("/cost/check", h.CheckDeveliryFee)
-	order.GET("/couriers", h.GetCouriers)
+	order.GET("/couriers/:sellerId", h.GetCouriers)
 
 	return gin
 }

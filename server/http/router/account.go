@@ -10,6 +10,8 @@ func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 	account := gin.Group("accounts")
 	{
 		account.Use(middleware.AuthenticateJWT())
+		account.GET("/couriers", h.GetCouriers)
+
 		account.GET("/carts", h.GetCart)
 		account.POST("/carts", h.AddProductToCart)
 
