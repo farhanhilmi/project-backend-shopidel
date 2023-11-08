@@ -105,6 +105,7 @@ type AddressResponse struct {
 	ID              int    `json:"id"`
 	FullAddress     string `json:"full_address"`
 	Detail          string `json:"detail"`
+	ZipCode         string `json:"zip_code"`
 	Kelurahan       string `json:"kelurahan"`
 	SubDistrict     string `json:"sub_district"`
 	District        string `json:"district"`
