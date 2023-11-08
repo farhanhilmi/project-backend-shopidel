@@ -38,6 +38,10 @@ type AccountRepository interface {
 	GetAddresses(ctx context.Context, req dtorepository.AddressRequest) (*[]dtorepository.AddressResponse, error)
 	CreateSeller(ctx context.Context, req dtorepository.RegisterSellerRequest) (*dtorepository.RegisterSellerResponse, error)
 	UpdateCartQuantity(ctx context.Context, req dtorepository.UpdateCart) (dtorepository.UpdateCart, error)
+	AddressAndCourierIsAvailable(ctx context.Context, tx *gorm.DB, req dtorepository.RegisterSellerRequest) error
+	AlreadyRegisteredAsSeller(ctx context.Context, tx *gorm.DB, req dtorepository.RegisterSellerRequest) error
+	UpdateShopNameAndSellerDefaultAddress(ctx context.Context, tx *gorm.DB, req dtorepository.RegisterSellerRequest) error
+	ConvertListCourierIdToListCourierModel(ctx context.Context, req dtorepository.RegisterSellerRequest) []model.SellerCouriers
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
@@ -46,13 +50,87 @@ func NewAccountRepository(db *gorm.DB) AccountRepository {
 	}
 }
 
-func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.RegisterSellerRequest) (*dtorepository.RegisterSellerResponse, error) {
-	res := dtorepository.RegisterSellerResponse{}
-	account := model.Accounts{}
+func (r *accountRepository) AddressAndCourierIsAvailable(ctx context.Context, tx *gorm.DB, req dtorepository.RegisterSellerRequest) error {
 	couriers := []model.Couriers{}
+	err := tx.WithContext(ctx).Where("id = ?", req.AddressId).First(&model.AccountAddress{}).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		tx.Rollback()
+		return util.ErrAddressNotAvailable
+	}
 
-	var seller_couriers []model.SellerCouriers
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
 
+	err = r.db.WithContext(ctx).Model(&model.Couriers{}).Where("id IN ?", req.ListCourierId).Scan(&couriers).Error
+	if len(couriers) < len(req.ListCourierId) {
+		tx.Rollback()
+		return util.ErrCourierNotAvailable
+	}
+
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
+func (r *accountRepository) AlreadyRegisteredAsSeller(ctx context.Context, tx *gorm.DB, req dtorepository.RegisterSellerRequest) error {
+	account := model.Accounts{}
+	err := tx.WithContext(ctx).Where("id = ?", req.UserId).First(&account).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		tx.Rollback()
+		return util.ErrNoRecordFound
+	}
+
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if account.ShopName != "" {
+		tx.Rollback()
+		return util.ErrAlreadyRegisteredAsSeller
+	}
+
+	return nil
+}
+
+func (r *accountRepository) UpdateShopNameAndSellerDefaultAddress(ctx context.Context, tx *gorm.DB, req dtorepository.RegisterSellerRequest) error {
+	account := model.Accounts{}
+	accountAddress := model.AccountAddress{}
+
+	err := tx.WithContext(ctx).Clauses(clause.Locking{
+		Strength: "UPDATE",
+		Table: clause.Table{
+			Name: clause.CurrentTable,
+		}}).Model(&account).Where("id = ?", req.UserId).Update("shop_name", req.ShopName).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.WithContext(ctx).Clauses(clause.Locking{
+		Strength: "UPDATE",
+		Table: clause.Table{
+			Name: clause.CurrentTable,
+		}}).Model(accountAddress).Where("id = ?", req.AddressId).Updates(
+		model.AccountAddress{
+			IsBuyerDefault:  false,
+			IsSellerDefault: true,
+		}).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
+func (r accountRepository) ConvertListCourierIdToListCourierModel(ctx context.Context, req dtorepository.RegisterSellerRequest) []model.SellerCouriers {
+	seller_couriers := []model.SellerCouriers{}
 	for _, seller_courier_id := range req.ListCourierId {
 		seller_couriers = append(seller_couriers, model.SellerCouriers{
 			AccountID: req.UserId,
@@ -60,70 +138,27 @@ func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.
 		})
 	}
 
+	return seller_couriers
+}
+
+func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.RegisterSellerRequest) (*dtorepository.RegisterSellerResponse, error) {
+	res := dtorepository.RegisterSellerResponse{}
+	seller_couriers := r.ConvertListCourierIdToListCourierModel(ctx, req)
+
 	tx := r.db.Begin()
-
-	err := tx.WithContext(ctx).Where("id = ?", req.AddressId).First(&model.AccountAddress{}).Error
-
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		tx.Rollback()
-		return &res, util.ErrAddressNotAvailable
-	}
-
+	err := r.AddressAndCourierIsAvailable(ctx, tx, req)
 	if err != nil {
 		tx.Rollback()
 		return &res, err
 	}
 
-	err = r.db.WithContext(ctx).Model(&model.Couriers{}).Where("id IN ?", req.ListCourierId).Scan(&couriers).Error
-
-	if len(couriers) < len(req.ListCourierId) {
-		tx.Rollback()
-		return &res, util.ErrCourierNotAvailable
-	}
-
+	err = r.AlreadyRegisteredAsSeller(ctx, tx, req)
 	if err != nil {
 		tx.Rollback()
 		return &res, err
 	}
 
-	err = tx.WithContext(ctx).Where("id = ?", req.UserId).First(&account).Error
-
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		tx.Rollback()
-		return &res, util.ErrNoRecordFound
-	}
-
-	if err != nil {
-		tx.Rollback()
-		return &res, err
-	}
-
-	if account.ShopName != "" {
-		tx.Rollback()
-		return &res, util.ErrAlreadyRegisteredAsSeller
-	}
-
-	err = tx.WithContext(ctx).Clauses(clause.Locking{
-		Strength: "UPDATE",
-		Table: clause.Table{
-			Name: clause.CurrentTable,
-		}}).Model(&account).Where("id = ?", req.UserId).Update("shop_name", req.ShopName).Error
-
-	if err != nil {
-		tx.Rollback()
-		return &res, err
-	}
-
-	err = tx.WithContext(ctx).Clauses(clause.Locking{
-		Strength: "UPDATE",
-		Table: clause.Table{
-			Name: clause.CurrentTable,
-		}}).Model(&model.AccountAddress{}).Where("id = ?", req.AddressId).Updates(
-		model.AccountAddress{
-			IsBuyerDefault:  false,
-			IsSellerDefault: true,
-		}).Error
-
+	err = r.UpdateShopNameAndSellerDefaultAddress(ctx, tx, req)
 	if err != nil {
 		tx.Rollback()
 		return &res, err
