@@ -30,6 +30,7 @@ func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 			wallet.PUT("/change-pin", h.ChangeWalletPIN)
 			wallet.GET("", h.GetWallet)
 			wallet.GET("/histories", h.GetListTransactions)
+			wallet.POST("/validate-pin", h.ValidateWalletPIN)
 
 			wallet.POST("/topup", h.TopUpBalanceWallet)
 		}
