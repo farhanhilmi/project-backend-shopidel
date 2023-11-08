@@ -670,17 +670,25 @@ func (r *accountRepository) FindAccountCartItems(ctx context.Context, req dtorep
 			seller.shop_name as "ShopName",
 			pvsc.id as "ProductId",
 			pvsc.picture_url as "ProductUrl",
-			p."name" as "ProductName",
+			case 
+				when pvs."name" = 'default_reserved_keyword' then p."name"
+				when pvs2."name" is null then concat(p."name", ' - ', pvs."name")
+				when pvs2."name" is not null then concat(p."name", ' - ', pvs."name", ', ', pvs2."name")
+			end as "ProductName",
 			pvsc.price as "ProductPrice",
 			ac.quantity as "Quantity"
 		from account_carts ac 
 			left join product_variant_selection_combinations pvsc 
 				on pvsc.id = ac.product_variant_selection_combination_id 
+			left join product_variant_selections pvs
+				on pvs.id = pvsc.product_variant_selection_id1 
+			left join product_variant_selections pvs2 
+				on pvs2.id = pvsc.product_variant_selection_id2 
 			left join products p 
 				on p.id = pvsc.product_id 
 			left join accounts seller
 				on seller.id = p.seller_id 
-		where ac.account_id = ?
+		where ac.account_id = 2
 		order by seller.id asc
 	`
 
