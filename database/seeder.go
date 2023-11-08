@@ -38,7 +38,8 @@ func dropTable() {
 			couriers,
 			account_addresses,
 			account_carts,
-			seller_couriers
+			seller_couriers,
+			favorite_products
 			;
 	`
 
@@ -76,6 +77,7 @@ func createTable() {
 		&model.AccountAddress{},
 		&model.AccountCarts{},
 		&model.SellerCouriers{},
+		&model.FavoriteProducts{},
 	)
 
 	if err != nil {

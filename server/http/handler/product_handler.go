@@ -40,3 +40,25 @@ func (h *ProductHandler) GetProductDetail(c *gin.Context) {
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes})
 }
+
+func (h *ProductHandler) AddToFavorite(c *gin.Context) {
+	id := c.Param("productId")
+	productId, err := strconv.Atoi(id)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	uReq := dtousecase.FavoriteProduct{
+		ProductID: productId,
+		AccountID: c.GetInt("userId"),
+	}
+
+	_, err = h.productUsecase.AddToFavorite(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Successfully add product to favorite"})
+}

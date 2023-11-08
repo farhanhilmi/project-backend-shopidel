@@ -63,4 +63,5 @@ var (
 	ErrAddressNotAvailable       = &CustomError{Message: "address not found or available", Code: BadRequest}
 	ErrInvalidToken              = &CustomError{Message: "Invalid token", Code: Unauthorized}
 	ErrUnauthorize               = &CustomError{Message: "Unauthorize", Code: Unauthorized}
+	ErrProductNotFound           = &CustomError{Message: "Product not found", Code: NotFound}
 )

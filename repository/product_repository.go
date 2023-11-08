@@ -19,6 +19,8 @@ type ProductRepository interface {
 	First(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error)
 	FindProductVariant(ctx context.Context, req dtorepository.FindProductVariantRequest) (dtorepository.FindProductVariantResponse, error)
 	FindProductVariantByID(ctx context.Context, req dtorepository.ProductCart) (dtorepository.ProductCart, error)
+	FindProductFavorites(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
+	AddProductFavorite(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
 }
 
 func NewProductRepository(db *gorm.DB) ProductRepository {
@@ -57,6 +59,10 @@ func (r *productRepository) First(ctx context.Context, req dtorepository.Product
 	}
 
 	err = r.db.WithContext(ctx).Where(qw).First(&p).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+
 	if err != nil {
 		return res, err
 	}
@@ -113,4 +119,29 @@ func (r *productRepository) FindProductVariant(ctx context.Context, req dtorepos
 	res.Variants = variants
 
 	return res, nil
+}
+
+func (r *productRepository) AddProductFavorite(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error) {
+	res := dtorepository.FavoriteProduct{}
+
+	err := r.db.WithContext(ctx).Model(&model.FavoriteProducts{}).Create(&req).Scan(&res).Error
+	if err != nil {
+		return res, err
+	}
+
+	return res, err
+}
+
+func (r *productRepository) FindProductFavorites(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error) {
+	res := dtorepository.FavoriteProduct{}
+
+	err := r.db.WithContext(ctx).Model(&model.FavoriteProducts{}).Where("product_id = ?", req.ProductID).Where("account_id = ?", req.AccountID).First(&res).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
+	}
+
+	return res, err
 }

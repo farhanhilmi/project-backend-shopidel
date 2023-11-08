@@ -7,10 +7,12 @@ import (
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/repository"
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
 )
 
 type ProductUsecase interface {
 	GetProductDetail(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductDetailResponse, error)
+	AddToFavorite(ctx context.Context, req dtousecase.FavoriteProduct) (*dtousecase.FavoriteProduct, error)
 }
 
 type productUsecase struct {
@@ -29,6 +31,34 @@ func NewProductUsecase(config ProductUsecaseConfig) ProductUsecase {
 
 	return au
 
+}
+
+func (u *productUsecase) AddToFavorite(ctx context.Context, req dtousecase.FavoriteProduct) (*dtousecase.FavoriteProduct, error) {
+	_, err := u.productRepository.First(ctx, dtorepository.ProductRequest{
+		ProductID: req.ProductID,
+	})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrProductNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// productFavorites, err := u.productRepository.
+
+	favorite, err := u.productRepository.AddProductFavorite(ctx, dtorepository.FavoriteProduct{
+		ProductID: req.ProductID,
+		AccountID: req.AccountID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &dtousecase.FavoriteProduct{
+		ID:        favorite.ID,
+		ProductID: favorite.ProductID,
+		AccountID: favorite.AccountID,
+	}, nil
 }
 
 func (u *productUsecase) GetProductDetail(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductDetailResponse, error) {
