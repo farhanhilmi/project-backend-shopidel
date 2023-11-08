@@ -61,4 +61,6 @@ var (
 	ErrProductCartNotFound       = &CustomError{Message: "Product not found", Code: BadRequest}
 	ErrAlreadyRegisteredAsSeller = &CustomError{Message: "already registered as seller", Code: BadRequest}
 	ErrAddressNotAvailable       = &CustomError{Message: "address not found or available", Code: BadRequest}
+	ErrInvalidToken              = &CustomError{Message: "Invalid token", Code: Unauthorized}
+	ErrUnauthorize               = &CustomError{Message: "Unauthorize", Code: Unauthorized}
 )
