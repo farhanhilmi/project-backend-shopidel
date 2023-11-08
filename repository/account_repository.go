@@ -182,7 +182,7 @@ func (r *accountRepository) GetAddresses(ctx context.Context, req dtorepository.
 	res := []dtorepository.AddressResponse{}
 	addresses := []model.AccountAddress{}
 
-	err := r.db.WithContext(ctx).Find(&addresses).Where("account_id = ?", req.UserId).Error
+	err := r.db.WithContext(ctx).Find(&addresses, "account_id = ?", req.UserId).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return &res, util.ErrNoRecordFound
 	}
