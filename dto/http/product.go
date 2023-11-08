@@ -31,7 +31,7 @@ type CategoryResponse struct {
 
 type CheckDeliveryFeeRequest struct {
 	SellerID    int    `json:"seller_id" binding:"required"`
-	Destination string `json:"destination" binding:"required"`
+	Destination string `json:"destination_address_id" binding:"required"`
 	Weight      string `json:"weight" binding:"required"`
 	CourierID   int    `json:"courier_id" binding:"required"`
 }
