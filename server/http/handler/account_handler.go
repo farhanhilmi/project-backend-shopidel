@@ -115,10 +115,39 @@ func (h *AccountHandler) Login(c *gin.Context) {
 	}
 
 	res := dtogeneral.JSONResponse{
-		AccessToken: uRes.AccessToken,
+		AccessToken:  uRes.AccessToken,
+		RefreshToken: uRes.RefreshToken,
 	}
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Login success", Data: res})
+}
+
+func (h *AccountHandler) RefreshToken(c *gin.Context) {
+	var req dtohttp.RefreshTokenRequest
+
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.RefreshTokenRequest{
+		RefreshToken: req.RefreshToken,
+		UserId:       c.GetInt("userId"),
+	}
+
+	uRes, err := h.accountUsecase.RefreshToken(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res := dtogeneral.JSONResponse{
+		AccessToken:  uRes.AccessToken,
+		RefreshToken: uRes.RefreshToken,
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
 }
 
 func (h *AccountHandler) EditProfile(c *gin.Context) {
