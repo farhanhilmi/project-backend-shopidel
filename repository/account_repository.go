@@ -694,7 +694,7 @@ func (r *accountRepository) FindAccountCartItems(ctx context.Context, req dtorep
 				on p.id = pvsc.product_id 
 			left join accounts seller
 				on seller.id = p.seller_id 
-		where ac.account_id = 2
+		where ac.account_id = ?
 		order by seller.id asc
 	`
 
