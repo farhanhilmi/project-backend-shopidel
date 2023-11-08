@@ -7,6 +7,7 @@ import (
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto"
+	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -36,6 +37,7 @@ type AccountUsecase interface {
 	RegisterAccountAddress(ctx context.Context, req dtousecase.RegisterAddressRequest) (dtousecase.RegisterAddressResponse, error)
 	GetProvinces(ctx context.Context) (dtousecase.GetProvincesResponse, error)
 	GetDistrictsByProvinceId(ctx context.Context, req dtousecase.GetDistrictRequest) (dtousecase.GetDistrictResponse, error)
+	RefreshToken(ctx context.Context, req dtousecase.RefreshTokenRequest) (*dtousecase.LoginResponse, error)
 }
 
 type accountUsecase struct {
@@ -147,10 +149,55 @@ func (u *accountUsecase) Login(ctx context.Context, req dtousecase.LoginRequest)
 	if err != nil {
 		return nil, err
 	}
+	refreshToken, err := util.GenerateRefreshJWT(userAccount.ID)
+	if err != nil {
+		return nil, err
+	}
 
 	res.AccessToken = token
+	res.RefreshToken = refreshToken
 
 	return &res, nil
+}
+
+func (u *accountUsecase) RefreshToken(ctx context.Context, req dtousecase.RefreshTokenRequest) (*dtousecase.LoginResponse, error) {
+	token, err := util.ValidateRefreshToken(req.RefreshToken)
+
+	if err != nil || !token.Valid {
+		return nil, util.ErrInvalidToken
+	}
+
+	claims, ok := token.Claims.(*dtogeneral.ClaimsJWT)
+
+	if !ok {
+		return nil, util.ErrUnauthorize
+	}
+	account, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{UserId: claims.UserId})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, err
+	}
+	if err != nil {
+		return nil, util.ErrUnauthorize
+	}
+	role := "buyer"
+	if account.ShopName != "" {
+		role = "seller"
+	}
+
+	accessToken, err := util.GenerateJWT(account.ID, role, account.WalletNumber)
+	if err != nil {
+		return nil, err
+	}
+	refreshToken, err := util.GenerateRefreshJWT(account.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dtousecase.LoginResponse{
+		RefreshToken: refreshToken,
+		AccessToken:  accessToken,
+	}, nil
+
 }
 
 func (u *accountUsecase) CreateAccount(ctx context.Context, req dtousecase.CreateAccountRequest) (*dtousecase.CreateAccountResponse, error) {

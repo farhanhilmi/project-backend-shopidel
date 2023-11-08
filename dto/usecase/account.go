@@ -80,6 +80,11 @@ type LoginRequest struct {
 	Password string
 }
 
+type RefreshTokenRequest struct {
+	RefreshToken string
+	UserId       int
+}
+
 type AddressRequest struct {
 	UserId int
 }
@@ -113,7 +118,8 @@ type EditAccountResponse struct {
 }
 
 type LoginResponse struct {
-	AccessToken string
+	AccessToken  string
+	RefreshToken string
 }
 
 type GetCartRequest struct {
