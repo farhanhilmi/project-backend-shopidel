@@ -124,8 +124,8 @@ func (h *ProductOrderHandler) CheckDeveliryFee(c *gin.Context) {
 	}
 
 	uReq := dtousecase.CheckDeliveryFeeRequest{
+		SellerID:    req.SellerID,
 		ID:          req.CourierID,
-		Origin:      req.Origin,
 		Destination: req.Destination,
 		Weight:      req.Weight,
 	}
