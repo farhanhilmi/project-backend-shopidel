@@ -169,12 +169,9 @@ func (u *accountUsecase) RefreshToken(ctx context.Context, req dtousecase.Refres
 	if !ok {
 		return nil, util.ErrUnauthorize
 	}
-	account, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{UserId: req.UserId})
+	account, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{UserId: claims.UserId})
 	if errors.Is(err, util.ErrNoRecordFound) {
 		return nil, err
-	}
-	if claims.UserId != account.ID {
-		return nil, util.ErrUnauthorize
 	}
 	if err != nil {
 		return nil, util.ErrUnauthorize
