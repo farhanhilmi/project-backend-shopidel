@@ -105,16 +105,6 @@ func (u *productOrderUsecase) CheckoutOrder(ctx context.Context, req dtousecase.
 		orderDetails = append(orderDetails, order)
 	}
 
-	sellerAccount, err := u.accountAddressRepository.FindSellerAddressByAccountID(ctx, dtorepository.AccountAddressRequest{
-		AccountID: req.SellerID,
-	})
-	if errors.Is(err, util.ErrNoRecordFound) {
-		return nil, err
-	}
-	if err != nil {
-		return nil, err
-	}
-
 	courier, err := u.courierRepository.FindById(ctx, dtorepository.CourierData{ID: req.CourierID})
 	if errors.Is(err, util.ErrNoRecordFound) {
 		return nil, err
@@ -124,10 +114,10 @@ func (u *productOrderUsecase) CheckoutOrder(ctx context.Context, req dtousecase.
 	}
 	courierFee, err := u.CheckDeliveryFee(ctx, dtousecase.CheckDeliveryFeeRequest{
 		ID:          req.CourierID,
-		Origin:      sellerAccount.RajaOngkirDistrictId,
 		Destination: req.DestinationAddressID,
 		Weight:      req.Weight,
 		Courier:     courier.Name,
+		SellerID:    req.SellerID,
 	})
 	if err != nil {
 		return nil, err
@@ -293,7 +283,17 @@ func (u *productOrderUsecase) CheckDeliveryFee(ctx context.Context, req dtouseca
 		return nil, err
 	}
 
+	sellerAccount, err := u.accountAddressRepository.FindSellerAddressByAccountID(ctx, dtorepository.AccountAddressRequest{
+		AccountID: req.SellerID,
+	})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
 	req.Courier = courier.Name
+	req.Origin = sellerAccount.RajaOngkirDistrictId
 	response, err := util.GetRajaOngkirCost(req)
 	if err != nil {
 		return nil, err

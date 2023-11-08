@@ -3,6 +3,7 @@ package dtorepository
 type AccountAddressRequest struct {
 	ID        int
 	AccountID int
+	SellerID  int
 }
 
 type AccountAddressResponse struct {

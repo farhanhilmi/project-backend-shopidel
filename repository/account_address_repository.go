@@ -29,7 +29,7 @@ func (r *accountAddressRepository) FindBuyerAddressByID(ctx context.Context, req
 	accountAddress := model.AccountAddress{}
 	res := dtorepository.AccountAddressResponse{}
 
-	err := r.db.WithContext(ctx).Where("id = ?", req.ID).Where("is_buyer_default is true").First(&accountAddress).Error
+	err := r.db.WithContext(ctx).Where("id = ?", req.ID).First(&accountAddress).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound
