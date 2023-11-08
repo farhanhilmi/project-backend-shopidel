@@ -21,6 +21,7 @@ type ProductRepository interface {
 	FindProductVariantByID(ctx context.Context, req dtorepository.ProductCart) (dtorepository.ProductCart, error)
 	FindProductFavorites(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
 	AddProductFavorite(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
+	RemoveProductFavorite(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
 }
 
 func NewProductRepository(db *gorm.DB) ProductRepository {
@@ -125,6 +126,17 @@ func (r *productRepository) AddProductFavorite(ctx context.Context, req dtorepos
 	res := dtorepository.FavoriteProduct{}
 
 	err := r.db.WithContext(ctx).Model(&model.FavoriteProducts{}).Create(&req).Scan(&res).Error
+	if err != nil {
+		return res, err
+	}
+
+	return res, err
+}
+
+func (r *productRepository) RemoveProductFavorite(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error) {
+	res := dtorepository.FavoriteProduct{}
+
+	err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountID).Where("product_id = ?", req.ProductID).Delete(&model.FavoriteProducts{}).Scan(&res).Error
 	if err != nil {
 		return res, err
 	}

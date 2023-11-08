@@ -44,7 +44,24 @@ func (u *productUsecase) AddToFavorite(ctx context.Context, req dtousecase.Favor
 		return nil, err
 	}
 
-	// productFavorites, err := u.productRepository.
+	_, err = u.productRepository.FindProductFavorites(ctx, dtorepository.FavoriteProduct{ProductID: req.ProductID, AccountID: req.AccountID})
+	if err != nil && !errors.Is(err, util.ErrNoRecordFound) {
+		return nil, err
+	}
+	if !errors.Is(err, util.ErrNoRecordFound) {
+		favorite, err := u.productRepository.RemoveProductFavorite(ctx, dtorepository.FavoriteProduct{ProductID: req.ProductID, AccountID: req.AccountID})
+		if errors.Is(err, util.ErrNoRecordFound) {
+			return nil, util.ErrProductNotFound
+		}
+		if err != nil {
+			return nil, err
+		}
+		return &dtousecase.FavoriteProduct{
+			ID:        favorite.ID,
+			ProductID: favorite.ProductID,
+			AccountID: favorite.AccountID,
+		}, nil
+	}
 
 	favorite, err := u.productRepository.AddProductFavorite(ctx, dtorepository.FavoriteProduct{
 		ProductID: req.ProductID,
