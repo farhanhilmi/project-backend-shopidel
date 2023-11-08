@@ -72,3 +72,7 @@ type CourierFeeResponse struct {
 	Estimated string `json:"estimated"`
 	Note      string `json:"note"`
 }
+
+type SellerCourier struct {
+	SellerID int
+}
