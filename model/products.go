@@ -92,3 +92,12 @@ type ProductCombinationVariant struct {
 	ID    int `gorm:"serial"`
 	Stock int `gorm:"type:int;not null"`
 }
+
+type FavoriteProducts struct {
+	ID        int       `gorm:"primaryKey;not null,autoIncrement;serial"`
+	ProductID int       `gorm:"foreignKey:ProductID;type:bigint;not null"`
+	AccountID int       `gorm:"foreignKey:AccountID;type:bigint;not null"`
+	CreatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
+	UpdatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
+	DeletedAt time.Time `gorm:"type:timestamp;default:null"`
+}

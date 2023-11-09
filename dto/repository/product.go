@@ -1,6 +1,10 @@
 package dtorepository
 
-import "github.com/shopspring/decimal"
+import (
+	"time"
+
+	"github.com/shopspring/decimal"
+)
 
 type ProductRequest struct {
 	ProductID int
@@ -95,4 +99,13 @@ type ProductCart struct {
 	ProductID int
 	Quantity  int
 	AccountID int
+}
+
+type FavoriteProduct struct {
+	ID        int
+	ProductID int
+	AccountID int
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt time.Time
 }

@@ -133,7 +133,6 @@ func (h *AccountHandler) RefreshToken(c *gin.Context) {
 
 	uReq := dtousecase.RefreshTokenRequest{
 		RefreshToken: req.RefreshToken,
-		UserId:       c.GetInt("userId"),
 	}
 
 	uRes, err := h.accountUsecase.RefreshToken(c.Request.Context(), uReq)
