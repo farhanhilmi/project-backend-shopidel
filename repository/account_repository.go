@@ -48,6 +48,7 @@ type AccountRepository interface {
 	FindProvinces(ctx context.Context) ([]model.Province, error)
 	FindDistrictsByProvinceId(ctx context.Context, ProvinceId int) ([]model.District, error)
 	DeleteAddress(ctx context.Context, req dtorepository.DeleteAddressRequest) error
+	UpdateAddress(ctx context.Context, req dtorepository.UpdateAddressRequest) (dtorepository.UpdateAddressResponse, error)
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
@@ -811,6 +812,52 @@ func (r *accountRepository) CreateAddress(ctx context.Context, req dtorepository
 	}
 
 	if err := r.db.WithContext(ctx).Create(&ad).Error; err != nil {
+		return res, err
+	}
+
+	res.AccountId = req.AccountId
+	res.ProvinceId = req.ProvinceId
+	res.DistrictId = req.DistrictId
+	res.Kelurahan = req.Kelurahan
+	res.SubDistrict = req.SubDistrict
+	res.ZipCode = req.ZipCode
+	res.Detail = req.Detail
+
+	return res, nil
+}
+
+func (r *accountRepository) UpdateAddress(ctx context.Context, req dtorepository.UpdateAddressRequest) (dtorepository.UpdateAddressResponse, error) {
+	res := dtorepository.UpdateAddressResponse{}
+
+	p := model.Province{}
+	if err := r.db.WithContext(ctx).Where("id = ?", req.ProvinceId).Find(&p).Error; err != nil {
+		return res, err
+	}
+
+	d := model.District{}
+	if err := r.db.WithContext(ctx).Where("id = ?", req.DistrictId).Find(&d).Error; err != nil {
+		return res, err
+	}
+
+	ad := model.AccountAddress{
+		Province:             p.Name,
+		District:             d.Name,
+		RajaOngkirDistrictId: d.RajaOngkirDistrictId,
+		SubDistrict:          req.SubDistrict,
+		Kelurahan:            req.Kelurahan,
+		ZipCode:              req.ZipCode,
+		Detail:               req.Detail,
+	}
+
+	ads := []model.AccountAddress{}
+	if err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountId).Find(&ads).Error; err != nil {
+		return res, err
+	}
+	if len(ads) == 0 {
+		ad.IsBuyerDefault = true
+	}
+
+	if err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountId).Where("id = ?", req.AddressId).Updates(&ad).Error; err != nil {
 		return res, err
 	}
 

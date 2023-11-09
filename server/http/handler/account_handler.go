@@ -129,6 +129,49 @@ func (h *AccountHandler) RegisterAdress(c *gin.Context) {
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
 }
 
+func (h *AccountHandler) UpdateAddress(c *gin.Context) {
+	req := dtohttp.UpdateAddressRequest{}
+	res := dtohttp.UpdateAddressRequest{}
+
+	id := c.Param("addressId")
+	addressId, err := strconv.Atoi(id)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
+		return
+	}
+
+	uReq := dtousecase.UpdateAddressRequest{
+		AddressId:   addressId,
+		ProvinceId:  req.ProvinceId,
+		DistrictId:  req.DistrictId,
+		SubDistrict: req.SubDistrict,
+		Kelurahan:   req.Kelurahan,
+		ZipCode:     req.ZipCode,
+		Detail:      req.Detail,
+		AccountId:   c.GetInt("userId"),
+	}
+
+	uRes, err := h.accountUsecase.UpdateAccountAddress(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res.Detail = uRes.Detail
+	res.DistrictId = uRes.DistrictId
+	res.Kelurahan = uRes.Kelurahan
+	res.ProvinceId = uRes.ProvinceId
+	res.SubDistrict = uRes.SubDistrict
+	res.ZipCode = uRes.ZipCode
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
+}
+
 func (h *AccountHandler) DeleteAdress(c *gin.Context) {
 	addressIdString := c.Param("addressId")
 	addressId, err := strconv.Atoi(addressIdString)
