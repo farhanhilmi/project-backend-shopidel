@@ -101,3 +101,16 @@ type FavoriteProducts struct {
 	UpdatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	DeletedAt time.Time `gorm:"type:timestamp;default:null"`
 }
+
+type FavoriteProductList struct {
+	ID         int             `json:"id"`
+	ProductID  int             `json:"product_id"`
+	Name       string          `json:"name"`
+	District   string          `json:"district"`
+	TotalSold  int             `json:"total_sold"`
+	Price      decimal.Decimal `json:"price"`
+	PictureURL string          `json:"picture_url"`
+	CreatedAt  time.Time       `json:"created_at"`
+	UpdatedAt  time.Time       `json:"-"`
+	DeletedAt  time.Time       `json:"-"`
+}

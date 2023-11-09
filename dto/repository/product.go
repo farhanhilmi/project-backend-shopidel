@@ -109,3 +109,27 @@ type FavoriteProduct struct {
 	UpdatedAt time.Time
 	DeletedAt time.Time
 }
+
+type FavoriteProductResponse struct {
+	ID          int
+	ProductID   int
+	AccountID   int
+	Name        string
+	Description string
+	Price       decimal.Decimal
+	PictureURL  string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   time.Time
+}
+
+type ProductFavoritesParams struct {
+	AccountID int
+	SortBy    string
+	Search    string
+	Sort      string
+	Limit     int
+	Page      int
+	StartDate string
+	EndDate   string
+}
