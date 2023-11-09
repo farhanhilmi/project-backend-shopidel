@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
@@ -21,6 +22,7 @@ type ProductOrderUsecase interface {
 	CheckoutOrder(ctx context.Context, req dtousecase.CheckoutOrderRequest) (*dtousecase.CheckoutOrderResponse, error)
 	CheckDeliveryFee(ctx context.Context, req dtousecase.CheckDeliveryFeeRequest) (*dtousecase.CourierFeeResponse, error)
 	GetCouriers(ctx context.Context, req dtousecase.SellerCourier) ([]model.Couriers, error)
+	GetOrderHistories(ctx context.Context, req dtousecase.ProductOrderHistoryRequest) ([]dtousecase.OrdersResponse, error)
 }
 
 type productOrderUsecase struct {
@@ -159,7 +161,7 @@ func (u *productOrderUsecase) CheckoutOrder(ctx context.Context, req dtousecase.
 		AccountID:          req.UserID,
 		SellerID:           req.SellerID,
 		CourierID:          req.CourierID,
-		Status:             constant.StatusWaitingSellerConfirmation,
+		Status:             constant.StatusOrderOnProcess,
 		Notes:              req.Notes,
 		DeliveryFee:        deliveryFee,
 		TotalAmount:        totalPayment,
@@ -183,7 +185,7 @@ func (u *productOrderUsecase) CancelOrderBySeller(ctx context.Context, req dtous
 	order, err := u.productOrderRepository.FindByIDAndSellerID(ctx, dtorepository.ProductOrderRequest{
 		ID:       req.ID,
 		SellerID: req.SellerID,
-		Status:   constant.StatusWaitingSellerConfirmation,
+		Status:   constant.StatusOrderOnProcess,
 	})
 	if errors.Is(err, util.ErrNoRecordFound) {
 		return nil, util.ErrNoRecordFound
@@ -239,7 +241,7 @@ func (u *productOrderUsecase) ProcessedOrder(ctx context.Context, req dtousecase
 	order, err := u.productOrderRepository.FindByIDAndSellerID(ctx, dtorepository.ProductOrderRequest{
 		ID:       req.ID,
 		SellerID: req.SellerID,
-		Status:   constant.StatusWaitingSellerConfirmation,
+		Status:   constant.StatusOrderOnProcess,
 	})
 	if errors.Is(err, util.ErrNoRecordFound) {
 		return nil, util.ErrNoRecordFound
@@ -323,4 +325,63 @@ func (u *productOrderUsecase) GetCouriers(ctx context.Context, req dtousecase.Se
 	}
 
 	return response, nil
+}
+
+func (u *productOrderUsecase) convertOrderHistoriesReponse(ctx context.Context, orders []model.ProductOrderHistories) ([]dtousecase.OrdersResponse, error) {
+	orderHistories := make(map[int][]dtousecase.OrderProduct)
+	productOrders := []dtousecase.OrdersResponse{}
+
+	for _, o := range orders {
+		product := dtousecase.OrderProduct{
+			ProductName:     o.ProductName,
+			Quantity:        o.Quantity,
+			IndividualPrice: o.IndividualPrice,
+			ProductID:       o.ProductID,
+		}
+		orderHistories[o.ID] = append(orderHistories[o.ID], product)
+	}
+
+	for k, products := range orderHistories {
+		var totalAmount decimal.Decimal
+		for _, o := range products {
+			qty, err := decimal.NewFromString(fmt.Sprintf("%v", o.Quantity))
+			if err != nil {
+				return nil, err
+			}
+
+			totalAmount = totalAmount.Add(o.IndividualPrice.Mul(qty))
+		}
+		order := dtousecase.OrdersResponse{
+			OrderID:      k,
+			Products:     products,
+			TotalPayment: totalAmount,
+		}
+		productOrders = append(productOrders, order)
+	}
+
+	return productOrders, nil
+}
+
+func (u *productOrderUsecase) GetOrderHistories(ctx context.Context, req dtousecase.ProductOrderHistoryRequest) ([]dtousecase.OrdersResponse, error) {
+	var err error
+	if req.Status == "" || strings.EqualFold(req.Status, constant.StatusOrderAll) {
+		orders, err := u.productOrderRepository.FindAllOrderHistoriesByUser(ctx, dtorepository.ProductOrderHistoryRequest{
+			AccountID: req.AccountID,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return u.convertOrderHistoriesReponse(ctx, orders)
+	}
+
+	orders, err := u.productOrderRepository.FindAllOrderHistoriesByUserAndStatus(ctx, dtorepository.ProductOrderHistoryRequest{
+		AccountID: req.AccountID,
+		Status:    req.Status,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return u.convertOrderHistoriesReponse(ctx, orders)
 }

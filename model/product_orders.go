@@ -55,3 +55,16 @@ type ProductOrderSeller struct {
 	Quantity                             int
 	Status                               string
 }
+
+type ProductOrderHistories struct {
+	ID              int
+	ProductName     string
+	Quantity        int
+	Status          string
+	ProductID       int
+	IndividualPrice decimal.Decimal
+	PictureURL      string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	DeletedAt       time.Time
+}

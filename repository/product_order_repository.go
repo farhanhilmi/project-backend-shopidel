@@ -25,6 +25,8 @@ type ProductOrdersRepository interface {
 	FindByIDAndSellerID(ctx context.Context, req dtorepository.ProductOrderRequest) ([]model.ProductOrderSeller, error)
 	ProcessedOrder(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error)
 	Create(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error)
+	FindAllOrderHistoriesByUser(ctx context.Context, req dtorepository.ProductOrderHistoryRequest) ([]model.ProductOrderHistories, error)
+	FindAllOrderHistoriesByUserAndStatus(ctx context.Context, req dtorepository.ProductOrderHistoryRequest) ([]model.ProductOrderHistories, error)
 }
 
 func NewProductOrdersRepository(db *gorm.DB) ProductOrdersRepository {
@@ -58,6 +60,48 @@ func (r *productOrdersRepository) FindByID(ctx context.Context, req dtorepositor
 	res.UpdatedAt = order.UpdatedAt
 
 	return res, err
+}
+
+func (r *productOrdersRepository) FindAllOrderHistoriesByUser(ctx context.Context, req dtorepository.ProductOrderHistoryRequest) ([]model.ProductOrderHistories, error) {
+	res := []model.ProductOrderHistories{}
+
+	q := `
+	select po.*, pod.quantity, pod.individual_price, pvsc.picture_url, p.name as product_name, pvsc.product_id  from product_orders po
+		left join product_order_details pod 
+			on pod.product_order_id = po.id
+		left join product_variant_selection_combinations pvsc 
+			on pvsc.id = pod.product_variant_selection_combination_id
+		left join products p 
+			on p.id = pvsc.product_id 
+	where po.account_id = ?
+	`
+	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q, req.AccountID))
+	if err := query.Find(&res).Error; err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (r *productOrdersRepository) FindAllOrderHistoriesByUserAndStatus(ctx context.Context, req dtorepository.ProductOrderHistoryRequest) ([]model.ProductOrderHistories, error) {
+	res := []model.ProductOrderHistories{}
+
+	q := `
+	select po.*, pod.quantity, pod.individual_price, pvsc.picture_url, p.name as product_name, pvsc.product_id  from product_orders po
+		left join product_order_details pod 
+			on pod.product_order_id = po.id
+		left join product_variant_selection_combinations pvsc 
+			on pvsc.id = pod.product_variant_selection_combination_id
+		left join products p 
+			on p.id = pvsc.product_id 
+	where po.account_id = ? and status ilike ?
+	`
+	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q, req.AccountID, req.Status))
+	if err := query.Find(&res).Error; err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 func (r *productOrdersRepository) FindByIDAndSellerID(ctx context.Context, req dtorepository.ProductOrderRequest) ([]model.ProductOrderSeller, error) {
