@@ -140,3 +140,36 @@ type DeleteAddressRequest struct {
 type DeleteAddressResponse struct {
 	AddressId int
 }
+type SellerDataRequest struct {
+	SellerId int
+}
+
+type SellerDataResponse struct {
+	Id                  int
+	Name                string
+	ProfilePicture      string
+	District            string
+	StartOperatingHours string
+	EndOperatingHours   string
+	TimeZone            string
+}
+
+type FindSellerProductsRequest struct {
+	SellerId int
+}
+
+type FindSellerProductsResponse struct {
+	Products []SellerProduct
+}
+
+type SellerProduct struct {
+	Name           string
+	Price          decimal.Decimal
+	PictureUrl     string
+	Stars          decimal.Decimal
+	TotalSold      int
+	CreatedAt      string
+	CategoryLevel1 string
+	CategoryLevel2 string
+	CategoryLevel3 string
+}
