@@ -84,94 +84,29 @@ func createTable() {
 }
 
 func seeding() {
-
-	err := db.Create(seeder.Accounts).Error
-
-	if err != nil {
-		panic(err)
+	seeders := []any{
+		seeder.Accounts,
+		seeder.Categories,
+		seeder.Products,
+		seeder.ProductImages,
+		seeder.ProductVideos,
+		seeder.ProductVariants,
+		seeder.ProductVariantSelections,
+		seeder.ProductVariantSelectionCombinations,
+		seeder.Couriers,
+		seeder.ProductOrders,
+		seeder.ProductOrderDetails,
+		seeder.ProductOrderDetails,
+		seeder.SaleWalletTransactionHistories,
+		seeder.AccountAddress,
+		seeder.AccountCarts,
+		seeder.SellerCouriers,
 	}
 
-	err = db.Create(seeder.Categories).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(&seeder.Products).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(seeder.ProductImages).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(seeder.ProductVideos).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(seeder.ProductVariants).Error
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(seeder.ProductVariantSelections).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(seeder.ProductVariantSelectionCombinations).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(seeder.Couriers).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(seeder.ProductOrders).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(seeder.ProductOrderDetails).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(seeder.SaleWalletTransactionHistories).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(seeder.AccountAddress).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(seeder.AccountCarts).Error
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Create(seeder.SellerCouriers).Error
-
-	if err != nil {
-		panic(err)
+	for _, seed := range seeders {
+		if err := db.Create(seed).Error; err != nil {
+			panic(err)
+		}
 	}
 
 	fmt.Println("successfully seed tables")
