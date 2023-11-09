@@ -767,6 +767,14 @@ func (u *accountUsecase) RegisterAccountAddress(ctx context.Context, req dtousec
 func (u *accountUsecase) UpdateAccountAddress(ctx context.Context, req dtousecase.UpdateAddressRequest) (dtousecase.UpdateAddressResponse, error) {
 	res := dtousecase.UpdateAddressResponse{}
 
+	_, err := u.accountRepository.FindAddressByID(ctx, dtorepository.UpdateAddressRequest{AddressId: req.AddressId, AccountId: req.AccountId})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
+	}
+
 	rReq := dtorepository.UpdateAddressRequest{
 		AddressId:   req.AddressId,
 		AccountId:   req.AccountId,

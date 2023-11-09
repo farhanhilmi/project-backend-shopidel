@@ -49,6 +49,7 @@ type AccountRepository interface {
 	FindDistrictsByProvinceId(ctx context.Context, ProvinceId int) ([]model.District, error)
 	DeleteAddress(ctx context.Context, req dtorepository.DeleteAddressRequest) error
 	UpdateAddress(ctx context.Context, req dtorepository.UpdateAddressRequest) (dtorepository.UpdateAddressResponse, error)
+	FindAddressByID(ctx context.Context, req dtorepository.UpdateAddressRequest) (dtorepository.UpdateAddressResponse, error)
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
@@ -870,6 +871,21 @@ func (r *accountRepository) UpdateAddress(ctx context.Context, req dtorepository
 	res.Detail = req.Detail
 
 	return res, nil
+}
+
+func (r *accountRepository) FindAddressByID(ctx context.Context, req dtorepository.UpdateAddressRequest) (dtorepository.UpdateAddressResponse, error) {
+	res := dtorepository.UpdateAddressResponse{}
+	ads := model.AccountAddress{}
+	err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountId).Where("id = ?", req.AddressId).First(&ads).Scan(&res).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+
 }
 
 func (r *accountRepository) FindProvinces(ctx context.Context) ([]model.Province, error) {
