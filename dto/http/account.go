@@ -149,3 +149,21 @@ type RegisterAddressResponse struct {
 	ZipCode     string `json:"zip_code"`
 	Detail      string `json:"detail"`
 }
+
+type UpdateAddressRequest struct {
+	ProvinceId  int    `json:"province_id" binding:"required"`
+	DistrictId  int    `json:"district_id" binding:"required"`
+	SubDistrict string `json:"sub_district" binding:"required"`
+	Kelurahan   string `json:"kelurahan" binding:"required"`
+	ZipCode     string `json:"zip_code" binding:"required"`
+	Detail      string `json:"detail" binding:"required"`
+}
+
+type UpdateAddressResponse struct {
+	ProvinceId  int    `json:"province_id" binding:"required"`
+	DistrictId  int    `json:"district_id" binding:"required"`
+	SubDistrict string `json:"sub_district"`
+	Kelurahan   string `json:"kelurahan"`
+	ZipCode     string `json:"zip_code"`
+	Detail      string `json:"detail"`
+}

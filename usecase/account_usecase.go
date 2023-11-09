@@ -39,6 +39,7 @@ type AccountUsecase interface {
 	GetDistrictsByProvinceId(ctx context.Context, req dtousecase.GetDistrictRequest) (dtousecase.GetDistrictResponse, error)
 	RefreshToken(ctx context.Context, req dtousecase.RefreshTokenRequest) (*dtousecase.LoginResponse, error)
 	DeleteAddresses(ctx context.Context, req dtousecase.DeleteAddressRequest) error
+	UpdateAccountAddress(ctx context.Context, req dtousecase.UpdateAddressRequest) (dtousecase.UpdateAddressResponse, error)
 }
 
 type accountUsecase struct {
@@ -748,6 +749,43 @@ func (u *accountUsecase) RegisterAccountAddress(ctx context.Context, req dtousec
 		Detail:      req.Detail,
 	}
 	rRes, err := u.accountRepository.CreateAddress(ctx, rReq)
+	if err != nil {
+		return res, err
+	}
+
+	res.Detail = rRes.Detail
+	res.DistrictId = rRes.DistrictId
+	res.Kelurahan = rRes.Kelurahan
+	res.ProvinceId = rRes.ProvinceId
+	res.SubDistrict = rRes.SubDistrict
+	res.AccountId = rRes.AccountId
+	res.ZipCode = rRes.ZipCode
+
+	return res, nil
+}
+
+func (u *accountUsecase) UpdateAccountAddress(ctx context.Context, req dtousecase.UpdateAddressRequest) (dtousecase.UpdateAddressResponse, error) {
+	res := dtousecase.UpdateAddressResponse{}
+
+	_, err := u.accountRepository.FindAddressByID(ctx, dtorepository.UpdateAddressRequest{AddressId: req.AddressId, AccountId: req.AccountId})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
+	}
+
+	rReq := dtorepository.UpdateAddressRequest{
+		AddressId:   req.AddressId,
+		AccountId:   req.AccountId,
+		ProvinceId:  req.ProvinceId,
+		DistrictId:  req.DistrictId,
+		SubDistrict: req.SubDistrict,
+		Kelurahan:   req.Kelurahan,
+		ZipCode:     req.ZipCode,
+		Detail:      req.Detail,
+	}
+	rRes, err := u.accountRepository.UpdateAddress(ctx, rReq)
 	if err != nil {
 		return res, err
 	}

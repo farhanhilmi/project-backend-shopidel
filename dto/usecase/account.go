@@ -208,6 +208,27 @@ type RegisterAddressResponse struct {
 	Detail      string
 }
 
+type UpdateAddressRequest struct {
+	AddressId   int
+	AccountId   int
+	ProvinceId  int
+	DistrictId  int
+	SubDistrict string
+	Kelurahan   string
+	ZipCode     string
+	Detail      string
+}
+
+type UpdateAddressResponse struct {
+	AccountId   int
+	ProvinceId  int
+	DistrictId  int
+	SubDistrict string
+	Kelurahan   string
+	ZipCode     string
+	Detail      string
+}
+
 type GetProvincesResponse struct {
 	Provinces []Province `json:"provinces"`
 }
