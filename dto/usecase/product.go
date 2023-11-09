@@ -82,3 +82,12 @@ type ProductCart struct {
 	Quantity  int
 	AccountID int
 }
+
+type FavoriteProduct struct {
+	ID        int
+	ProductID int
+	AccountID int
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt time.Time
+}
