@@ -32,6 +32,7 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 	accountAddressRepo := repository.NewAccountAddressRepository(db)
 	courierRepo := repository.NewCourierRepository(db)
 	myWalletRepo := repository.NewWalletTransactionHistoryRepository(db)
+	productRepo := repository.NewProductRepository(db)
 
 	pouc := usecase.ProductOrderUsecaseConfig{
 		ProductOrderRepository:              productOrderRepo,
@@ -40,7 +41,6 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 		AccountAddressRepository:            accountAddressRepo,
 		CourierRepository:                   courierRepo,
 	}
-	productRepo := repository.NewProductRepository(db)
 
 	auc := usecase.AccountUsecaseConfig{
 		AccountRepository:   accountRepo,
@@ -57,14 +57,20 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 		AccountRepository:     accountRepo,
 	}
 
+	suc := usecase.SellerUsecaseConfig{
+		AccountRepository: accountRepo,
+	}
+
 	productUsecase := usecase.NewProductUsecase(puc)
 	accountUsecase := usecase.NewAccountUsecase(auc)
 	productOrderUsecase := usecase.NewProductOrderUsecase(pouc)
 	walletTransactionUsecase := usecase.NewMyWalletTransactionUsecase(wuc)
+	sellerUsecase := usecase.NewSellerUsecase(suc)
 
 	accountHandler := handler.NewAccountHandler(accountUsecase, walletTransactionUsecase)
 	productOrderHandler := handler.NewProductOrderHandler(productOrderUsecase)
 	productHandler := handler.NewProductHandler(productUsecase)
+	sellerHandler := handler.NewSellerHandler(handler.SellerHandlerConfig{SellerUsecase: sellerUsecase})
 
 	configCors := cors.DefaultConfig()
 	configCors.AllowAllOrigins = true
@@ -78,6 +84,7 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 	router_seller.NewProductOrderRouter(productOrderHandler, gin)
 	router.NewProductRouter(productHandler, gin)
 	router.NewProductOrderRouter(productOrderHandler, gin)
+	router_seller.NewSellerProfileRouter(sellerHandler, gin)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", config.GetEnv("PORT")),
