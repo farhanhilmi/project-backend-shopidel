@@ -20,6 +20,7 @@ type ProductRepository interface {
 	FindProductVariant(ctx context.Context, req dtorepository.FindProductVariantRequest) (dtorepository.FindProductVariantResponse, error)
 	FindProductVariantByID(ctx context.Context, req dtorepository.ProductCart) (dtorepository.ProductCart, error)
 	FindProductFavorites(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
+	FindAllProductFavorites(ctx context.Context, req dtorepository.ProductFavoritesParams) ([]model.FavoriteProductList, int64, error)
 	AddProductFavorite(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
 	RemoveProductFavorite(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
 }
@@ -156,4 +157,52 @@ func (r *productRepository) FindProductFavorites(ctx context.Context, req dtorep
 	}
 
 	return res, err
+}
+
+func (r *productRepository) FindAllProductFavorites(ctx context.Context, req dtorepository.ProductFavoritesParams) ([]model.FavoriteProductList, int64, error) {
+	res := []model.FavoriteProductList{}
+	var totalItems int64
+
+	q := `
+	select distinct on (fp.product_id) fp.product_id, sum(pod.quantity) as total_sold, fp.*, p.name, pvsc.price, pvsc.picture_url, aa.district 
+		from favorite_products fp 
+		left join products p 
+			on p.id = fp.product_id
+		left join product_variant_selection_combinations pvsc 
+			on pvsc.product_id = fp.product_id
+		left join account_addresses aa 
+			on aa.account_id = fp.account_id  
+		left join product_order_details pod 
+			on pod.product_variant_selection_combination_id = pvsc.id
+		where fp.account_id = ?
+	group by fp.product_id, fp.id, p.name, pvsc.price, pvsc.picture_url, aa.district
+	`
+	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q, req.AccountID))
+
+	if req.StartDate != "" {
+		query = query.Where("created_at >= ?", req.StartDate)
+	}
+
+	if req.EndDate != "" {
+		req.EndDate += " 23:59:59"
+		query = query.Where("created_at <= ?", req.EndDate)
+	}
+
+	if req.Search != "" {
+		query = query.Where("name ilike ?", "%"+req.Search+"%")
+	}
+
+	if err := query.Count(&totalItems).Error; err != nil {
+		return nil, 0, err
+	}
+
+	query = query.Order(req.SortBy + " " + req.Sort)
+	offset := (req.Page - 1) * req.Limit
+	query = query.Offset(offset).Limit(req.Limit)
+
+	if err := query.Find(&res).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return res, totalItems, nil
 }

@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 
+	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
 )
@@ -13,6 +15,7 @@ import (
 type ProductUsecase interface {
 	GetProductDetail(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductDetailResponse, error)
 	AddToFavorite(ctx context.Context, req dtousecase.FavoriteProduct) (*dtousecase.FavoriteProduct, error)
+	GetProductFavorites(ctx context.Context, req dtousecase.ProductFavoritesParams) ([]model.FavoriteProductList, *dtogeneral.PaginationData, error)
 }
 
 type productUsecase struct {
@@ -76,6 +79,33 @@ func (u *productUsecase) AddToFavorite(ctx context.Context, req dtousecase.Favor
 		ProductID: favorite.ProductID,
 		AccountID: favorite.AccountID,
 	}, nil
+}
+
+func (u *productUsecase) GetProductFavorites(ctx context.Context, req dtousecase.ProductFavoritesParams) ([]model.FavoriteProductList, *dtogeneral.PaginationData, error) {
+	res := []model.FavoriteProductList{}
+
+	products, totalItems, err := u.productRepository.FindAllProductFavorites(ctx, dtorepository.ProductFavoritesParams{
+		AccountID: req.AccountID,
+		SortBy:    req.SortBy,
+		Search:    req.Search,
+		Sort:      req.Sort,
+		Limit:     req.Limit,
+		Page:      req.Page,
+		StartDate: req.StartDate,
+		EndDate:   req.EndDate,
+	})
+	if err != nil {
+		return res, nil, err
+	}
+
+	pagination := dtogeneral.PaginationData{
+		TotalItem:   int(totalItems),
+		TotalPage:   (int(totalItems) + req.Limit - 1) / req.Limit,
+		CurrentPage: req.Page,
+		Limit:       req.Limit,
+	}
+
+	return products, &pagination, nil
 }
 
 func (u *productUsecase) GetProductDetail(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductDetailResponse, error) {
