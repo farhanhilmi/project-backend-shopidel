@@ -132,3 +132,11 @@ type DeleteCartProductRequest struct {
 type DeleteCartProductResponse struct {
 	ListProductID []int
 }
+
+type DeleteAddressRequest struct {
+	AddressId int
+}
+
+type DeleteAddressResponse struct {
+	AddressId int
+}

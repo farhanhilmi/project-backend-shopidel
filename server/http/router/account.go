@@ -42,6 +42,7 @@ func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 		{
 			address.GET("", h.GetAddresses)
 			address.POST("", h.RegisterAdress)
+			address.DELETE("/:addressId", h.DeleteAdress)
 		}
 	}
 
