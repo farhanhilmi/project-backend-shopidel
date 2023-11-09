@@ -164,14 +164,20 @@ func (r *productRepository) FindAllProductFavorites(ctx context.Context, req dto
 	var totalItems int64
 
 	q := `
-	select distinct on (fp.product_id) fp.product_id, fp.*, p.name, p.description, pvsc.price, pvsc.picture_url from favorite_products fp 
+	select distinct on (fp.product_id) fp.product_id, sum(pod.quantity) as total_sold, fp.*, p.name, pvsc.price, pvsc.picture_url, aa.district 
+		from favorite_products fp 
 		left join products p 
 			on p.id = fp.product_id
 		left join product_variant_selection_combinations pvsc 
 			on pvsc.product_id = fp.product_id
-	where fp.account_id = 2
+		left join account_addresses aa 
+			on aa.account_id = fp.account_id  
+		left join product_order_details pod 
+			on pod.product_variant_selection_combination_id = pvsc.id
+		where fp.account_id = ?
+	group by fp.product_id, fp.id, p.name, pvsc.price, pvsc.picture_url, aa.district
 	`
-	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q))
+	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q, req.AccountID))
 
 	if req.StartDate != "" {
 		query = query.Where("created_at >= ?", req.StartDate)
