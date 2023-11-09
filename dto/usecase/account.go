@@ -222,7 +222,7 @@ type GetDistrictRequest struct {
 }
 
 type GetDistrictResponse struct {
-	Districts []District
+	Districts []District `json:"districts"`
 }
 
 type District struct {
