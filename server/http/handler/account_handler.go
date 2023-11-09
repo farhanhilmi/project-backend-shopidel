@@ -129,6 +129,23 @@ func (h *AccountHandler) RegisterAdress(c *gin.Context) {
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
 }
 
+func (h *AccountHandler) DeleteAdress(c *gin.Context) {
+	addressIdString := c.Param("addressId")
+	addressId, err := strconv.Atoi(addressIdString)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	err = h.accountUsecase.DeleteAddresses(c.Request.Context(), dtousecase.DeleteAddressRequest{AddressId: addressId})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "success deleting the address"})
+}
+
 func (h *AccountHandler) Login(c *gin.Context) {
 	var req dtohttp.LoginRequest
 

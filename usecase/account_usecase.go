@@ -38,6 +38,7 @@ type AccountUsecase interface {
 	GetProvinces(ctx context.Context) (dtousecase.GetProvincesResponse, error)
 	GetDistrictsByProvinceId(ctx context.Context, req dtousecase.GetDistrictRequest) (dtousecase.GetDistrictResponse, error)
 	RefreshToken(ctx context.Context, req dtousecase.RefreshTokenRequest) (*dtousecase.LoginResponse, error)
+	DeleteAddresses(ctx context.Context, req dtousecase.DeleteAddressRequest) error
 }
 
 type accountUsecase struct {
@@ -126,6 +127,12 @@ func (u *accountUsecase) GetAddresses(ctx context.Context, req dtousecase.Addres
 	}
 
 	return &res, nil
+}
+
+func (u *accountUsecase) DeleteAddresses(ctx context.Context, req dtousecase.DeleteAddressRequest) error {
+	err := u.accountRepository.DeleteAddress(ctx, dtorepository.DeleteAddressRequest{AddressId: req.AddressId})
+
+	return err
 }
 
 func (u *accountUsecase) Login(ctx context.Context, req dtousecase.LoginRequest) (*dtousecase.LoginResponse, error) {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -46,6 +47,7 @@ type AccountRepository interface {
 	CreateAddress(ctx context.Context, req dtorepository.RegisterAddressRequest) (dtorepository.RegisterAddressResponse, error)
 	FindProvinces(ctx context.Context) ([]model.Province, error)
 	FindDistrictsByProvinceId(ctx context.Context, ProvinceId int) ([]model.District, error)
+	DeleteAddress(ctx context.Context, req dtorepository.DeleteAddressRequest) error
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
@@ -213,6 +215,24 @@ func (r *accountRepository) GetAddresses(ctx context.Context, req dtorepository.
 	}
 
 	return &res, nil
+}
+
+func (r *accountRepository) DeleteAddress(ctx context.Context, req dtorepository.DeleteAddressRequest) error {
+	ad := model.AccountAddress{}
+
+	err := r.db.WithContext(ctx).Where("id = ?", req.AddressId).First(&ad).Error
+	if err != nil {
+		return err
+	}
+
+	ad.DeletedAt = time.Now()
+
+	err = r.db.WithContext(ctx).Save(&ad).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *accountRepository) UpdateAccount(ctx context.Context, req dtorepository.EditAccountRequest) (*dtorepository.EditAccountResponse, error) {
