@@ -98,7 +98,6 @@ func seeding() {
 		seeder.Couriers,
 		seeder.ProductOrders,
 		seeder.ProductOrderDetails,
-		seeder.ProductOrderDetails,
 		seeder.SaleWalletTransactionHistories,
 		seeder.AccountAddress,
 		seeder.AccountCarts,
