@@ -87,11 +87,11 @@ type AddProductReview struct {
 }
 
 type AddProductReviewResponse struct {
-	ID        int
-	AccountID int
-	ProductID int
-	OrderID   int
-	Feedback  string
-	Rating    int
-	CreatedAt time.Time
+	ID        int       `json:"id"`
+	AccountID int       `json:"account_id"`
+	ProductID int       `json:"product_id"`
+	OrderID   int       `json:"order_id"`
+	Feedback  string    `json:"feedback"`
+	Rating    int       `json:"rating"`
+	CreatedAt time.Time `json:"created_at"`
 }

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"log"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -93,13 +94,17 @@ func (r *productOrdersRepository) FindAllOrderHistoriesByUserAndStatus(ctx conte
 	res := []model.ProductOrderHistories{}
 
 	q := `
-	select po.*, pod.quantity, pod.individual_price, pvsc.picture_url, p.name as product_name, pvsc.product_id  from product_orders po
+	select po.*, pod.quantity, pod.individual_price, pvsc.picture_url, p.name as product_name, pvsc.product_id, 
+	por.feedback, por.rating, por.created_at as review_created_at, por.id as review_id
+		from product_orders po
 		left join product_order_details pod 
 			on pod.product_order_id = po.id
 		left join product_variant_selection_combinations pvsc 
 			on pvsc.id = pod.product_variant_selection_combination_id
 		left join products p 
 			on p.id = pvsc.product_id 
+		left join product_order_reviews por 
+			on por.product_order_id = po.id and por.product_id = pvsc.product_id
 	where po.account_id = ? and status ilike ?
 	`
 	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q, req.AccountID, req.Status))
@@ -230,6 +235,8 @@ func (r *productOrdersRepository) AddProductReview(ctx context.Context, req dtor
 		Feedback:       req.Feedback,
 		Rating:         req.Rating,
 	}
+
+	log.Println("review", review)
 
 	err := r.db.WithContext(ctx).Model(&review).Create(&review).Scan(&res).Error
 

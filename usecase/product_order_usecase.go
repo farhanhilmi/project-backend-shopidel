@@ -360,7 +360,7 @@ func (u *productOrderUsecase) AddProductReview(ctx context.Context, req dtouseca
 		ID:        review.ID,
 		AccountID: review.AccountID,
 		ProductID: review.ProductID,
-		OrderID:   review.OrderID,
+		OrderID:   req.OrderID,
 		Feedback:  review.Feedback,
 		Rating:    review.Rating,
 		CreatedAt: review.CreatedAt,
