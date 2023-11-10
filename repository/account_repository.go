@@ -824,6 +824,13 @@ func (r *accountRepository) CreateAddress(ctx context.Context, req dtorepository
 	return res, nil
 }
 
+type ChangeDefaultAddress struct {
+	ID              int
+	AccountID       int
+	IsBuyerDefault  bool
+	IsSellerDefault bool
+}
+
 func (r *accountRepository) UpdateAddress(ctx context.Context, req dtorepository.UpdateAddressRequest) (dtorepository.UpdateAddressResponse, error) {
 	res := dtorepository.UpdateAddressResponse{}
 
@@ -857,9 +864,30 @@ func (r *accountRepository) UpdateAddress(ctx context.Context, req dtorepository
 		ad.IsBuyerDefault = true
 	}
 
-	if err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountId).Where("id = ?", req.AddressId).Updates(&ad).Error; err != nil {
+	tx := r.db.Begin()
+
+	if err := tx.WithContext(ctx).Where("account_id = ?", req.AccountId).Where("id = ?", req.AddressId).Updates(&ad).Error; err != nil {
+		tx.Rollback()
 		return res, err
 	}
+
+	if req.IsBuyerDefault {
+		_, err := r.updateBuyerDefaultSetToFalse(ctx, tx, req.AccountId, req.AddressId)
+		if err != nil {
+			tx.Rollback()
+			return res, err
+		}
+	}
+
+	if req.IsSellerDefault {
+		_, err := r.updateSellerDefaultSetToFalse(ctx, tx, req.AccountId, req.AddressId)
+		if err != nil {
+			tx.Rollback()
+			return res, err
+		}
+	}
+
+	tx.Commit()
 
 	res.AccountId = req.AccountId
 	res.ProvinceId = req.ProvinceId
@@ -868,6 +896,26 @@ func (r *accountRepository) UpdateAddress(ctx context.Context, req dtorepository
 	res.SubDistrict = req.SubDistrict
 	res.ZipCode = req.ZipCode
 	res.Detail = req.Detail
+
+	return res, nil
+}
+
+func (r *accountRepository) updateSellerDefaultSetToFalse(ctx context.Context, tx *gorm.DB, accountId, addressId int) (dtorepository.UpdateAddressResponse, error) {
+	res := dtorepository.UpdateAddressResponse{}
+
+	if err := tx.WithContext(ctx).Model(&model.AccountAddress{}).Where("account_id = ?", accountId).Where("id != ?", addressId).Update("is_seller_default", false).Error; err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (r *accountRepository) updateBuyerDefaultSetToFalse(ctx context.Context, tx *gorm.DB, accountId, addressId int) (dtorepository.UpdateAddressResponse, error) {
+	res := dtorepository.UpdateAddressResponse{}
+
+	if err := tx.WithContext(ctx).Model(&model.AccountAddress{}).Where("account_id = ?", accountId).Where("id != ?", addressId).Update("is_buyer_default", false).Error; err != nil {
+		return res, err
+	}
 
 	return res, nil
 }
