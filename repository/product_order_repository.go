@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"log"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -236,8 +235,6 @@ func (r *productOrdersRepository) AddProductReview(ctx context.Context, req dtor
 		Feedback:       req.Feedback,
 		Rating:         req.Rating,
 	}
-
-	log.Println("review", review)
 
 	err := r.db.WithContext(ctx).Model(&review).Create(&review).Scan(&res).Error
 
