@@ -84,7 +84,9 @@ func (h *AccountHandler) GetAddresses(c *gin.Context) {
 			ZipCode:         data.ZipCode,
 			Kelurahan:       data.Kelurahan,
 			SubDistrict:     data.SubDistrict,
+			DistrictId:      data.DistrictId,
 			District:        data.District,
+			ProvinceId:      data.ProvinceId,
 			Province:        data.Province,
 			IsBuyerDefault:  data.IsBuyerDefault,
 			IsSellerDefault: data.IsSellerDefault,
@@ -140,20 +142,23 @@ func (h *AccountHandler) UpdateAddress(c *gin.Context) {
 		return
 	}
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.Error(err)
+	err = c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
 		return
 	}
 
 	uReq := dtousecase.UpdateAddressRequest{
-		AddressId:   addressId,
-		ProvinceId:  req.ProvinceId,
-		DistrictId:  req.DistrictId,
-		SubDistrict: req.SubDistrict,
-		Kelurahan:   req.Kelurahan,
-		ZipCode:     req.ZipCode,
-		Detail:      req.Detail,
-		AccountId:   c.GetInt("userId"),
+		AddressId:       addressId,
+		ProvinceId:      req.ProvinceId,
+		DistrictId:      req.DistrictId,
+		SubDistrict:     req.SubDistrict,
+		Kelurahan:       req.Kelurahan,
+		ZipCode:         req.ZipCode,
+		Detail:          req.Detail,
+		IsBuyerDefault:  *req.IsBuyerDefault,
+		IsSellerDefault: *req.IsSellerDefault,
+		AccountId:       c.GetInt("userId"),
 	}
 
 	uRes, err := h.accountUsecase.UpdateAccountAddress(c.Request.Context(), uReq)
@@ -168,6 +173,8 @@ func (h *AccountHandler) UpdateAddress(c *gin.Context) {
 	res.ProvinceId = uRes.ProvinceId
 	res.SubDistrict = uRes.SubDistrict
 	res.ZipCode = uRes.ZipCode
+	res.IsBuyerDefault = &uRes.IsBuyerDefault
+	res.IsSellerDefault = &uRes.IsSellerDefault
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
 }

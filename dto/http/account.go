@@ -112,7 +112,9 @@ type AddressResponse struct {
 	ZipCode         string `json:"zip_code"`
 	Kelurahan       string `json:"kelurahan"`
 	SubDistrict     string `json:"sub_district"`
+	DistrictId      int    `json:"district_id"`
 	District        string `json:"district"`
+	ProvinceId      int    `json:"province_id"`
 	Province        string `json:"province"`
 	IsBuyerDefault  bool   `json:"is_buyer_default"`
 	IsSellerDefault bool   `json:"is_seller_default"`
@@ -151,19 +153,23 @@ type RegisterAddressResponse struct {
 }
 
 type UpdateAddressRequest struct {
-	ProvinceId  int    `json:"province_id" binding:"required"`
-	DistrictId  int    `json:"district_id" binding:"required"`
-	SubDistrict string `json:"sub_district" binding:"required"`
-	Kelurahan   string `json:"kelurahan" binding:"required"`
-	ZipCode     string `json:"zip_code" binding:"required"`
-	Detail      string `json:"detail" binding:"required"`
+	ProvinceId      int    `json:"province_id" binding:"required"`
+	DistrictId      int    `json:"district_id" binding:"required"`
+	SubDistrict     string `json:"sub_district" binding:"required"`
+	Kelurahan       string `json:"kelurahan" binding:"required"`
+	ZipCode         string `json:"zip_code" binding:"required"`
+	Detail          string `json:"detail" binding:"required"`
+	IsBuyerDefault  *bool  `json:"is_buyer_default" binding:"required"`
+	IsSellerDefault *bool  `json:"is_seller_default" binding:"required"`
 }
 
 type UpdateAddressResponse struct {
-	ProvinceId  int    `json:"province_id" binding:"required"`
-	DistrictId  int    `json:"district_id" binding:"required"`
-	SubDistrict string `json:"sub_district"`
-	Kelurahan   string `json:"kelurahan"`
-	ZipCode     string `json:"zip_code"`
-	Detail      string `json:"detail"`
+	ProvinceId      int    `json:"province_id" binding:"required"`
+	DistrictId      int    `json:"district_id" binding:"required"`
+	SubDistrict     string `json:"sub_district"`
+	Kelurahan       string `json:"kelurahan"`
+	ZipCode         string `json:"zip_code"`
+	Detail          string `json:"detail"`
+	IsBuyerDefault  bool   `json:"is_buyer_default" `
+	IsSellerDefault bool   `json:"is_seller_default" `
 }

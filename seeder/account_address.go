@@ -6,7 +6,7 @@ var AccountAddress = []model.AccountAddress{
 	{
 		AccountID:            2,
 		Province:             "DKI Jakarta",
-		District:             "Jakarta Selatan",
+		District:             "Kota Jakarta Selatan",
 		SubDistrict:          "Setiabudi",
 		Kelurahan:            "Setiabudi",
 		ZipCode:              "12230",
@@ -18,7 +18,7 @@ var AccountAddress = []model.AccountAddress{
 	{
 		AccountID:            2,
 		Province:             "DKI Jakarta",
-		District:             "Jakarta Timur",
+		District:             "Kota Jakarta Timur",
 		SubDistrict:          "Jatinegara",
 		Kelurahan:            "Cipinang Besar Sel",
 		ZipCode:              "14738",
@@ -28,7 +28,7 @@ var AccountAddress = []model.AccountAddress{
 	{
 		AccountID:            2,
 		Province:             "DKI Jakarta",
-		District:             "Jakarta Barat",
+		District:             "Kota Jakarta Barat",
 		SubDistrict:          "Kembangan",
 		Kelurahan:            "Lingkar Luar",
 		RajaOngkirDistrictId: "151",
