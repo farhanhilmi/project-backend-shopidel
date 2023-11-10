@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
@@ -190,33 +189,33 @@ func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.
 
 func (r *accountRepository) GetAddresses(ctx context.Context, req dtorepository.AddressRequest) (*[]dtorepository.AddressResponse, error) {
 	res := []dtorepository.AddressResponse{}
-	addresses := []model.AccountAddress{}
 
-	err := r.db.WithContext(ctx).Find(&addresses, "account_id = ?", req.UserId).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	q := `
+		select
+			aa.id as "ID",
+			concat(aa.detail, aa.kelurahan, aa.sub_district, aa.district, aa.province) as "FullAddress",
+			aa.detail as "Detail",          
+			aa.zip_code as "ZipCode",         
+			aa.kelurahan as "Kelurahan",       
+			aa.sub_district as "SubDistrict",     
+			d.id as "DistrictId",
+			aa.district as "District",        
+			p.id as "ProvinceId",
+			aa.province as "Province",        
+			aa.is_buyer_default as "IsBuyerDefault",  
+			aa.is_seller_default as "IsSellerDefault" 
+		from account_addresses aa 
+		left join provinces p 
+			on p."name" = aa.province 
+		left join districts d 
+			on d."name" = aa.district
+		where aa.account_id = ?
+			and aa.deleted_at is null
+	`
+
+	err := r.db.WithContext(ctx).Raw(q, req.UserId).Scan(&res).Error
+	if err != nil {
 		return &res, util.ErrNoRecordFound
-	}
-
-	for _, address := range addresses {
-		convertedFullAddress := fmt.Sprintf("%s, %s, %s, %s, %s.",
-			address.Detail,
-			address.Kelurahan,
-			address.SubDistrict,
-			address.District,
-			address.Province,
-		)
-		res = append(res, dtorepository.AddressResponse{
-			ID:              address.ID,
-			FullAddress:     convertedFullAddress,
-			Detail:          address.Detail,
-			ZipCode:         address.ZipCode,
-			Kelurahan:       address.Kelurahan,
-			SubDistrict:     address.SubDistrict,
-			District:        address.District,
-			Province:        address.Province,
-			IsBuyerDefault:  address.IsBuyerDefault,
-			IsSellerDefault: address.IsSellerDefault,
-		})
 	}
 
 	return &res, nil
@@ -699,31 +698,26 @@ func (r *accountRepository) FindAccountCartItems(ctx context.Context, req dtorep
 	res := dtorepository.GetAccountCartItemsResponse{}
 
 	q := `
-		select 
-			seller.id as "ShopId",
-			seller.shop_name as "ShopName",
-			pvsc.id as "ProductId",
-			pvsc.picture_url as "ProductUrl",
-			case 
-				when pvs."name" = 'default_reserved_keyword' then p."name"
-				when pvs2."name" is null then concat(p."name", ' - ', pvs."name")
-				when pvs2."name" is not null then concat(p."name", ' - ', pvs."name", ', ', pvs2."name")
-			end as "ProductName",
-			pvsc.price as "ProductPrice",
-			ac.quantity as "Quantity"
-		from account_carts ac 
-			left join product_variant_selection_combinations pvsc 
-				on pvsc.id = ac.product_variant_selection_combination_id 
-			left join product_variant_selections pvs
-				on pvs.id = pvsc.product_variant_selection_id1 
-			left join product_variant_selections pvs2 
-				on pvs2.id = pvsc.product_variant_selection_id2 
-			left join products p 
-				on p.id = pvsc.product_id 
-			left join accounts seller
-				on seller.id = p.seller_id 
-		where ac.account_id = ?
-		order by seller.id asc
+		select
+			aa.id as "ID",
+			concat(aa.detail, aa.kelurahan, aa.sub_district, aa.district, aa.province) as "FullAddress",
+			aa.detail as "Detail",          
+			aa.zip_code as "ZipCode",         
+			aa.kelurahan as "Kelurahan",       
+			aa.sub_district as "SubDistrict",     
+			d.id as "DistrictId",
+			aa.district as "District",        
+			p.id as "ProvinceId",
+			aa.province as "Province",        
+			aa.is_buyer_default as "IsBuyerDefault",  
+			aa.is_seller_default as "IsSellerDefault" 
+		from account_addresses aa 
+		left join provinces p 
+			on p."name" = aa.province 
+		left join districts d 
+			on d."name" = aa.district
+		where aa.account_id = ?
+			and aa.deleted_at is null
 	`
 
 	err := r.db.WithContext(ctx).Raw(q, req.AccountId).Scan(&res.CartItems).Error
