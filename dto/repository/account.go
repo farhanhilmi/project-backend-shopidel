@@ -175,3 +175,12 @@ type SellerProduct struct {
 	CategoryLevel2 string
 	CategoryLevel3 string
 }
+
+type FindSellerSelectedCategoriesRequest struct {
+	SellerId int
+}
+
+type FindSellerSelectedCategoriesResponse struct {
+	CategoryId   int
+	CategoryName string
+}

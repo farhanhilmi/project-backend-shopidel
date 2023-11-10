@@ -43,6 +43,11 @@ func (u *sellerUsecase) GetProfile(ctx context.Context, req dtousecase.GetSeller
 		return res, err
 	}
 
+	rRes2, err := u.accountRepository.FindSellerSelectedCategories(ctx, dtorepository.FindSellerSelectedCategoriesRequest{SellerId: req.SellerId})
+	if err != nil {
+		return res, err
+	}
+
 	for _, data := range rRes.Products {
 		p := dtousecase.SellerProduct{
 			Name:           data.Name,
@@ -57,6 +62,13 @@ func (u *sellerUsecase) GetProfile(ctx context.Context, req dtousecase.GetSeller
 		}
 
 		res.SellerProducts = append(res.SellerProducts, p)
+	}
+
+	for _, data := range rRes2 {
+		res.SellerSelectedCategories = append(res.SellerSelectedCategories, dtousecase.SellerSelectedCategory{
+			CategoryId:   data.CategoryId,
+			CategoryName: data.CategoryName,
+		})
 	}
 
 	res.SellerId = seller.Id

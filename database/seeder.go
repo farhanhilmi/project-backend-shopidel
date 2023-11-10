@@ -39,7 +39,8 @@ func dropTable() {
 			seller_couriers,
 			favorite_products,
 			provinces,
-			districts
+			districts,
+			seller_page_selected_categories
 		;
 	`
 
@@ -80,6 +81,7 @@ func createTable() {
 		&model.FavoriteProducts{},
 		&model.Province{},
 		&model.District{},
+		&model.SellerPageSelectedCategory{},
 	)
 
 	if err != nil {
@@ -108,6 +110,7 @@ func seeding() {
 		seeder.SellerCouriers,
 		seeder.Provinces,
 		seeder.Districts,
+		seeder.SellerPageSelectedCategory,
 	}
 
 	for _, seed := range seeders {
