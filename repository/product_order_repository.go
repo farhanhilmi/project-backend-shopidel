@@ -27,6 +27,9 @@ type ProductOrdersRepository interface {
 	Create(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error)
 	FindAllOrderHistoriesByUser(ctx context.Context, req dtorepository.ProductOrderHistoryRequest) ([]model.ProductOrderHistories, error)
 	FindAllOrderHistoriesByUserAndStatus(ctx context.Context, req dtorepository.ProductOrderHistoryRequest) ([]model.ProductOrderHistories, error)
+	FindByIDAndAccountAndStatus(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error)
+	AddProductReview(ctx context.Context, req dtorepository.AddProductReviewRequest) (dtorepository.AddProductReviewResponse, error)
+	FindReviewByID(ctx context.Context, req dtorepository.ProductReviewRequest) (dtorepository.ProductReviewResponse, error)
 }
 
 func NewProductOrdersRepository(db *gorm.DB) ProductOrdersRepository {
@@ -91,13 +94,17 @@ func (r *productOrdersRepository) FindAllOrderHistoriesByUserAndStatus(ctx conte
 	res := []model.ProductOrderHistories{}
 
 	q := `
-	select po.*, pod.quantity, pod.individual_price, pvsc.picture_url, p.name as product_name, pvsc.product_id  from product_orders po
+	select po.*, pod.quantity, pod.individual_price, pvsc.picture_url, p.name as product_name, pvsc.product_id, 
+	por.feedback, por.rating, por.created_at as review_created_at, por.id as review_id
+		from product_orders po
 		left join product_order_details pod 
 			on pod.product_order_id = po.id
 		left join product_variant_selection_combinations pvsc 
 			on pvsc.id = pod.product_variant_selection_combination_id
 		left join products p 
 			on p.id = pvsc.product_id 
+		left join product_order_reviews por 
+			on por.product_order_id = po.id and por.product_id = pvsc.product_id
 	where po.account_id = ? and status ilike ?
 	`
 	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q, req.AccountID, req.Status))
@@ -158,10 +165,13 @@ func (r *productOrdersRepository) FindByStatusAndAccountID(ctx context.Context, 
 	order := model.ProductOrders{}
 	res := dtorepository.ProductOrderResponse{}
 
-	err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountID).Where("status = ?", req.Status).First(&order).Error
+	err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountID).Where("status ilike ?", req.Status).First(&order).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
 	}
 
 	res.ID = order.ID
@@ -179,6 +189,78 @@ func (r *productOrdersRepository) FindByStatusAndAccountID(ctx context.Context, 
 	res.UpdatedAt = order.UpdatedAt
 
 	return res, err
+}
+
+func (r *productOrdersRepository) FindByIDAndAccountAndStatus(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error) {
+	order := model.ProductOrders{}
+	res := dtorepository.ProductOrderResponse{}
+
+	err := r.db.WithContext(ctx).
+		Where("account_id = ?", req.AccountID).
+		Where("status ilike ?", req.Status).
+		Where("id = ?", req.ID).
+		First(&order).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
+	}
+
+	res.ID = order.ID
+	res.AccountID = order.AccountID
+	res.CourierID = order.CourierID
+	res.DeliveryFee = order.DeliveryFee
+	res.Province = order.Province
+	res.SubDistrict = order.SubDistrict
+	res.Kelurahan = order.Kelurahan
+	res.Status = order.Status
+	res.ZipCode = order.ZipCode
+	res.District = order.District
+	res.CreatedAt = order.CreatedAt
+	res.DeletedAt = order.DeletedAt
+	res.UpdatedAt = order.UpdatedAt
+
+	return res, err
+}
+
+func (r *productOrdersRepository) AddProductReview(ctx context.Context, req dtorepository.AddProductReviewRequest) (dtorepository.AddProductReviewResponse, error) {
+	res := dtorepository.AddProductReviewResponse{}
+
+	review := model.ProductOrderReviews{
+		AccountID:      req.AccountID,
+		ProductID:      req.ProductID,
+		ProductOrderID: req.OrderID,
+		Feedback:       req.Feedback,
+		Rating:         req.Rating,
+	}
+
+	err := r.db.WithContext(ctx).Model(&review).Create(&review).Scan(&res).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
+	}
+
+	return res, err
+}
+
+func (r *productOrdersRepository) FindReviewByID(ctx context.Context, req dtorepository.ProductReviewRequest) (dtorepository.ProductReviewResponse, error) {
+	res := dtorepository.ProductReviewResponse{}
+	review := model.ProductOrderReviews{}
+	err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountID).Where("product_order_id = ?", req.OrderID).Where("product_id", req.ProductID).First(&review).Scan(&res).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+
 }
 
 func (r *productOrdersRepository) UpdateOrderStatusByIDAndAccountID(ctx context.Context, req dtorepository.ReceiveOrderRequest) (dtorepository.ProductOrderResponse, error) {

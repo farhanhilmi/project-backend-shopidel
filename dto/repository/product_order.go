@@ -106,3 +106,36 @@ type ProductOrderHistoryRequest struct {
 	AccountID int
 	Status    string
 }
+
+type AddProductReviewRequest struct {
+	AccountID int
+	ProductID int
+	OrderID   int
+	Feedback  string
+	Rating    int
+}
+
+type AddProductReviewResponse struct {
+	ID        int
+	AccountID int
+	ProductID int
+	OrderID   int
+	Feedback  string
+	Rating    int
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt time.Time
+}
+
+type ProductReviewRequest struct {
+	AccountID int
+	ProductID int
+	OrderID   int
+}
+
+type ProductReviewResponse struct {
+	ID        int
+	AccountID int
+	ProductID int
+	OrderID   int
+}
