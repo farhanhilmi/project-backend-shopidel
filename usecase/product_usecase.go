@@ -16,7 +16,7 @@ type ProductUsecase interface {
 	GetProductDetail(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductDetailResponse, error)
 	AddToFavorite(ctx context.Context, req dtousecase.FavoriteProduct) (*dtousecase.FavoriteProduct, error)
 	GetProductFavorites(ctx context.Context, req dtousecase.ProductFavoritesParams) ([]model.FavoriteProductList, *dtogeneral.PaginationData, error)
-	GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtousecase.ProductListResponse, *dtogeneral.PaginationData, error)
+	GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error)
 }
 
 type productUsecase struct {
@@ -37,9 +37,7 @@ func NewProductUsecase(config ProductUsecaseConfig) ProductUsecase {
 
 }
 
-func (u *productUsecase) GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtousecase.ProductListResponse, *dtogeneral.PaginationData, error) {
-	res := []dtousecase.ProductListResponse{}
-
+func (u *productUsecase) GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error) {
 	uReq := dtorepository.ProductListParam {
 		AccountID: req.AccountID,
 		SortBy: req.SortBy,
@@ -53,21 +51,7 @@ func (u *productUsecase) GetProducts(ctx context.Context, req dtousecase.Product
 
 	listProduct, totalItems, err := u.productRepository.FindProducts(ctx, uReq)
 	if err != nil {
-		return &res, nil, err
-	}
-
-	for _, product := range listProduct {
-		res = append(res, dtousecase.ProductListResponse{
-			ID:         product.ID,
-			Name:       product.Name,
-			District:   product.District,
-			TotalSold:  product.TotalSold,
-			Price:      product.Price,
-			PictureURL: product.PictureURL,
-			CreatedAt:  product.CreatedAt,
-			UpdatedAt:  product.UpdatedAt,
-			DeletedAt:  product.DeletedAt,
-		})
+		return &listProduct, nil, err
 	}
 
 	pagination := dtogeneral.PaginationData{
@@ -77,7 +61,7 @@ func (u *productUsecase) GetProducts(ctx context.Context, req dtousecase.Product
 		Limit:       req.Limit,
 	}
 
-	return &res, &pagination, nil
+	return &listProduct, &pagination, nil
 }
 
 func (u *productUsecase) AddToFavorite(ctx context.Context, req dtousecase.FavoriteProduct) (*dtousecase.FavoriteProduct, error) {
