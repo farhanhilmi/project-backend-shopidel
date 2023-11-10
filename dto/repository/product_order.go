@@ -126,3 +126,16 @@ type AddProductReviewResponse struct {
 	UpdatedAt time.Time
 	DeletedAt time.Time
 }
+
+type ProductReviewRequest struct {
+	AccountID int
+	ProductID int
+	OrderID   int
+}
+
+type ProductReviewResponse struct {
+	ID        int
+	AccountID int
+	ProductID int
+	OrderID   int
+}

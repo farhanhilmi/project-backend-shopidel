@@ -30,6 +30,7 @@ type ProductOrdersRepository interface {
 	FindAllOrderHistoriesByUserAndStatus(ctx context.Context, req dtorepository.ProductOrderHistoryRequest) ([]model.ProductOrderHistories, error)
 	FindByIDAndAccountAndStatus(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error)
 	AddProductReview(ctx context.Context, req dtorepository.AddProductReviewRequest) (dtorepository.AddProductReviewResponse, error)
+	FindReviewByID(ctx context.Context, req dtorepository.ProductReviewRequest) (dtorepository.ProductReviewResponse, error)
 }
 
 func NewProductOrdersRepository(db *gorm.DB) ProductOrdersRepository {
@@ -248,6 +249,21 @@ func (r *productOrdersRepository) AddProductReview(ctx context.Context, req dtor
 	}
 
 	return res, err
+}
+
+func (r *productOrdersRepository) FindReviewByID(ctx context.Context, req dtorepository.ProductReviewRequest) (dtorepository.ProductReviewResponse, error) {
+	res := dtorepository.ProductReviewResponse{}
+	review := model.ProductOrderReviews{}
+	err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountID).Where("product_order_id = ?", req.OrderID).Where("product_id", req.ProductID).First(&review).Scan(&res).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+
 }
 
 func (r *productOrdersRepository) UpdateOrderStatusByIDAndAccountID(ctx context.Context, req dtorepository.ReceiveOrderRequest) (dtorepository.ProductOrderResponse, error) {

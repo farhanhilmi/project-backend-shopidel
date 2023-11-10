@@ -67,4 +67,5 @@ var (
 	ErrProductNotFound           = &CustomError{Message: "Product not found", Code: NotFound}
 	ErrProductOrderNotFound      = &CustomError{Message: "The product order was not found or the order has not been completed", Code: BadRequest}
 	ErrInvalidRating             = &CustomError{Message: "Ratings should be between 1 - 5", Code: BadRequest}
+	ErrAlreadyReviewProduct      = &CustomError{Message: "You have given a review of this product", Code: BadRequest}
 )

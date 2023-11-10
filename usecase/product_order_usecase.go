@@ -345,7 +345,19 @@ func (u *productOrderUsecase) AddProductReview(ctx context.Context, req dtouseca
 		return nil, err
 	}
 
-	review, err := u.productOrderRepository.AddProductReview(ctx, dtorepository.AddProductReviewRequest{
+	_, err = u.productOrderRepository.FindReviewByID(ctx, dtorepository.ProductReviewRequest{
+		AccountID: req.AccountID,
+		OrderID:   req.OrderID,
+		ProductID: req.ProductID,
+	})
+	if !errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrAlreadyReviewProduct
+	}
+	if err != nil && !errors.Is(err, util.ErrNoRecordFound) {
+		return nil, err
+	}
+
+	newReview, err := u.productOrderRepository.AddProductReview(ctx, dtorepository.AddProductReviewRequest{
 		AccountID: req.AccountID,
 		ProductID: req.ProductID,
 		OrderID:   req.OrderID,
@@ -357,13 +369,13 @@ func (u *productOrderUsecase) AddProductReview(ctx context.Context, req dtouseca
 	}
 
 	return &dtousecase.AddProductReviewResponse{
-		ID:        review.ID,
-		AccountID: review.AccountID,
-		ProductID: review.ProductID,
+		ID:        newReview.ID,
+		AccountID: newReview.AccountID,
+		ProductID: newReview.ProductID,
 		OrderID:   req.OrderID,
-		Feedback:  review.Feedback,
-		Rating:    review.Rating,
-		CreatedAt: review.CreatedAt,
+		Feedback:  newReview.Feedback,
+		Rating:    newReview.Rating,
+		CreatedAt: newReview.CreatedAt,
 	}, nil
 }
 
