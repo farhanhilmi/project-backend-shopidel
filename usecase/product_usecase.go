@@ -16,6 +16,7 @@ type ProductUsecase interface {
 	GetProductDetail(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductDetailResponse, error)
 	AddToFavorite(ctx context.Context, req dtousecase.FavoriteProduct) (*dtousecase.FavoriteProduct, error)
 	GetProductFavorites(ctx context.Context, req dtousecase.ProductFavoritesParams) ([]model.FavoriteProductList, *dtogeneral.PaginationData, error)
+	GetProducts(ctx context.Context) (*[]dtousecase.ProductListResponse, error)
 }
 
 type productUsecase struct {
@@ -34,6 +35,31 @@ func NewProductUsecase(config ProductUsecaseConfig) ProductUsecase {
 
 	return au
 
+}
+
+func (u *productUsecase) GetProducts(ctx context.Context) (*[]dtousecase.ProductListResponse, error) {
+	res := []dtousecase.ProductListResponse{}
+
+	listProduct, err := u.productRepository.FindProducts(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, product := range listProduct {
+		res = append(res, dtousecase.ProductListResponse{
+			ID:         product.ID,
+			Name:       product.Name,
+			District:   product.District,
+			TotalSold:  product.TotalSold,
+			Price:      product.Price,
+			PictureURL: product.PictureURL,
+			CreatedAt:  product.CreatedAt,
+			UpdatedAt:  product.UpdatedAt,
+			DeletedAt:  product.DeletedAt,
+		})
+	}
+
+	return &res, nil
 }
 
 func (u *productUsecase) AddToFavorite(ctx context.Context, req dtousecase.FavoriteProduct) (*dtousecase.FavoriteProduct, error) {

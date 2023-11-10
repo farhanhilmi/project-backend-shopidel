@@ -22,6 +22,16 @@ func NewProductHandler(productUsecase usecase.ProductUsecase) *ProductHandler {
 	}
 }
 
+func (h *ProductHandler) ListProduct(c *gin.Context) {
+	uRes, err := h.productUsecase.GetProducts(c.Request.Context())
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "product listed successfully", Data: uRes})
+}
+
 func (h *ProductHandler) GetProductDetail(c *gin.Context) {
 	id := c.Param("productId")
 	productId, err := strconv.Atoi(id)

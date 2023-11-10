@@ -35,6 +35,32 @@ func NewProductRepository(db *gorm.DB) ProductRepository {
 func (r *productRepository) FindProducts(ctx context.Context) ([]dtorepository.ProductListResponse, error) {
 	res := []dtorepository.ProductListResponse{}
 
+	q := `
+	select
+	distinct on(p.id) p.id,
+	p.name,
+	aa.district,
+	sum(pod.quantity) as total_sold, 
+	pvsc.price, 
+	pvsc.picture_url, 
+	p.created_at,
+	p.updated_at,
+	p.deleted_at
+		from products p  
+		left join product_variant_selection_combinations pvsc 
+			on pvsc.product_id = p.id
+		left join account_addresses aa 
+			on aa.account_id = p.seller_id  
+		left join product_order_details pod 	
+			on pod.product_variant_selection_combination_id = pvsc.id
+	group by p.id, p.name, pvsc.price, pvsc.picture_url, aa.district;
+	`
+
+	err := r.db.WithContext(ctx).Raw(q).Scan(&res).Error
+	if err != nil {
+		return res, err
+	}
+
 	return res, nil
 }
 

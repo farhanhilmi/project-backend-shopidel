@@ -102,3 +102,15 @@ type ProductFavoritesParams struct {
 	StartDate string
 	EndDate   string
 }
+
+type ProductListResponse struct {
+	ID         int             
+	Name       string          
+	District   string          
+	TotalSold  int             
+	Price      decimal.Decimal 
+	PictureURL string          
+	CreatedAt  time.Time       
+	UpdatedAt  time.Time       
+	DeletedAt  time.Time       
+}

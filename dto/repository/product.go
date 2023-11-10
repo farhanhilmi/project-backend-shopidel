@@ -135,10 +135,13 @@ type ProductFavoritesParams struct {
 }
 
 type ProductListResponse struct {
-	ID int
-	Title string
-	MainPhoto string
-	Price string
-	Location string
-	Sold string
+	ID         int
+	Name       string
+	District   string
+	TotalSold  int
+	Price      decimal.Decimal
+	PictureURL string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	DeletedAt  time.Time
 }
