@@ -38,8 +38,10 @@ func dropTable() {
 			account_carts,
 			seller_couriers,
 			favorite_products,
-			product_order_reviews
-			;
+			product_order_reviews,
+			provinces,
+			districts
+		;
 	`
 
 	err := db.Exec(sql).Error
@@ -78,6 +80,8 @@ func createTable() {
 		&model.SellerCouriers{},
 		&model.FavoriteProducts{},
 		&model.ProductOrderReviews{},
+		&model.Province{},
+		&model.District{},
 	)
 
 	if err != nil {
@@ -105,6 +109,8 @@ func seeding() {
 		seeder.AccountCarts,
 		seeder.SellerCouriers,
 		seeder.ProductOrderReviews,
+		seeder.Provinces,
+		seeder.Districts,
 	}
 
 	for _, seed := range seeders {

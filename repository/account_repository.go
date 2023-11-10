@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -12,12 +13,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-type accountRepository struct {
-	db                         *gorm.DB
-	usedEmailRepo              usedEmailRepository
-	walletTransactionHistories walletTransactionHistoryRepository
-	saleTransactionHistories   saleWalletTransactionHistoryRepository
-}
 type AccountRepository interface {
 	ActivateWalletByID(ctx context.Context, userId int, walletPin string) (model.Accounts, error)
 	FindById(ctx context.Context, req dtorepository.GetAccountRequest) (dtorepository.GetAccountResponse, error)
@@ -43,6 +38,21 @@ type AccountRepository interface {
 	UpdateShopNameAndSellerDefaultAddress(ctx context.Context, tx *gorm.DB, req dtorepository.RegisterSellerRequest) error
 	ConvertListCourierIdToListCourierModel(ctx context.Context, req dtorepository.RegisterSellerRequest) []model.SellerCouriers
 	DeleteCartProduct(ctx context.Context, req dtorepository.DeleteCartProductRequest) ([]model.AccountCarts, error)
+	CreateAddress(ctx context.Context, req dtorepository.RegisterAddressRequest) (dtorepository.RegisterAddressResponse, error)
+	FindProvinces(ctx context.Context) ([]model.Province, error)
+	FindDistrictsByProvinceId(ctx context.Context, ProvinceId int) ([]model.District, error)
+	DeleteAddress(ctx context.Context, req dtorepository.DeleteAddressRequest) error
+	UpdateAddress(ctx context.Context, req dtorepository.UpdateAddressRequest) (dtorepository.UpdateAddressResponse, error)
+	FindAddressByID(ctx context.Context, req dtorepository.UpdateAddressRequest) (dtorepository.UpdateAddressResponse, error)
+	FirstSeller(ctx context.Context, req dtorepository.SellerDataRequest) (dtorepository.SellerDataResponse, error)
+	FindSellerProducts(ctx context.Context, req dtorepository.FindSellerProductsRequest) (dtorepository.FindSellerProductsResponse, error)
+}
+
+type accountRepository struct {
+	db                         *gorm.DB
+	usedEmailRepo              usedEmailRepository
+	walletTransactionHistories walletTransactionHistoryRepository
+	saleTransactionHistories   saleWalletTransactionHistoryRepository
 }
 
 func NewAccountRepository(db *gorm.DB) AccountRepository {
@@ -210,6 +220,24 @@ func (r *accountRepository) GetAddresses(ctx context.Context, req dtorepository.
 	}
 
 	return &res, nil
+}
+
+func (r *accountRepository) DeleteAddress(ctx context.Context, req dtorepository.DeleteAddressRequest) error {
+	ad := model.AccountAddress{}
+
+	err := r.db.WithContext(ctx).Where("id = ?", req.AddressId).First(&ad).Error
+	if err != nil {
+		return err
+	}
+
+	ad.DeletedAt = time.Now()
+
+	err = r.db.WithContext(ctx).Save(&ad).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *accountRepository) UpdateAccount(ctx context.Context, req dtorepository.EditAccountRequest) (*dtorepository.EditAccountResponse, error) {
@@ -751,6 +779,249 @@ func (r *accountRepository) AddProductToCart(ctx context.Context, req dtoreposit
 	res.AccountId = req.AccountId
 	res.Quantity = c.Quantity
 	res.ProductVariantCombinationId = c.ProductVariantSelectionCombinationId
+
+	return res, nil
+}
+
+func (r *accountRepository) CreateAddress(ctx context.Context, req dtorepository.RegisterAddressRequest) (dtorepository.RegisterAddressResponse, error) {
+	res := dtorepository.RegisterAddressResponse{}
+
+	p := model.Province{}
+	if err := r.db.WithContext(ctx).Where("id = ?", req.ProvinceId).Find(&p).Error; err != nil {
+		return res, err
+	}
+
+	d := model.District{}
+	if err := r.db.WithContext(ctx).Where("id = ?", req.DistrictId).Find(&d).Error; err != nil {
+		return res, err
+	}
+
+	ad := model.AccountAddress{
+		AccountID:            req.AccountId,
+		Province:             p.Name,
+		District:             d.Name,
+		RajaOngkirDistrictId: d.RajaOngkirDistrictId,
+		SubDistrict:          req.SubDistrict,
+		Kelurahan:            req.Kelurahan,
+		ZipCode:              req.ZipCode,
+		Detail:               req.Detail,
+	}
+
+	ads := []model.AccountAddress{}
+	if err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountId).Find(&ads).Error; err != nil {
+		return res, err
+	}
+	if len(ads) == 0 {
+		ad.IsBuyerDefault = true
+	}
+
+	if err := r.db.WithContext(ctx).Create(&ad).Error; err != nil {
+		return res, err
+	}
+
+	res.AccountId = req.AccountId
+	res.ProvinceId = req.ProvinceId
+	res.DistrictId = req.DistrictId
+	res.Kelurahan = req.Kelurahan
+	res.SubDistrict = req.SubDistrict
+	res.ZipCode = req.ZipCode
+	res.Detail = req.Detail
+
+	return res, nil
+}
+
+func (r *accountRepository) UpdateAddress(ctx context.Context, req dtorepository.UpdateAddressRequest) (dtorepository.UpdateAddressResponse, error) {
+	res := dtorepository.UpdateAddressResponse{}
+
+	p := model.Province{}
+	if err := r.db.WithContext(ctx).Where("id = ?", req.ProvinceId).Find(&p).Error; err != nil {
+		return res, err
+	}
+
+	d := model.District{}
+	if err := r.db.WithContext(ctx).Where("id = ?", req.DistrictId).Find(&d).Error; err != nil {
+		return res, err
+	}
+
+	ad := model.AccountAddress{
+		Province:             p.Name,
+		District:             d.Name,
+		RajaOngkirDistrictId: d.RajaOngkirDistrictId,
+		SubDistrict:          req.SubDistrict,
+		Kelurahan:            req.Kelurahan,
+		ZipCode:              req.ZipCode,
+		Detail:               req.Detail,
+	}
+
+	ads := []model.AccountAddress{}
+	if err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountId).Find(&ads).Error; err != nil {
+		return res, err
+	}
+	if len(ads) == 0 {
+		ad.IsBuyerDefault = true
+	}
+
+	if err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountId).Where("id = ?", req.AddressId).Updates(&ad).Error; err != nil {
+		return res, err
+	}
+
+	res.AccountId = req.AccountId
+	res.ProvinceId = req.ProvinceId
+	res.DistrictId = req.DistrictId
+	res.Kelurahan = req.Kelurahan
+	res.SubDistrict = req.SubDistrict
+	res.ZipCode = req.ZipCode
+	res.Detail = req.Detail
+
+	return res, nil
+}
+
+func (r *accountRepository) FindAddressByID(ctx context.Context, req dtorepository.UpdateAddressRequest) (dtorepository.UpdateAddressResponse, error) {
+	res := dtorepository.UpdateAddressResponse{}
+	ads := model.AccountAddress{}
+	err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountId).Where("id = ?", req.AddressId).First(&ads).Scan(&res).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+
+}
+
+func (r *accountRepository) FindProvinces(ctx context.Context) ([]model.Province, error) {
+	p := []model.Province{}
+	err := r.db.WithContext(ctx).Order("id asc").Find(&p).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return p, nil
+}
+
+func (r *accountRepository) FindDistrictsByProvinceId(ctx context.Context, ProvinceId int) ([]model.District, error) {
+	d := []model.District{}
+	err := r.db.WithContext(ctx).Order("id asc").Where("province_id = ?", ProvinceId).Find(&d).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return d, nil
+}
+
+func (r *accountRepository) FirstSeller(ctx context.Context, req dtorepository.SellerDataRequest) (dtorepository.SellerDataResponse, error) {
+	res := dtorepository.SellerDataResponse{}
+
+	q := `
+		select 
+			a.id as "Id",
+			a.shop_name as "Name",
+			a.profile_picture as "ProfilePicture",
+			aa.district as "District",
+			'08:00' as "StartOperatingHours",
+			'20:00' as "EndOperatingHours",
+			'asia/jakarta' as "TimeZone"
+		from accounts a
+		left join account_addresses aa 
+			on aa.account_id  = a.id 
+		where a.id = ?
+	`
+
+	if err := r.db.WithContext(ctx).Raw(q, req.SellerId).Scan(&res).Error; err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (r *accountRepository) FindSellerProducts(ctx context.Context, req dtorepository.FindSellerProductsRequest) (dtorepository.FindSellerProductsResponse, error) {
+	res := dtorepository.FindSellerProductsResponse{}
+	products := []dtorepository.SellerProduct{}
+
+	q := `
+		select 
+			p.id as "Id",
+			p."name" as  "Name",
+			product_lowest_price.lowest_price as "Price",
+			product_image.url as "PictureUrl",
+			4.8 as stars,
+			p.created_at as "CreatedAt",
+			case 
+				when category_level_3.level_3_id is not null then category_level_3.level_1_name
+				when category_level_2.level_2_id is not null then category_level_2.level_1_name
+				when category_level_1.level_1_id is not null then category_level_1.level_1_name
+			end as "CategoryLevel1",
+			case 
+				when category_level_3.level_3_id is not null then category_level_3.level_2_name
+				when category_level_2.level_2_id is not null then category_level_2.level_2_name
+			end as "CategoryLevel2",
+			case 
+				when category_level_3.level_3_id is not null then category_level_3.level_3_name
+			end as "CategoryLevel3"
+		from products p 
+		left join (
+			select
+				pvsc.product_id,
+				min (
+					case
+						when pvsc.price > 0 then pvsc.price 
+						else null
+					end
+				) as lowest_price
+			from product_variant_selection_combinations pvsc 
+			group by pvsc.product_id
+		) product_lowest_price on product_lowest_price.product_id = p.id 
+		left join (
+			select
+				pi2.product_id,
+				pi2.url 
+			from product_images pi2 
+			limit 1
+		) product_image on product_image.product_id = p.id 
+		left join (
+			select
+				c.id as level_1_id,
+				c."name" level_1_name
+			from categories c
+			where c."level" = 1
+		) as category_level_1 on category_level_1.level_1_id = p.category_id 
+		left join (
+			select
+				c.id as level_2_id,
+				c."name" level_2_name,
+				c2.id as level_1_id,
+				c2."name" as level_1_name
+			from categories c
+			inner join categories c2 
+				on c2.id = c.parent 
+			where c."level" = 2
+		) as category_level_2 on category_level_2.level_2_id = p.category_id 
+		left join (
+			select
+				c.id as level_3_id,
+				c."name" level_3_name,
+				c2.id as level_2_id,
+				c2."name" level_2_name,
+				c3.id as level_1_id,
+				c3."name" as level_1_name
+			from categories c
+			inner join categories c2 
+				on c2.id = c.parent 
+			inner join categories c3
+				on c3.id = c2.parent 
+			where c."level" = 3
+		) as category_level_3 on category_level_3.level_3_id = p.category_id 
+		where p.seller_id = ?
+	`
+
+	err := r.db.WithContext(ctx).Raw(q, req.SellerId).Scan(&products).Error
+	if err != nil {
+		return res, err
+	}
+
+	res.Products = products
 
 	return res, nil
 }

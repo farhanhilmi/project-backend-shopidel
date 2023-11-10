@@ -34,7 +34,12 @@ type AccountUsecase interface {
 	DeleteProductCart(ctx context.Context, req dtousecase.DeleteCartProductRequest) ([]model.AccountCarts, error)
 	ValidateWalletPIN(ctx context.Context, req dtousecase.ValidateWAlletPINRequest) (*dtousecase.ValidateWAlletPINResponse, error)
 	GetCouriers(ctx context.Context) ([]model.Couriers, error)
+	RegisterAccountAddress(ctx context.Context, req dtousecase.RegisterAddressRequest) (dtousecase.RegisterAddressResponse, error)
+	GetProvinces(ctx context.Context) (dtousecase.GetProvincesResponse, error)
+	GetDistrictsByProvinceId(ctx context.Context, req dtousecase.GetDistrictRequest) (dtousecase.GetDistrictResponse, error)
 	RefreshToken(ctx context.Context, req dtousecase.RefreshTokenRequest) (*dtousecase.LoginResponse, error)
+	DeleteAddresses(ctx context.Context, req dtousecase.DeleteAddressRequest) error
+	UpdateAccountAddress(ctx context.Context, req dtousecase.UpdateAddressRequest) (dtousecase.UpdateAddressResponse, error)
 }
 
 type accountUsecase struct {
@@ -123,6 +128,12 @@ func (u *accountUsecase) GetAddresses(ctx context.Context, req dtousecase.Addres
 	}
 
 	return &res, nil
+}
+
+func (u *accountUsecase) DeleteAddresses(ctx context.Context, req dtousecase.DeleteAddressRequest) error {
+	err := u.accountRepository.DeleteAddress(ctx, dtorepository.DeleteAddressRequest{AddressId: req.AddressId})
+
+	return err
 }
 
 func (u *accountUsecase) Login(ctx context.Context, req dtousecase.LoginRequest) (*dtousecase.LoginResponse, error) {
@@ -655,6 +666,137 @@ func (u *accountUsecase) DeleteProductCart(ctx context.Context, req dtousecase.D
 	if err != nil {
 		return nil, err
 	}
+
+	return res, nil
+}
+
+func (u *accountUsecase) GetProvinces(ctx context.Context) (dtousecase.GetProvincesResponse, error) {
+	res := dtousecase.GetProvincesResponse{}
+
+	p, err := u.accountRepository.FindProvinces(ctx)
+	if err != nil {
+		return res, err
+	}
+
+	provinces, err := u.convertProvincesData(ctx, p)
+	if err != nil {
+		return res, err
+	}
+
+	res.Provinces = provinces
+
+	return res, nil
+}
+
+func (u *accountUsecase) convertProvincesData(ctx context.Context, req []model.Province) ([]dtousecase.Province, error) {
+	res := []dtousecase.Province{}
+
+	for _, data := range req {
+		p := dtousecase.Province{}
+
+		p.Id = data.ID
+		p.Name = data.Name
+
+		res = append(res, p)
+	}
+
+	return res, nil
+}
+
+func (u *accountUsecase) GetDistrictsByProvinceId(ctx context.Context, req dtousecase.GetDistrictRequest) (dtousecase.GetDistrictResponse, error) {
+	res := dtousecase.GetDistrictResponse{}
+
+	d, err := u.accountRepository.FindDistrictsByProvinceId(ctx, req.ProvinceId)
+	if err != nil {
+		return res, err
+	}
+
+	districts, err := u.convertDistrictsData(ctx, d)
+	if err != nil {
+		return res, err
+	}
+
+	res.Districts = districts
+
+	return res, nil
+}
+
+func (u *accountUsecase) convertDistrictsData(ctx context.Context, req []model.District) ([]dtousecase.District, error) {
+	res := []dtousecase.District{}
+
+	for _, data := range req {
+		p := dtousecase.District{}
+
+		p.Id = data.ID
+		p.Name = data.Name
+
+		res = append(res, p)
+	}
+
+	return res, nil
+}
+
+func (u *accountUsecase) RegisterAccountAddress(ctx context.Context, req dtousecase.RegisterAddressRequest) (dtousecase.RegisterAddressResponse, error) {
+	res := dtousecase.RegisterAddressResponse{}
+
+	rReq := dtorepository.RegisterAddressRequest{
+		AccountId:   req.AccountId,
+		ProvinceId:  req.ProvinceId,
+		DistrictId:  req.DistrictId,
+		SubDistrict: req.SubDistrict,
+		Kelurahan:   req.Kelurahan,
+		ZipCode:     req.ZipCode,
+		Detail:      req.Detail,
+	}
+	rRes, err := u.accountRepository.CreateAddress(ctx, rReq)
+	if err != nil {
+		return res, err
+	}
+
+	res.Detail = rRes.Detail
+	res.DistrictId = rRes.DistrictId
+	res.Kelurahan = rRes.Kelurahan
+	res.ProvinceId = rRes.ProvinceId
+	res.SubDistrict = rRes.SubDistrict
+	res.AccountId = rRes.AccountId
+	res.ZipCode = rRes.ZipCode
+
+	return res, nil
+}
+
+func (u *accountUsecase) UpdateAccountAddress(ctx context.Context, req dtousecase.UpdateAddressRequest) (dtousecase.UpdateAddressResponse, error) {
+	res := dtousecase.UpdateAddressResponse{}
+
+	_, err := u.accountRepository.FindAddressByID(ctx, dtorepository.UpdateAddressRequest{AddressId: req.AddressId, AccountId: req.AccountId})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
+	}
+
+	rReq := dtorepository.UpdateAddressRequest{
+		AddressId:   req.AddressId,
+		AccountId:   req.AccountId,
+		ProvinceId:  req.ProvinceId,
+		DistrictId:  req.DistrictId,
+		SubDistrict: req.SubDistrict,
+		Kelurahan:   req.Kelurahan,
+		ZipCode:     req.ZipCode,
+		Detail:      req.Detail,
+	}
+	rRes, err := u.accountRepository.UpdateAddress(ctx, rReq)
+	if err != nil {
+		return res, err
+	}
+
+	res.Detail = rRes.Detail
+	res.DistrictId = rRes.DistrictId
+	res.Kelurahan = rRes.Kelurahan
+	res.ProvinceId = rRes.ProvinceId
+	res.SubDistrict = rRes.SubDistrict
+	res.AccountId = rRes.AccountId
+	res.ZipCode = rRes.ZipCode
 
 	return res, nil
 }

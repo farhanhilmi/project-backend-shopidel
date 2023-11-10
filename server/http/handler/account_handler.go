@@ -94,6 +94,101 @@ func (h *AccountHandler) GetAddresses(c *gin.Context) {
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "successfully get addresses", Data: res})
 }
 
+func (h *AccountHandler) RegisterAdress(c *gin.Context) {
+	req := dtohttp.RegisterAddressRequest{}
+	res := dtohttp.RegisterAddressRequest{}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
+		return
+	}
+
+	uReq := dtousecase.RegisterAddressRequest{
+		ProvinceId:  req.ProvinceId,
+		DistrictId:  req.DistrictId,
+		SubDistrict: req.SubDistrict,
+		Kelurahan:   req.Kelurahan,
+		ZipCode:     req.ZipCode,
+		Detail:      req.Detail,
+		AccountId:   c.GetInt("userId"),
+	}
+
+	uRes, err := h.accountUsecase.RegisterAccountAddress(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res.Detail = uRes.Detail
+	res.DistrictId = uRes.DistrictId
+	res.Kelurahan = uRes.Kelurahan
+	res.ProvinceId = uRes.ProvinceId
+	res.SubDistrict = uRes.SubDistrict
+	res.ZipCode = uRes.ZipCode
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
+}
+
+func (h *AccountHandler) UpdateAddress(c *gin.Context) {
+	req := dtohttp.UpdateAddressRequest{}
+	res := dtohttp.UpdateAddressRequest{}
+
+	id := c.Param("addressId")
+	addressId, err := strconv.Atoi(id)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
+		return
+	}
+
+	uReq := dtousecase.UpdateAddressRequest{
+		AddressId:   addressId,
+		ProvinceId:  req.ProvinceId,
+		DistrictId:  req.DistrictId,
+		SubDistrict: req.SubDistrict,
+		Kelurahan:   req.Kelurahan,
+		ZipCode:     req.ZipCode,
+		Detail:      req.Detail,
+		AccountId:   c.GetInt("userId"),
+	}
+
+	uRes, err := h.accountUsecase.UpdateAccountAddress(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res.Detail = uRes.Detail
+	res.DistrictId = uRes.DistrictId
+	res.Kelurahan = uRes.Kelurahan
+	res.ProvinceId = uRes.ProvinceId
+	res.SubDistrict = uRes.SubDistrict
+	res.ZipCode = uRes.ZipCode
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
+}
+
+func (h *AccountHandler) DeleteAdress(c *gin.Context) {
+	addressIdString := c.Param("addressId")
+	addressId, err := strconv.Atoi(addressIdString)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	err = h.accountUsecase.DeleteAddresses(c.Request.Context(), dtousecase.DeleteAddressRequest{AddressId: addressId})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "success deleting the address"})
+}
+
 func (h *AccountHandler) Login(c *gin.Context) {
 	var req dtohttp.LoginRequest
 
@@ -549,6 +644,34 @@ func (h *AccountHandler) DeleteCartProduct(c *gin.Context) {
 
 func (h *AccountHandler) GetCouriers(c *gin.Context) {
 	response, err := h.accountUsecase.GetCouriers(c.Request.Context())
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
+}
+
+func (h *AccountHandler) GetProvinces(c *gin.Context) {
+	response, err := h.accountUsecase.GetProvinces(c.Request.Context())
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
+}
+
+func (h *AccountHandler) GetDistricts(c *gin.Context) {
+	provinceIdString := c.Param("provinceId")
+
+	provinceId, err := strconv.Atoi(provinceIdString)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response, err := h.accountUsecase.GetDistrictsByProvinceId(c.Request.Context(), dtousecase.GetDistrictRequest{ProvinceId: provinceId})
 	if err != nil {
 		c.Error(err)
 		return
