@@ -34,6 +34,7 @@ type ProductResponse struct {
 
 type GetProductDetailRequest struct {
 	ProductId int
+	AccountId int
 }
 
 type GetProductDetailResponse struct {
@@ -46,6 +47,7 @@ type GetProductDetailResponse struct {
 	Images         []string         `json:"images"`
 	VariantOptions []VariantOption  `json:"variant_options,omitempty"`
 	Variants       []ProductVariant `json:"variants,omitempty"`
+	IsFavorite     bool             `json:"is_favorite,omitempty"`
 }
 
 type VariantOption struct {
