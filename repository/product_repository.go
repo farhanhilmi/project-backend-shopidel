@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -53,36 +52,28 @@ func (r *productRepository) FindProductVariantByID(ctx context.Context, req dtor
 func (r *productRepository) First(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error) {
 	res := dtorepository.ProductResponse{}
 
-	p := model.Products{}
+	q := `
+		select 
+			p.Id as "ID",
+			p."name" as "Name",
+			p.description as "Description",
+			case 
+				when fp.id is not null then true
+				else false
+			end as "IsFavorite"
+		from products p 
+		left join favorite_products fp 
+			on fp.product_id = p.id 
+			and fp.account_id = $1
+		where p.Id = $2
+	`
 
-	qw, err := r.firstWhereQuery(ctx, req)
+	err := r.db.WithContext(ctx).Raw(q, req.AccountId, req.ProductID).Scan(&res).Error
 	if err != nil {
 		return res, err
 	}
-
-	err = r.db.WithContext(ctx).Where(qw).First(&p).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return res, util.ErrNoRecordFound
-	}
-
-	if err != nil {
-		return res, err
-	}
-	res.ID = p.ID
-	res.Name = p.Name
-	res.Description = p.Description
 
 	return res, nil
-}
-
-func (r *productRepository) firstWhereQuery(ctx context.Context, req dtorepository.ProductRequest) (string, error) {
-	q := ``
-
-	if req.ProductID != 0 {
-		q += fmt.Sprint(` id = ` + fmt.Sprint(req.ProductID))
-	}
-
-	return q, nil
 }
 
 func (r *productRepository) FindProductVariant(ctx context.Context, req dtorepository.FindProductVariantRequest) (dtorepository.FindProductVariantResponse, error) {
