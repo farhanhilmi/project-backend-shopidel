@@ -87,6 +87,7 @@ func (h *ProductHandler) GetProductDetail(c *gin.Context) {
 
 	uReq := dtousecase.GetProductDetailRequest{
 		ProductId: productId,
+		AccountId: c.GetInt("userId"),
 	}
 
 	uRes, err := h.productUsecase.GetProductDetail(c.Request.Context(), uReq)

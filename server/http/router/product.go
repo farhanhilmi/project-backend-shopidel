@@ -10,7 +10,7 @@ func NewProductRouter(h *handler.ProductHandler, gin *gin.Engine) *gin.Engine {
 	product := gin.Group("/products")
 
 	product.GET("", h.ListProduct)
-	product.GET("/:productId", h.GetProductDetail)
+	product.GET("/:productId", middleware.IfExistAuthenticateJWTIf(), h.GetProductDetail)
 	product.POST("/:productId/favorites/add-favorite", middleware.AuthenticateJWT(), h.AddToFavorite)
 	product.GET("/favorites", middleware.AuthenticateJWT(), h.GetListFavorite)
 

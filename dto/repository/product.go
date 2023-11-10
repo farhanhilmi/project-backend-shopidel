@@ -8,12 +8,14 @@ import (
 
 type ProductRequest struct {
 	ProductID int
+	AccountId int
 }
 
 type ProductResponse struct {
 	ID          int
 	Name        string
 	Description string
+	IsFavorite  bool
 }
 
 type ProductLowestHighestPriceRequest struct {
@@ -155,4 +157,14 @@ type ProductListParam struct {
 	Page      int
 	StartDate string
 	EndDate   string
+}
+type IsProductFavoriteRequest struct {
+	AccountId int
+	ProductId int
+}
+
+type IsProductFavoriteResponse struct {
+	AccountId  int
+	ProductId  int
+	IsFavorite bool
 }

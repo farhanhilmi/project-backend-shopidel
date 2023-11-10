@@ -17,6 +17,6 @@ var ProductOrders = []model.ProductOrders{
 		Kelurahan:     "Sukapura",
 		ZipCode:       "40851",
 		AddressDetail: "Jl Telekomunikasi No 1 Bojongsoang",
-		Status:        constant.StatusWaitingSellerConfirmation,
+		Status:        constant.StatusOrderOnProcess,
 	},
 }

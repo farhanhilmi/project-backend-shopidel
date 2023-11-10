@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtohttp "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/http"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
@@ -151,6 +152,23 @@ func (h *ProductOrderHandler) GetCouriers(c *gin.Context) {
 	}
 
 	response, err := h.productOrderUsecase.GetCouriers(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
+}
+
+func (h *ProductOrderHandler) GetOrderHistories(c *gin.Context) {
+	status := c.DefaultQuery("status", constant.StatusOrderAll)
+
+	uReq := dtousecase.ProductOrderHistoryRequest{
+		AccountID: c.GetInt("userId"),
+		Status:    status,
+	}
+
+	response, err := h.productOrderUsecase.GetOrderHistories(c.Request.Context(), uReq)
 	if err != nil {
 		c.Error(err)
 		return

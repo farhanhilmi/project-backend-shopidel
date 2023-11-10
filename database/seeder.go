@@ -38,6 +38,7 @@ func dropTable() {
 			account_carts,
 			seller_couriers,
 			favorite_products,
+			product_order_reviews,
 			provinces,
 			districts
 		;
@@ -78,6 +79,7 @@ func createTable() {
 		&model.AccountCarts{},
 		&model.SellerCouriers{},
 		&model.FavoriteProducts{},
+		&model.ProductOrderReviews{},
 		&model.Province{},
 		&model.District{},
 	)
@@ -106,6 +108,7 @@ func seeding() {
 		seeder.AccountAddress,
 		seeder.AccountCarts,
 		seeder.SellerCouriers,
+		seeder.ProductOrderReviews,
 		seeder.Provinces,
 		seeder.Districts,
 	}

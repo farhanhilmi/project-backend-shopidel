@@ -157,6 +157,7 @@ func (u *productUsecase) GetProductDetail(ctx context.Context, req dtousecase.Ge
 
 	rReq := dtorepository.ProductRequest{
 		ProductID: req.ProductId,
+		AccountId: req.AccountId,
 	}
 	rRes, err := u.productRepository.First(ctx, rReq)
 	if err != nil {
@@ -189,6 +190,7 @@ func (u *productUsecase) GetProductDetail(ctx context.Context, req dtousecase.Ge
 	res.Description = rRes.Description
 	res.Variants = variants
 	res.VariantOptions = options
+	res.IsFavorite = rRes.IsFavorite
 
 	return res, nil
 }

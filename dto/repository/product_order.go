@@ -101,3 +101,8 @@ type SellerCourier struct {
 type SellerCourierResponse struct {
 	CourierID int
 }
+
+type ProductOrderHistoryRequest struct {
+	AccountID int
+	Status    string
+}
