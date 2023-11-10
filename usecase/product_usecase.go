@@ -16,7 +16,7 @@ type ProductUsecase interface {
 	GetProductDetail(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductDetailResponse, error)
 	AddToFavorite(ctx context.Context, req dtousecase.FavoriteProduct) (*dtousecase.FavoriteProduct, error)
 	GetProductFavorites(ctx context.Context, req dtousecase.ProductFavoritesParams) ([]model.FavoriteProductList, *dtogeneral.PaginationData, error)
-	GetProducts(ctx context.Context) (*[]dtousecase.ProductListResponse, error)
+	GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtousecase.ProductListResponse, *dtogeneral.PaginationData, error)
 }
 
 type productUsecase struct {
@@ -37,12 +37,23 @@ func NewProductUsecase(config ProductUsecaseConfig) ProductUsecase {
 
 }
 
-func (u *productUsecase) GetProducts(ctx context.Context) (*[]dtousecase.ProductListResponse, error) {
+func (u *productUsecase) GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtousecase.ProductListResponse, *dtogeneral.PaginationData, error) {
 	res := []dtousecase.ProductListResponse{}
 
-	listProduct, err := u.productRepository.FindProducts(ctx)
+	uReq := dtorepository.ProductListParam {
+		AccountID: req.AccountID,
+		SortBy: req.SortBy,
+		Search: req.Search,
+		Sort: req.Sort,
+		Limit: req.Limit,
+		Page: req.Page,
+		StartDate: req.StartDate,
+		EndDate: req.EndDate,
+	}
+
+	listProduct, totalItems, err := u.productRepository.FindProducts(ctx, uReq)
 	if err != nil {
-		return nil, err
+		return &res, nil, err
 	}
 
 	for _, product := range listProduct {
@@ -59,7 +70,14 @@ func (u *productUsecase) GetProducts(ctx context.Context) (*[]dtousecase.Product
 		})
 	}
 
-	return &res, nil
+	pagination := dtogeneral.PaginationData{
+		TotalItem:   int(totalItems),
+		TotalPage:   (int(totalItems) + req.Limit - 1) / req.Limit,
+		CurrentPage: req.Page,
+		Limit:       req.Limit,
+	}
+
+	return &res, &pagination, nil
 }
 
 func (u *productUsecase) AddToFavorite(ctx context.Context, req dtousecase.FavoriteProduct) (*dtousecase.FavoriteProduct, error) {

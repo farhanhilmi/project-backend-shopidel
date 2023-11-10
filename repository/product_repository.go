@@ -17,7 +17,7 @@ type productRepository struct {
 
 type ProductRepository interface {
 	First(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error)
-	FindProducts(ctx context.Context) ([]dtorepository.ProductListResponse, error)
+	FindProducts(ctx context.Context, req dtorepository.ProductListParam) ([]dtorepository.ProductListResponse, int64, error)
 	FindProductVariant(ctx context.Context, req dtorepository.FindProductVariantRequest) (dtorepository.FindProductVariantResponse, error)
 	FindProductVariantByID(ctx context.Context, req dtorepository.ProductCart) (dtorepository.ProductCart, error)
 	FindProductFavorites(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
@@ -32,36 +32,58 @@ func NewProductRepository(db *gorm.DB) ProductRepository {
 	}
 }
 
-func (r *productRepository) FindProducts(ctx context.Context) ([]dtorepository.ProductListResponse, error) {
+func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.ProductListParam) ([]dtorepository.ProductListResponse, int64, error) {
 	res := []dtorepository.ProductListResponse{}
+	var totalItems int64
 
 	q := `
-	select
-	distinct on(p.id) p.id,
-	p.name,
-	aa.district,
-	sum(pod.quantity) as total_sold, 
-	pvsc.price, 
-	pvsc.picture_url, 
-	p.created_at,
-	p.updated_at,
-	p.deleted_at
-		from products p  
-		left join product_variant_selection_combinations pvsc 
-			on pvsc.product_id = p.id
-		left join account_addresses aa 
-			on aa.account_id = p.seller_id  
-		left join product_order_details pod 	
-			on pod.product_variant_selection_combination_id = pvsc.id
-	group by p.id, p.name, pvsc.price, pvsc.picture_url, aa.district;
+		select
+		distinct on(p.id) p.id,
+		p.name,
+		aa.district,
+		sum(pod.quantity) as total_sold, 
+		pvsc.price, 
+		pvsc.picture_url, 
+		p.created_at,
+		p.updated_at,
+		p.deleted_at
+			from products p  
+			left join product_variant_selection_combinations pvsc 
+				on pvsc.product_id = p.id
+			left join account_addresses aa 
+				on aa.account_id = p.seller_id  
+			left join product_order_details pod 	
+				on pod.product_variant_selection_combination_id = pvsc.id
+		group by p.id, p.name, pvsc.price, pvsc.picture_url, aa.district
 	`
 
-	err := r.db.WithContext(ctx).Raw(q).Scan(&res).Error
-	if err != nil {
-		return res, err
+	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q))
+	if req.StartDate != "" {
+		query = query.Where("created_at >= ?", req.StartDate)
 	}
 
-	return res, nil
+	if req.EndDate != "" {
+		req.EndDate += " 23:59:59"
+		query = query.Where("created_at <= ?", req.EndDate)
+	}
+
+	if req.Search != "" {
+		query = query.Where("name ilike ?", "%"+req.Search+"%")
+	}
+
+	if err := query.Count(&totalItems).Error; err != nil {
+		return nil, 0, err
+	}
+
+	query = query.Order(req.SortBy + " " + req.Sort)
+	offset := (req.Page - 1) * req.Limit
+	query = query.Offset(offset).Limit(req.Limit)
+
+	if err := query.Find(&res).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return res, totalItems, nil
 }
 
 func (r *productRepository) FindProductVariantByID(ctx context.Context, req dtorepository.ProductCart) (dtorepository.ProductCart, error) {

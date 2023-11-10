@@ -23,13 +23,58 @@ func NewProductHandler(productUsecase usecase.ProductUsecase) *ProductHandler {
 }
 
 func (h *ProductHandler) ListProduct(c *gin.Context) {
-	uRes, err := h.productUsecase.GetProducts(c.Request.Context())
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "30"))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	sortBy := c.DefaultQuery("sortBy", "date")
+	sort := c.DefaultQuery("sort", "desc")
+	startDate := c.DefaultQuery("startDate", "")
+	endDate := c.DefaultQuery("endDate", "")
+	s := c.DefaultQuery("s", "")
+
+	if valid := util.IsDateValid(startDate); !valid && startDate != "" {
+		c.Error(util.ErrInvalidDateFormat)
+		return
+	}
+	if valid := util.IsDateValid(endDate); !valid && endDate != "" {
+		c.Error(util.ErrInvalidDateFormat)
+		return
+	}
+
+	if !slices.Contains([]string{"date", "price"}, sortBy) {
+		c.Error(util.ErrProductFavoriteSortBy)
+		return
+	}
+
+	switch sortBy {
+	case "date":
+		sortBy = "created_at"
+	}
+	uReq := dtousecase.ProductListParam {	
+		SortBy:    sortBy,
+		Sort:      sort,
+		Limit:     limit,
+		Page:      page,
+		StartDate: startDate,
+		EndDate:   endDate,
+		AccountID: c.GetInt("userId"),
+		Search:    s,
+	}
+
+	uRes, pagination, err := h.productUsecase.GetProducts(c.Request.Context(), uReq)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "product listed successfully", Data: uRes})
+	c.JSON(http.StatusOK, dtogeneral.JSONWithPagination{Data: uRes, Pagination: *pagination})
 }
 
 func (h *ProductHandler) GetProductDetail(c *gin.Context) {

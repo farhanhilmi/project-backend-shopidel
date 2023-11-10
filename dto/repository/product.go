@@ -145,3 +145,14 @@ type ProductListResponse struct {
 	UpdatedAt  time.Time
 	DeletedAt  time.Time
 }
+
+type ProductListParam struct {
+	AccountID int
+	SortBy    string
+	Search    string
+	Sort      string
+	Limit     int
+	Page      int
+	StartDate string
+	EndDate   string
+}
