@@ -68,3 +68,14 @@ type ProductOrderHistories struct {
 	UpdatedAt       time.Time
 	DeletedAt       time.Time
 }
+
+type ProductOrderReviews struct {
+	ID             int
+	AccountID      int
+	ProductOrderID int
+	Feedback       string
+	Rating         int
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	DeletedAt      time.Time
+}

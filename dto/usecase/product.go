@@ -118,4 +118,5 @@ type OrdersResponse struct {
 	OrderID      int             `json:"order_id"`
 	Products     []OrderProduct  `json:"products"`
 	TotalPayment decimal.Decimal `json:"total_payment"`
+	IsReviewed   bool            `json:"is_reviewed"`
 }
