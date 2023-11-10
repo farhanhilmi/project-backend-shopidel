@@ -24,6 +24,7 @@ type ProductOrderUsecase interface {
 	CheckDeliveryFee(ctx context.Context, req dtousecase.CheckDeliveryFeeRequest) (*dtousecase.CourierFeeResponse, error)
 	GetCouriers(ctx context.Context, req dtousecase.SellerCourier) ([]model.Couriers, error)
 	GetOrderHistories(ctx context.Context, req dtousecase.ProductOrderHistoryRequest) ([]dtousecase.OrdersResponse, dtogeneral.PaginationData, error)
+	AddProductReview(ctx context.Context, req dtousecase.AddProductReview) (*dtousecase.AddProductReviewResponse, error)
 }
 
 type productOrderUsecase struct {
@@ -263,7 +264,7 @@ func (u *productOrderUsecase) ProcessedOrder(ctx context.Context, req dtousecase
 	data, err := u.productOrderRepository.ProcessedOrder(ctx, dtorepository.ProductOrderRequest{
 		ID:          req.ID,
 		SellerID:    req.SellerID,
-		Status:      constant.StatusProcessedOrder,
+		Status:      constant.StatusOrderDelivered,
 		TotalAmount: totalAmount,
 	})
 
@@ -326,6 +327,57 @@ func (u *productOrderUsecase) GetCouriers(ctx context.Context, req dtousecase.Se
 	}
 
 	return response, nil
+}
+
+func (u *productOrderUsecase) AddProductReview(ctx context.Context, req dtousecase.AddProductReview) (*dtousecase.AddProductReviewResponse, error) {
+	if req.Rating < 1 || req.Rating > 5 {
+		return nil, util.ErrInvalidRating
+	}
+
+	_, err := u.productOrderRepository.FindByIDAndAccountAndStatus(ctx, dtorepository.ProductOrderRequest{
+		Status:    constant.StatusOrderCompleted,
+		AccountID: req.AccountID,
+		ID:        req.OrderID,
+	})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrProductOrderNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = u.productOrderRepository.FindReviewByID(ctx, dtorepository.ProductReviewRequest{
+		AccountID: req.AccountID,
+		OrderID:   req.OrderID,
+		ProductID: req.ProductID,
+	})
+	if !errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrAlreadyReviewProduct
+	}
+	if err != nil && !errors.Is(err, util.ErrNoRecordFound) {
+		return nil, err
+	}
+
+	newReview, err := u.productOrderRepository.AddProductReview(ctx, dtorepository.AddProductReviewRequest{
+		AccountID: req.AccountID,
+		ProductID: req.ProductID,
+		OrderID:   req.OrderID,
+		Feedback:  req.Feedback,
+		Rating:    req.Rating,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &dtousecase.AddProductReviewResponse{
+		ID:        newReview.ID,
+		AccountID: newReview.AccountID,
+		ProductID: newReview.ProductID,
+		OrderID:   req.OrderID,
+		Feedback:  newReview.Feedback,
+		Rating:    newReview.Rating,
+		CreatedAt: newReview.CreatedAt,
+	}, nil
 }
 
 func (u *productOrderUsecase) convertOrderHistoriesReponse(ctx context.Context, pagination dtogeneral.PaginationData, orders []model.ProductOrderHistories) ([]dtousecase.OrdersResponse, dtogeneral.PaginationData, error) {

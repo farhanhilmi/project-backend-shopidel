@@ -77,3 +77,21 @@ type CourierFeeResponse struct {
 type SellerCourier struct {
 	SellerID int
 }
+
+type AddProductReview struct {
+	AccountID int
+	ProductID int
+	OrderID   int
+	Feedback  string
+	Rating    int
+}
+
+type AddProductReviewResponse struct {
+	ID        int       `json:"id"`
+	AccountID int       `json:"account_id"`
+	ProductID int       `json:"product_id"`
+	OrderID   int       `json:"order_id"`
+	Feedback  string    `json:"feedback"`
+	Rating    int       `json:"rating"`
+	CreatedAt time.Time `json:"created_at"`
+}

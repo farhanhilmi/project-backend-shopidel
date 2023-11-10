@@ -161,6 +161,38 @@ func (h *ProductOrderHandler) GetCouriers(c *gin.Context) {
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
 }
 
+func (h *ProductOrderHandler) AddProductReview(c *gin.Context) {
+	var req dtohttp.AddProductReviewRequest
+
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	id := c.Param("orderId")
+	orderId, err := strconv.Atoi(id)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	uReq := dtousecase.AddProductReview{
+		AccountID: c.GetInt("userId"),
+		ProductID: req.ProductID,
+		OrderID:   orderId,
+		Feedback:  req.Feedback,
+		Rating:    req.Rating,
+	}
+
+	response, err := h.productOrderUsecase.AddProductReview(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
+}
+
 func (h *ProductOrderHandler) GetOrderHistories(c *gin.Context) {
 	status := c.DefaultQuery("status", constant.StatusOrderAll)
 
