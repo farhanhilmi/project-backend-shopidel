@@ -46,3 +46,11 @@ type CheckoutOrderRequest struct {
 	Weight               string                           `json:"weight" binding:"required"`
 	CourierID            int                              `json:"courier_id" binding:"required"`
 }
+
+type AddProductReviewRequest struct {
+	AccountID int
+	ProductID int `json:"product_id" binding:"required"`
+	OrderID   int
+	Feedback  string `json:"feedback" binding:"required"`
+	Rating    int    `json:"rating" binding:"required"`
+}

@@ -27,6 +27,8 @@ type ProductOrdersRepository interface {
 	Create(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error)
 	FindAllOrderHistoriesByUser(ctx context.Context, req dtorepository.ProductOrderHistoryRequest) ([]model.ProductOrderHistories, error)
 	FindAllOrderHistoriesByUserAndStatus(ctx context.Context, req dtorepository.ProductOrderHistoryRequest) ([]model.ProductOrderHistories, error)
+	FindByIDAndAccountAndStatus(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error)
+	AddProductReview(ctx context.Context, req dtorepository.AddProductReviewRequest) (dtorepository.AddProductReviewResponse, error)
 }
 
 func NewProductOrdersRepository(db *gorm.DB) ProductOrdersRepository {
@@ -158,10 +160,13 @@ func (r *productOrdersRepository) FindByStatusAndAccountID(ctx context.Context, 
 	order := model.ProductOrders{}
 	res := dtorepository.ProductOrderResponse{}
 
-	err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountID).Where("status = ?", req.Status).First(&order).Error
+	err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountID).Where("status ilike ?", req.Status).First(&order).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
 	}
 
 	res.ID = order.ID
@@ -177,6 +182,63 @@ func (r *productOrdersRepository) FindByStatusAndAccountID(ctx context.Context, 
 	res.CreatedAt = order.CreatedAt
 	res.DeletedAt = order.DeletedAt
 	res.UpdatedAt = order.UpdatedAt
+
+	return res, err
+}
+
+func (r *productOrdersRepository) FindByIDAndAccountAndStatus(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error) {
+	order := model.ProductOrders{}
+	res := dtorepository.ProductOrderResponse{}
+
+	err := r.db.WithContext(ctx).
+		Where("account_id = ?", req.AccountID).
+		Where("status ilike ?", req.Status).
+		Where("id = ?", req.ID).
+		First(&order).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
+	}
+
+	res.ID = order.ID
+	res.AccountID = order.AccountID
+	res.CourierID = order.CourierID
+	res.DeliveryFee = order.DeliveryFee
+	res.Province = order.Province
+	res.SubDistrict = order.SubDistrict
+	res.Kelurahan = order.Kelurahan
+	res.Status = order.Status
+	res.ZipCode = order.ZipCode
+	res.District = order.District
+	res.CreatedAt = order.CreatedAt
+	res.DeletedAt = order.DeletedAt
+	res.UpdatedAt = order.UpdatedAt
+
+	return res, err
+}
+
+func (r *productOrdersRepository) AddProductReview(ctx context.Context, req dtorepository.AddProductReviewRequest) (dtorepository.AddProductReviewResponse, error) {
+	res := dtorepository.AddProductReviewResponse{}
+
+	review := model.ProductOrderReviews{
+		AccountID:      req.AccountID,
+		ProductID:      req.ProductID,
+		ProductOrderID: req.OrderID,
+		Feedback:       req.Feedback,
+		Rating:         req.Rating,
+	}
+
+	err := r.db.WithContext(ctx).Model(&review).Create(&review).Scan(&res).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
+	}
 
 	return res, err
 }

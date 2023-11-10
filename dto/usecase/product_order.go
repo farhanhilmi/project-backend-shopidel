@@ -77,3 +77,21 @@ type CourierFeeResponse struct {
 type SellerCourier struct {
 	SellerID int
 }
+
+type AddProductReview struct {
+	AccountID int
+	ProductID int
+	OrderID   int
+	Feedback  string
+	Rating    int
+}
+
+type AddProductReviewResponse struct {
+	ID        int
+	AccountID int
+	ProductID int
+	OrderID   int
+	Feedback  string
+	Rating    int
+	CreatedAt time.Time
+}
