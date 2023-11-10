@@ -716,7 +716,7 @@ func (r *accountRepository) FindAccountCartItems(ctx context.Context, req dtorep
 			on p."name" = aa.province 
 		left join districts d 
 			on d."name" = aa.district
-		where aa.account_id = 2
+		where aa.account_id = ?
 			and aa.deleted_at is null
 	`
 
