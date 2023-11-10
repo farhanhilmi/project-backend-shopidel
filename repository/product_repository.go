@@ -44,6 +44,7 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 		pvsc.price, 
 		pvsc.picture_url, 
 		p.created_at,
+		p.category_id,
 		p.updated_at,
 		p.deleted_at
 			from products p  
@@ -64,6 +65,10 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 	if req.EndDate != "" {
 		req.EndDate += " 23:59:59"
 		query = query.Where("created_at <= ?", req.EndDate)
+	}
+
+	if req.CategoryId != "" {
+		query = query.Where("category_id = ?", req.CategoryId)
 	}
 
 	if req.Search != "" {

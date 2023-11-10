@@ -137,26 +137,27 @@ type ProductFavoritesParams struct {
 }
 
 type ProductListResponse struct {
-	ID         int
-	Name       string
-	District   string
-	TotalSold  int
-	Price      decimal.Decimal
-	PictureURL string
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-	DeletedAt  time.Time
+	ID         int             `json:"id"`
+	Name       string          `json:"name"`
+	District   string          `json:"district"`
+	TotalSold  int             `json:"total_sold"`
+	Price      decimal.Decimal `json:"price"`
+	PictureURL string          `json:"picture_url"`
+	CreatedAt  time.Time       `json:"created_at"`
+	UpdatedAt  time.Time       `json:"updated_at"`
+	DeletedAt  time.Time       `json:"deleted_at"`
 }
 
 type ProductListParam struct {
-	AccountID int
-	SortBy    string
-	Search    string
-	Sort      string
-	Limit     int
-	Page      int
-	StartDate string
-	EndDate   string
+	CategoryId string
+	AccountID  int
+	SortBy     string
+	Search     string
+	Sort       string
+	Limit      int
+	Page       int
+	StartDate  string
+	EndDate    string
 }
 type IsProductFavoriteRequest struct {
 	AccountId int

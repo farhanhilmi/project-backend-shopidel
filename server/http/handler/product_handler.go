@@ -37,6 +37,7 @@ func (h *ProductHandler) ListProduct(c *gin.Context) {
 	sort := c.DefaultQuery("sort", "desc")
 	startDate := c.DefaultQuery("startDate", "")
 	endDate := c.DefaultQuery("endDate", "")
+	categoryId := c.DefaultQuery("categoryId", "")
 	s := c.DefaultQuery("s", "")
 
 	if valid := util.IsDateValid(startDate); !valid && startDate != "" {
@@ -57,7 +58,9 @@ func (h *ProductHandler) ListProduct(c *gin.Context) {
 	case "date":
 		sortBy = "created_at"
 	}
+
 	uReq := dtousecase.ProductListParam {	
+		CategoryId: categoryId,
 		SortBy:    sortBy,
 		Sort:      sort,
 		Limit:     limit,
@@ -87,7 +90,6 @@ func (h *ProductHandler) GetProductDetail(c *gin.Context) {
 
 	uReq := dtousecase.GetProductDetailRequest{
 		ProductId: productId,
-		AccountId: c.GetInt("userId"),
 	}
 
 	uRes, err := h.productUsecase.GetProductDetail(c.Request.Context(), uReq)

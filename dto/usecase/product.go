@@ -106,26 +106,27 @@ type ProductFavoritesParams struct {
 }
 
 type ProductListResponse struct {
-	ID         int             
-	Name       string          
-	District   string          
-	TotalSold  int             
-	Price      decimal.Decimal 
-	PictureURL string          
-	CreatedAt  time.Time       
-	UpdatedAt  time.Time       
-	DeletedAt  time.Time       
+	ID         int
+	Name       string
+	District   string
+	TotalSold  int
+	Price      decimal.Decimal
+	PictureURL string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	DeletedAt  time.Time
 }
 
 type ProductListParam struct {
-	AccountID int
-	SortBy    string
-	Search    string
-	Sort      string
-	Limit     int
-	Page      int
-	StartDate string
-	EndDate   string
+	AccountID  int
+	CategoryId string
+	SortBy     string
+	Search     string
+	Sort       string
+	Limit      int
+	Page       int
+	StartDate  string
+	EndDate    string
 }
 type ProductOrderHistoryRequest struct {
 	AccountID int

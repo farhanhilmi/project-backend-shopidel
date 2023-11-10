@@ -40,15 +40,3 @@ type UpdateCartRequest struct {
 	ProductID int `json:"product_id" binding:"required"`
 	Quantity  int `json:"quantity" binding:"required"`
 }
-
-type ProductListResponse struct {
-	ID         int             `json:"id"`
-	Name       string          `json:"name"`
-	District   string          `json:"district"`
-	TotalSold  int             `json:"total_sold"`
-	Price      decimal.Decimal `json:"price"`
-	PictureURL string          `json:"picture_url"`
-	CreatedAt  time.Time       `json:"created_at"`
-	UpdatedAt  time.Time       `json:"-"`
-	DeletedAt  time.Time       `json:"-"`
-}
