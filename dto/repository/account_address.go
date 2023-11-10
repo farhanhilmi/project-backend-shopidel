@@ -41,14 +41,16 @@ type RegisterAddressResponse struct {
 }
 
 type UpdateAddressRequest struct {
-	AddressId   int
-	AccountId   int
-	ProvinceId  int
-	DistrictId  int
-	SubDistrict string
-	Kelurahan   string
-	ZipCode     string
-	Detail      string
+	AddressId       int
+	AccountId       int
+	ProvinceId      int
+	DistrictId      int
+	SubDistrict     string
+	Kelurahan       string
+	ZipCode         string
+	Detail          string
+	IsBuyerDefault  bool
+	IsSellerDefault bool
 }
 
 type UpdateAddressResponse struct {

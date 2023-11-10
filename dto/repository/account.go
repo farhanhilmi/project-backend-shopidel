@@ -108,7 +108,9 @@ type AddressResponse struct {
 	ZipCode         string
 	Kelurahan       string
 	SubDistrict     string
+	DistrictId      int
 	District        string
+	ProvinceId      int
 	Province        string
 	IsBuyerDefault  bool
 	IsSellerDefault bool
