@@ -133,3 +133,12 @@ type ProductFavoritesParams struct {
 	StartDate string
 	EndDate   string
 }
+
+type ProductListResponse struct {
+	ID int
+	Title string
+	MainPhoto string
+	Price string
+	Location string
+	Sold string
+}

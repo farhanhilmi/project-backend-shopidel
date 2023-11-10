@@ -17,6 +17,7 @@ type productRepository struct {
 
 type ProductRepository interface {
 	First(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error)
+	FindProducts(ctx context.Context) ([]dtorepository.ProductListResponse, error)
 	FindProductVariant(ctx context.Context, req dtorepository.FindProductVariantRequest) (dtorepository.FindProductVariantResponse, error)
 	FindProductVariantByID(ctx context.Context, req dtorepository.ProductCart) (dtorepository.ProductCart, error)
 	FindProductFavorites(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
@@ -29,6 +30,12 @@ func NewProductRepository(db *gorm.DB) ProductRepository {
 	return &productRepository{
 		db: db,
 	}
+}
+
+func (r *productRepository) FindProducts(ctx context.Context) ([]dtorepository.ProductListResponse, error) {
+	res := []dtorepository.ProductListResponse{}
+
+	return res, nil
 }
 
 func (r *productRepository) FindProductVariantByID(ctx context.Context, req dtorepository.ProductCart) (dtorepository.ProductCart, error) {
