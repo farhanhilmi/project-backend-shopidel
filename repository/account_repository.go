@@ -848,6 +848,8 @@ func (r *accountRepository) UpdateAddress(ctx context.Context, req dtorepository
 		Kelurahan:            req.Kelurahan,
 		ZipCode:              req.ZipCode,
 		Detail:               req.Detail,
+		IsBuyerDefault:       req.IsBuyerDefault,
+		IsSellerDefault:      req.IsSellerDefault,
 	}
 
 	ads := []model.AccountAddress{}
