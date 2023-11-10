@@ -101,3 +101,47 @@ type SellerCourier struct {
 type SellerCourierResponse struct {
 	CourierID int
 }
+
+type ProductOrderHistoryRequest struct {
+	AccountID int
+	Status    string
+	SortBy    string
+	Sort      string
+	Limit     int
+	Page      int
+	StartDate string
+	EndDate   string
+}
+
+type AddProductReviewRequest struct {
+	AccountID int
+	ProductID int
+	OrderID   int
+	Feedback  string
+	Rating    int
+}
+
+type AddProductReviewResponse struct {
+	ID        int
+	AccountID int
+	ProductID int
+	OrderID   int
+	Feedback  string
+	Rating    int
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt time.Time
+}
+
+type ProductReviewRequest struct {
+	AccountID int
+	ProductID int
+	OrderID   int
+}
+
+type ProductReviewResponse struct {
+	ID        int
+	AccountID int
+	ProductID int
+	OrderID   int
+}

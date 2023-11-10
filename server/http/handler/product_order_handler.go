@@ -4,12 +4,14 @@ import (
 	"net/http"
 	"strconv"
 
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtohttp "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/http"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/exp/slices"
 )
 
 type ProductOrderHandler struct {
@@ -157,4 +159,93 @@ func (h *ProductOrderHandler) GetCouriers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
+}
+
+func (h *ProductOrderHandler) AddProductReview(c *gin.Context) {
+	var req dtohttp.AddProductReviewRequest
+
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	id := c.Param("orderId")
+	orderId, err := strconv.Atoi(id)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	uReq := dtousecase.AddProductReview{
+		AccountID: c.GetInt("userId"),
+		ProductID: req.ProductID,
+		OrderID:   orderId,
+		Feedback:  req.Feedback,
+		Rating:    req.Rating,
+	}
+
+	response, err := h.productOrderUsecase.AddProductReview(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
+}
+
+func (h *ProductOrderHandler) GetOrderHistories(c *gin.Context) {
+	status := c.DefaultQuery("status", constant.StatusOrderAll)
+
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	sortBy := c.DefaultQuery("sortBy", "date")
+	sort := c.DefaultQuery("sort", "desc")
+	startDate := c.DefaultQuery("startDate", "")
+	endDate := c.DefaultQuery("endDate", "")
+
+	if valid := util.IsDateValid(startDate); !valid && startDate != "" {
+		c.Error(util.ErrInvalidDateFormat)
+		return
+	}
+	if valid := util.IsDateValid(endDate); !valid && endDate != "" {
+		c.Error(util.ErrInvalidDateFormat)
+		return
+	}
+
+	if !slices.Contains([]string{"date", "price"}, sortBy) {
+		c.Error(util.ErrProductFavoriteSortBy)
+		return
+	}
+
+	switch sortBy {
+	case "date":
+		sortBy = "created_at"
+	}
+
+	uReq := dtousecase.ProductOrderHistoryRequest{
+		AccountID: c.GetInt("userId"),
+		Status:    status,
+		SortBy:    sortBy,
+		Sort:      sort,
+		Limit:     limit,
+		Page:      page,
+		StartDate: startDate,
+		EndDate:   endDate,
+	}
+
+	response, pagination, err := h.productOrderUsecase.GetOrderHistories(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONWithPagination{Data: response, Pagination: pagination})
 }

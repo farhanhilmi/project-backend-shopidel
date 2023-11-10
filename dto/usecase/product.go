@@ -104,3 +104,58 @@ type ProductFavoritesParams struct {
 	StartDate string
 	EndDate   string
 }
+
+type ProductListResponse struct {
+	ID         int
+	Name       string
+	District   string
+	TotalSold  int
+	Price      decimal.Decimal
+	PictureURL string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	DeletedAt  time.Time
+}
+
+type ProductListParam struct {
+	AccountID  int
+	CategoryId string
+	SortBy     string
+	Search     string
+	Sort       string
+	Limit      int
+	Page       int
+	StartDate  string
+	EndDate    string
+}
+type ProductOrderHistoryRequest struct {
+	AccountID int
+	Status    string
+	SortBy    string
+	Sort      string
+	Limit     int
+	Page      int
+	StartDate string
+	EndDate   string
+}
+
+type ProductOrderReview struct {
+	ReviewID       int       `json:"review_id"`
+	ReviewFeedback string    `json:"review_feedback"`
+	ReviewRating   int       `json:"review_rating"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
+type OrderProduct struct {
+	ProductID       int                `json:"product_id"`
+	ProductName     string             `json:"product_name"`
+	Quantity        int                `json:"quantity"`
+	IndividualPrice decimal.Decimal    `json:"individual_price"`
+	Review          ProductOrderReview `json:"review,omitempty"`
+	IsReviewed      bool               `json:"is_reviewed"`
+}
+type OrdersResponse struct {
+	OrderID      int             `json:"order_id"`
+	Products     []OrderProduct  `json:"products"`
+	TotalPayment decimal.Decimal `json:"total_payment"`
+}

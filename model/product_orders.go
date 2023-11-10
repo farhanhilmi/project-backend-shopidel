@@ -55,3 +55,32 @@ type ProductOrderSeller struct {
 	Quantity                             int
 	Status                               string
 }
+
+type ProductOrderHistories struct {
+	ID              int
+	ProductName     string
+	Quantity        int
+	Status          string
+	ProductID       int
+	IndividualPrice decimal.Decimal
+	PictureURL      string
+	Feedback        string
+	Rating          int
+	ReviewID        int
+	ReviewCreatedAt time.Time
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	DeletedAt       time.Time
+}
+
+type ProductOrderReviews struct {
+	ID             int
+	AccountID      int
+	ProductID      int
+	ProductOrderID int
+	Feedback       string
+	Rating         int
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	DeletedAt      time.Time
+}
