@@ -332,12 +332,22 @@ func (u *productOrderUsecase) convertOrderHistoriesReponse(ctx context.Context, 
 	productOrders := []dtousecase.OrdersResponse{}
 
 	for _, o := range orders {
+		review := dtousecase.ProductOrderReview{}
 		product := dtousecase.OrderProduct{
 			ProductName:     o.ProductName,
 			Quantity:        o.Quantity,
 			IndividualPrice: o.IndividualPrice,
 			ProductID:       o.ProductID,
 		}
+		if o.ReviewID > 0 {
+			review.ReviewID = o.ReviewID
+			review.ReviewFeedback = o.Feedback
+			review.ReviewRating = o.Rating
+			review.CreatedAt = o.ReviewCreatedAt
+			product.IsReviewed = true
+		}
+
+		product.Review = review
 		orderHistories[o.ID] = append(orderHistories[o.ID], product)
 	}
 

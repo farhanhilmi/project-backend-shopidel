@@ -8,5 +8,6 @@ var ProductOrderReviews = []model.ProductOrderReviews{
 		ProductOrderID: 1,
 		Feedback:       "Ini product nya sangat bagus ya bang, menarik untuk beli lagi nanti aha",
 		Rating:         5,
+		ProductID:      1,
 	},
 }

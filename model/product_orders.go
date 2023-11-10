@@ -64,6 +64,10 @@ type ProductOrderHistories struct {
 	ProductID       int
 	IndividualPrice decimal.Decimal
 	PictureURL      string
+	Feedback        string
+	Rating          int
+	ReviewID        int
+	ReviewCreatedAt time.Time
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	DeletedAt       time.Time
@@ -72,6 +76,7 @@ type ProductOrderHistories struct {
 type ProductOrderReviews struct {
 	ID             int
 	AccountID      int
+	ProductID      int
 	ProductOrderID int
 	Feedback       string
 	Rating         int
