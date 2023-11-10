@@ -778,14 +778,16 @@ func (u *accountUsecase) UpdateAccountAddress(ctx context.Context, req dtousecas
 	}
 
 	rReq := dtorepository.UpdateAddressRequest{
-		AddressId:   req.AddressId,
-		AccountId:   req.AccountId,
-		ProvinceId:  req.ProvinceId,
-		DistrictId:  req.DistrictId,
-		SubDistrict: req.SubDistrict,
-		Kelurahan:   req.Kelurahan,
-		ZipCode:     req.ZipCode,
-		Detail:      req.Detail,
+		AddressId:       req.AddressId,
+		AccountId:       req.AccountId,
+		ProvinceId:      req.ProvinceId,
+		DistrictId:      req.DistrictId,
+		SubDistrict:     req.SubDistrict,
+		Kelurahan:       req.Kelurahan,
+		ZipCode:         req.ZipCode,
+		Detail:          req.Detail,
+		IsBuyerDefault:  req.IsBuyerDefault,
+		IsSellerDefault: req.IsSellerDefault,
 	}
 	rRes, err := u.accountRepository.UpdateAddress(ctx, rReq)
 	if err != nil {
@@ -799,6 +801,8 @@ func (u *accountUsecase) UpdateAccountAddress(ctx context.Context, req dtousecas
 	res.SubDistrict = rRes.SubDistrict
 	res.AccountId = rRes.AccountId
 	res.ZipCode = rRes.ZipCode
+	res.IsBuyerDefault = rReq.IsBuyerDefault
+	res.IsSellerDefault = rReq.IsSellerDefault
 
 	return res, nil
 }
