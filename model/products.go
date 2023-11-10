@@ -64,7 +64,7 @@ type Category struct {
 	ID        int       `gorm:"primaryKey;not null,autoIncrement;serial"`
 	Name      string    `gorm:"type:varchar;not null"`
 	Level     int       `gorm:"type:int;not null"`
-	Parent    int       `gorm:"type:int"`
+	Parent    int       `gorm:"type:int;default:null"`
 	CreatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	UpdatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	DeletedAt time.Time `gorm:"type:timestamp;default:null"`
