@@ -1557,7 +1557,7 @@ var Categories = []*model.Category{
 	},
 	{
 		ID:     260,
-		Name:   "Buku SD Kelas 1Buku SD Kelas 2Buku SD Kelas 3Buku SD Kelas 4Buku SD Kelas 5Buku SD Kelas 6Buku SMA Kelas 1Buku SMA Kelas 2Buku SMA Kelas 3Buku SMP Kelas 1Buku SMP Kelas 2Buku SMP Kelas 3Buku Saku Pramuka",
+		Name:   "Buku SD Kelas 1",
 		Level:  3,
 		Parent: 257,
 	},
@@ -1569,7 +1569,7 @@ var Categories = []*model.Category{
 	},
 	{
 		ID:     262,
-		Name:   "Kumpulan Soal SDKumpulan Soal SMAKumpulan Soal SMP",
+		Name:   "Kumpulan Soal SD",
 		Level:  3,
 		Parent: 257,
 	},
@@ -2971,7 +2971,7 @@ var Categories = []*model.Category{
 	},
 	{
 		ID:     496,
-		Name:   "Penguat Sinyal TVReceiver TVRemote TVTV Box",
+		Name:   "Penguat Sinyal TV",
 		Level:  3,
 		Parent: 493,
 	},
@@ -8565,7 +8565,7 @@ var Categories = []*model.Category{
 	},
 	{
 		ID:     1430,
-		Name:   "Vitamin CVitamin DVitamin EVitamin Ibu Hamil",
+		Name:   "Vitamin C",
 		Level:  3,
 		Parent: 1423,
 	},
@@ -8840,13 +8840,13 @@ var Categories = []*model.Category{
 	},
 	{
 		ID:     1476,
-		Name:   "Kabel HDMIKabel IDEKabel LANKabel Power CPUKabel SATA & e",
+		Name:   "Kabel HDMI",
 		Level:  3,
 		Parent: 1471,
 	},
 	{
 		ID:     1477,
-		Name:   "SATAKabel USBKabel UTPKabel VGAUSB Hub & Extension",
+		Name:   "SATA",
 		Level:  3,
 		Parent: 1471,
 	},
@@ -8888,7 +8888,7 @@ var Categories = []*model.Category{
 	},
 	{
 		ID:     1484,
-		Name:   "Motherboard AMDOptical Drive",
+		Name:   "Motherboard AMD",
 		Level:  3,
 		Parent: 1478,
 	},
@@ -8984,7 +8984,7 @@ var Categories = []*model.Category{
 	},
 	{
 		ID:     1500,
-		Name:   "Laptop 2 in 1Laptop Consumer",
+		Name:   "Laptop 2 in 1",
 		Level:  3,
 		Parent: 1499,
 	},
@@ -9074,7 +9074,7 @@ var Categories = []*model.Category{
 	},
 	{
 		ID:     1515,
-		Name:   "Memory Stick Micro M2Memory Stick Pro Duo",
+		Name:   "Memory Stick Micro M2",
 		Level:  3,
 		Parent: 1511,
 	},
@@ -9110,7 +9110,7 @@ var Categories = []*model.Category{
 	},
 	{
 		ID:     1521,
-		Name:   "Monitor LCDMonitor LEDMonitor Tabung",
+		Name:   "Monitor LCD",
 		Level:  3,
 		Parent: 1520,
 	},
@@ -9768,7 +9768,7 @@ var Categories = []*model.Category{
 	},
 	{
 		ID:     1631,
-		Name:   "Mobil & Truk RCPart RCPesawat RCPiano Anak",
+		Name:   "Mobil & Truk RC",
 		Level:  3,
 		Parent: 1625,
 	},
@@ -9792,7 +9792,7 @@ var Categories = []*model.Category{
 	},
 	{
 		ID:     1635,
-		Name:   "Mecha Model (Gunpla)Part Mini 4WD (Tamiya)Tool & Kit Mecha Model (Gunpla)Vehicle Model (Tamiya)",
+		Name:   "Mecha Model (Gunpla)",
 		Level:  3,
 		Parent: 1633,
 	},
@@ -10325,7 +10325,7 @@ var Categories = []*model.Category{
 	},
 	{
 		ID:     1724,
-		Name:   "Ready to Cook (Siap Masak)Ready to Eat (Siap Makan)",
+		Name:   "Ready to Cook (Siap Masak)",
 		Level:  3,
 		Parent: 1718,
 	},
@@ -10601,7 +10601,7 @@ var Categories = []*model.Category{
 	},
 	{
 		ID:     1770,
-		Name:   "Ready to Drink (Siap Minum)Sirup",
+		Name:   "Ready to Drink (Siap Minum)",
 		Level:  3,
 		Parent: 1756,
 	},
@@ -10937,7 +10937,7 @@ var Categories = []*model.Category{
 	},
 	{
 		ID:     1826,
-		Name:   "Susu UHTSusu segar & Pasteurisasi",
+		Name:   "Susu UHT",
 		Level:  3,
 		Parent: 1820,
 	},
@@ -11044,7 +11044,7 @@ var Categories = []*model.Category{
 	},
 	{
 		ID:     1844,
-		Name:   "Correction (Tip-Ex)Highlighter",
+		Name:   "Correction (Tip-Ex)",
 		Level:  3,
 		Parent: 1843,
 	},
@@ -11386,7 +11386,7 @@ var Categories = []*model.Category{
 	},
 	{
 		ID:     1901,
-		Name:   "Kertas HVSKertas Karton",
+		Name:   "Kertas HVS",
 		Level:  3,
 		Parent: 1897,
 	},
@@ -13089,7 +13089,7 @@ var Categories = []*model.Category{
 	},
 	{
 		ID:     2185,
-		Name:   "Sepeda BMXSepeda Balap",
+		Name:   "Sepeda BMX",
 		Level:  3,
 		Parent: 2176,
 	},
