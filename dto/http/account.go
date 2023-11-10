@@ -112,7 +112,9 @@ type AddressResponse struct {
 	ZipCode         string `json:"zip_code"`
 	Kelurahan       string `json:"kelurahan"`
 	SubDistrict     string `json:"sub_district"`
+	DistrictId      int    `json:"district_id"`
 	District        string `json:"district"`
+	ProvinceId      int    `json:"province_id"`
 	Province        string `json:"province"`
 	IsBuyerDefault  bool   `json:"is_buyer_default"`
 	IsSellerDefault bool   `json:"is_seller_default"`
