@@ -16,6 +16,7 @@ type ProductUsecase interface {
 	GetProductDetail(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductDetailResponse, error)
 	AddToFavorite(ctx context.Context, req dtousecase.FavoriteProduct) (*dtousecase.FavoriteProduct, error)
 	GetProductFavorites(ctx context.Context, req dtousecase.ProductFavoritesParams) ([]model.FavoriteProductList, *dtogeneral.PaginationData, error)
+	GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error)
 }
 
 type productUsecase struct {
@@ -34,6 +35,34 @@ func NewProductUsecase(config ProductUsecaseConfig) ProductUsecase {
 
 	return au
 
+}
+
+func (u *productUsecase) GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error) {
+	uReq := dtorepository.ProductListParam {
+		CategoryId: req.CategoryId,
+		AccountID: req.AccountID,
+		SortBy: req.SortBy,
+		Search: req.Search,
+		Sort: req.Sort,
+		Limit: req.Limit,
+		Page: req.Page,
+		StartDate: req.StartDate,
+		EndDate: req.EndDate,
+	}
+
+	listProduct, totalItems, err := u.productRepository.FindProducts(ctx, uReq)
+	if err != nil {
+		return &listProduct, nil, err
+	}
+
+	pagination := dtogeneral.PaginationData{
+		TotalItem:   int(totalItems),
+		TotalPage:   (int(totalItems) + req.Limit - 1) / req.Limit,
+		CurrentPage: req.Page,
+		Limit:       req.Limit,
+	}
+
+	return &listProduct, &pagination, nil
 }
 
 func (u *productUsecase) AddToFavorite(ctx context.Context, req dtousecase.FavoriteProduct) (*dtousecase.FavoriteProduct, error) {
