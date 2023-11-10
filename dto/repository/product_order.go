@@ -105,6 +105,12 @@ type SellerCourierResponse struct {
 type ProductOrderHistoryRequest struct {
 	AccountID int
 	Status    string
+	SortBy    string
+	Sort      string
+	Limit     int
+	Page      int
+	StartDate string
+	EndDate   string
 }
 
 type AddProductReviewRequest struct {

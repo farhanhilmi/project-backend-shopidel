@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
+	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -22,7 +23,7 @@ type ProductOrderUsecase interface {
 	CheckoutOrder(ctx context.Context, req dtousecase.CheckoutOrderRequest) (*dtousecase.CheckoutOrderResponse, error)
 	CheckDeliveryFee(ctx context.Context, req dtousecase.CheckDeliveryFeeRequest) (*dtousecase.CourierFeeResponse, error)
 	GetCouriers(ctx context.Context, req dtousecase.SellerCourier) ([]model.Couriers, error)
-	GetOrderHistories(ctx context.Context, req dtousecase.ProductOrderHistoryRequest) ([]dtousecase.OrdersResponse, error)
+	GetOrderHistories(ctx context.Context, req dtousecase.ProductOrderHistoryRequest) ([]dtousecase.OrdersResponse, dtogeneral.PaginationData, error)
 	AddProductReview(ctx context.Context, req dtousecase.AddProductReview) (*dtousecase.AddProductReviewResponse, error)
 }
 
@@ -379,7 +380,7 @@ func (u *productOrderUsecase) AddProductReview(ctx context.Context, req dtouseca
 	}, nil
 }
 
-func (u *productOrderUsecase) convertOrderHistoriesReponse(ctx context.Context, orders []model.ProductOrderHistories) ([]dtousecase.OrdersResponse, error) {
+func (u *productOrderUsecase) convertOrderHistoriesReponse(ctx context.Context, pagination dtogeneral.PaginationData, orders []model.ProductOrderHistories) ([]dtousecase.OrdersResponse, dtogeneral.PaginationData, error) {
 	orderHistories := make(map[int][]dtousecase.OrderProduct)
 	productOrders := []dtousecase.OrdersResponse{}
 
@@ -408,7 +409,7 @@ func (u *productOrderUsecase) convertOrderHistoriesReponse(ctx context.Context, 
 		for _, o := range products {
 			qty, err := decimal.NewFromString(fmt.Sprintf("%v", o.Quantity))
 			if err != nil {
-				return nil, err
+				return nil, dtogeneral.PaginationData{}, err
 			}
 
 			totalAmount = totalAmount.Add(o.IndividualPrice.Mul(qty))
@@ -421,29 +422,55 @@ func (u *productOrderUsecase) convertOrderHistoriesReponse(ctx context.Context, 
 		productOrders = append(productOrders, order)
 	}
 
-	return productOrders, nil
+	return productOrders, pagination, nil
 }
 
-func (u *productOrderUsecase) GetOrderHistories(ctx context.Context, req dtousecase.ProductOrderHistoryRequest) ([]dtousecase.OrdersResponse, error) {
+func (u *productOrderUsecase) GetOrderHistories(ctx context.Context, req dtousecase.ProductOrderHistoryRequest) ([]dtousecase.OrdersResponse, dtogeneral.PaginationData, error) {
 	var err error
 	if req.Status == "" || strings.EqualFold(req.Status, constant.StatusOrderAll) {
-		orders, err := u.productOrderRepository.FindAllOrderHistoriesByUser(ctx, dtorepository.ProductOrderHistoryRequest{
+		orders, totalItems, err := u.productOrderRepository.FindAllOrderHistoriesByUser(ctx, dtorepository.ProductOrderHistoryRequest{
 			AccountID: req.AccountID,
+			SortBy:    req.SortBy,
+			Sort:      req.Sort,
+			Limit:     req.Limit,
+			Page:      req.Page,
+			StartDate: req.StartDate,
+			EndDate:   req.EndDate,
 		})
 		if err != nil {
-			return nil, err
+			return nil, dtogeneral.PaginationData{}, err
 		}
 
-		return u.convertOrderHistoriesReponse(ctx, orders)
+		pagination := dtogeneral.PaginationData{
+			TotalItem:   int(totalItems),
+			TotalPage:   (int(totalItems) + req.Limit - 1) / req.Limit,
+			CurrentPage: req.Page,
+			Limit:       req.Limit,
+		}
+
+		return u.convertOrderHistoriesReponse(ctx, pagination, orders)
 	}
 
-	orders, err := u.productOrderRepository.FindAllOrderHistoriesByUserAndStatus(ctx, dtorepository.ProductOrderHistoryRequest{
+	orders, totalItems, err := u.productOrderRepository.FindAllOrderHistoriesByUserAndStatus(ctx, dtorepository.ProductOrderHistoryRequest{
 		AccountID: req.AccountID,
 		Status:    req.Status,
+		SortBy:    req.SortBy,
+		Sort:      req.Sort,
+		Limit:     req.Limit,
+		Page:      req.Page,
+		StartDate: req.StartDate,
+		EndDate:   req.EndDate,
 	})
 	if err != nil {
-		return nil, err
+		return nil, dtogeneral.PaginationData{}, err
 	}
 
-	return u.convertOrderHistoriesReponse(ctx, orders)
+	pagination := dtogeneral.PaginationData{
+		TotalItem:   int(totalItems),
+		TotalPage:   (int(totalItems) + req.Limit - 1) / req.Limit,
+		CurrentPage: req.Page,
+		Limit:       req.Limit,
+	}
+
+	return u.convertOrderHistoriesReponse(ctx, pagination, orders)
 }
