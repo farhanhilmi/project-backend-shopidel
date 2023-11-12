@@ -14,7 +14,7 @@ type Accounts struct {
 	PhoneNumber             string          `gorm:"type:varchar;unique;default:null"`
 	Password                string          `gorm:"type:varchar;not null"`
 	ShopName                string          `gorm:"type:varchar;unique;default:null"`
-	Gender                  string          `gorm:"type:varchar"`
+	Gender                  string          `gorm:"type:varchar;default:null"`
 	Birthdate               time.Time       `gorm:"type:timestamp;default:null"`
 	ProfilePicture          string          `gorm:"type:varchar;default:null"`
 	WalletNumber            string          `gorm:"type:varchar;unique;default:null"`

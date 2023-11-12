@@ -115,5 +115,17 @@ func seeding() {
 		}
 	}
 
+	err := db.Exec(`
+		ALTER SEQUENCE accounts_id_seq RESTART WITH 1000;
+		ALTER SEQUENCE products_id_seq RESTART WITH 1000;
+		ALTER SEQUENCE product_variant_selections_id_seq RESTART WITH 1000;
+		ALTER SEQUENCE Product_variant_selection_combinations_id_seq RESTART WITH 1000;
+		ALTER SEQUENCE product_variants_id_seq RESTART WITH 1000;
+		ALTER SEQUENCE product_orders_id_seq RESTART WITH 1000;
+	`).Error
+	if err != nil {
+		panic(err)
+	}
+
 	fmt.Println("successfully seed tables")
 }

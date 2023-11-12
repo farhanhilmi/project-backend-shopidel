@@ -38,16 +38,16 @@ func NewProductUsecase(config ProductUsecaseConfig) ProductUsecase {
 }
 
 func (u *productUsecase) GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error) {
-	uReq := dtorepository.ProductListParam {
+	uReq := dtorepository.ProductListParam{
 		CategoryId: req.CategoryId,
-		AccountID: req.AccountID,
-		SortBy: req.SortBy,
-		Search: req.Search,
-		Sort: req.Sort,
-		Limit: req.Limit,
-		Page: req.Page,
-		StartDate: req.StartDate,
-		EndDate: req.EndDate,
+		AccountID:  req.AccountID,
+		SortBy:     req.SortBy,
+		Search:     req.Search,
+		Sort:       req.Sort,
+		Limit:      req.Limit,
+		Page:       req.Page,
+		StartDate:  req.StartDate,
+		EndDate:    req.EndDate,
 	}
 
 	listProduct, totalItems, err := u.productRepository.FindProducts(ctx, uReq)
@@ -170,12 +170,24 @@ func (u *productUsecase) GetProductDetail(ctx context.Context, req dtousecase.Ge
 		return res, err
 	}
 
+	anotherProducts, err := u.productRepository.FindSellerAnotherProducts(ctx, rRes.SellerId)
+	if err != nil {
+		return res, err
+	}
+
+	productReviews, err := u.productRepository.FindProductReviews(ctx, req.ProductId)
+	if err != nil {
+		return res, err
+	}
+
 	res.Id = rRes.ID
 	res.ProductName = rRes.Name
 	res.Description = rRes.Description
 	res.Variants = variants
 	res.VariantOptions = options
 	res.IsFavorite = rRes.IsFavorite
+	res.AnotherProducts = anotherProducts
+	res.ProductReviews = productReviews
 
 	return res, nil
 }
