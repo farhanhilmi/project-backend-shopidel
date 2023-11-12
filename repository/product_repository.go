@@ -43,24 +43,46 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 
 	q := `
 		select
-		distinct on(p.id) p.id,
-		p.name,
-		aa.district,
-		sum(pod.quantity) as total_sold, 
-		pvsc.price, 
-		pvsc.picture_url, 
-		p.created_at,
-		p.category_id,
-		p.updated_at,
-		p.deleted_at
-			from products p  
-			left join product_variant_selection_combinations pvsc 
-				on pvsc.product_id = p.id
+			p.id,
+			p.name,
+			aa.district,
+			product_sold.total_sold as total_sold, 
+			product_price.lowest_price as "price", 
+			product_image.picture_url, 
+			p.created_at,
+			p.category_id,
+			p.updated_at,
+			p.deleted_at
+		from products p
+			inner join lateral (
+					select
+						pi2.product_id,
+						pi2.url as picture_url
+					from product_images pi2 
+					where pi2.product_id = p.id 
+					order by pi2.id asc
+					limit 1
+				) product_image on product_image.product_id = p.id 
+			inner join lateral (
+					select
+						pvsc2.product_id,
+						min(pvsc2.price) as lowest_price
+					from product_variant_selection_combinations pvsc2
+					where pvsc2.product_id = p.id
+					group by pvsc2.product_id 
+				) product_price on product_price.product_id = p.id
+			left join (
+					select
+						pvsc.product_id ,
+						sum(pod.quantity) total_sold
+					from product_variant_selection_combinations pvsc 
+					left join product_order_details pod
+						on pod.product_variant_selection_combination_id = pvsc.id
+					group by pvsc.product_id
+				) product_sold on product_sold.product_id = p.id
 			left join account_addresses aa 
-				on aa.account_id = p.seller_id  
-			left join product_order_details pod 	
-				on pod.product_variant_selection_combination_id = pvsc.id
-		group by p.id, p.name, pvsc.price, pvsc.picture_url, aa.district
+				on aa.account_id = p.seller_id
+				and aa.is_seller_default is true
 	`
 
 	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q))
