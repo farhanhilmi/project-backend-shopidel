@@ -599,7 +599,7 @@ func (h *AccountHandler) GetListTransactions(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONWithPagination{Data: transactions, Pagination: *pagination})
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: transactions, Pagination: *pagination})
 }
 
 func (h *AccountHandler) UpdateCart(c *gin.Context) {

@@ -3,7 +3,10 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
+	"math"
 
+	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -25,7 +28,7 @@ type ProductRepository interface {
 	AddProductFavorite(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
 	RemoveProductFavorite(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
 	FindSellerAnotherProducts(ctx context.Context, sellerId int) ([]dtousecase.AnotherProduct, error)
-	FindProductReviews(ctx context.Context, productId int) ([]dtousecase.ProductReview, error)
+	FindProductReviews(ctx context.Context, req dtousecase.GetProductReviewsRequest) (dtousecase.GetProductReviewsResponse, error)
 }
 
 func NewProductRepository(db *gorm.DB) ProductRepository {
@@ -300,8 +303,10 @@ func (r *productRepository) FindSellerAnotherProducts(ctx context.Context, selle
 	return res, nil
 }
 
-func (r *productRepository) FindProductReviews(ctx context.Context, productId int) ([]dtousecase.ProductReview, error) {
-	res := []dtousecase.ProductReview{}
+func (r *productRepository) FindProductReviews(ctx context.Context, req dtousecase.GetProductReviewsRequest) (dtousecase.GetProductReviewsResponse, error) {
+	res := dtousecase.GetProductReviewsResponse{}
+	pr := []dtousecase.ProductReview{}
+	pg := dtogeneral.PaginationData{}
 
 	q := `
 		select 
@@ -314,13 +319,46 @@ func (r *productRepository) FindProductReviews(ctx context.Context, productId in
 		from product_order_reviews por 
 		inner join accounts a 
 			on a.id = por.account_id 
-		where por.product_id = ?
 	`
 
-	err := r.db.WithContext(ctx).Raw(q, productId).Scan(&res).Error
+	pq := `
+		select 
+			count(por.id) as "TotalItem"
+		from product_order_reviews por 
+		inner join accounts a 
+			on a.id = por.account_id 
+	`
+
+	wq := ` where por.product_id = $1 `
+
+	oq := ` order by por.created_at ` + req.OrderBy
+
+	lq := ` limit ` + fmt.Sprint(req.Limit, " ")
+
+	ofq := ` offset ` + fmt.Sprint(req.Page-1, " ")
+
+	if req.Stars != 0 {
+		wq += fmt.Sprint(` and por.rating::int = `, req.Stars, " ")
+	}
+	if req.Comment {
+		wq += ` and por.feedback is not null `
+	}
+
+	err := r.db.WithContext(ctx).Raw(q+wq+oq+lq+ofq, req.ProductId).Scan(&pr).Error
 	if err != nil {
 		return res, err
 	}
+
+	err = r.db.WithContext(ctx).Raw(pq+wq, req.ProductId).Scan(&pg).Error
+	if err != nil {
+		return res, err
+	}
+
+	res.Reviews = pr
+	res.TotalItem = pg.TotalItem
+	res.Limit = req.Limit
+	res.TotalPage = int(math.Ceil(float64(pg.TotalItem) / float64(res.Limit)))
+	res.CurrentPage = req.Page
 
 	return res, nil
 }
