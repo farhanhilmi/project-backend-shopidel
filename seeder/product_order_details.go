@@ -8,14 +8,14 @@ import (
 var ProductOrderDetails = []model.ProductOrderDetails{
 	{
 		ProductOrderID:                       1,
-		ProductVariantSelectionCombinationID: 1,
+		ProductVariantSelectionCombinationID: 7,
 		Quantity:                             2,
-		IndividualPrice:                      decimal.NewFromInt(20000),
+		IndividualPrice:                      decimal.NewFromInt(30000),
 	},
 	{
 		ProductOrderID:                       1,
-		ProductVariantSelectionCombinationID: 3,
+		ProductVariantSelectionCombinationID: 8,
 		Quantity:                             1,
-		IndividualPrice:                      decimal.NewFromInt(50000),
+		IndividualPrice:                      decimal.NewFromInt(17000),
 	},
 }

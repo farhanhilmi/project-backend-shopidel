@@ -4,11 +4,19 @@ import "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupia
 
 var SellerPageSelectedCategory = []model.SellerPageSelectedCategory{
 	{
-		AccountId:  1,
-		CategoryId: 2,
+		AccountId:  4,
+		CategoryId: 636,
 	},
 	{
-		AccountId:  1,
-		CategoryId: 5,
+		AccountId:  4,
+		CategoryId: 711,
+	},
+	{
+		AccountId:  4,
+		CategoryId: 882,
+	},
+	{
+		AccountId:  4,
+		CategoryId: 936,
 	},
 }

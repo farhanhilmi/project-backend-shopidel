@@ -9,6 +9,7 @@ import (
 
 var Accounts = []*model.Accounts{
 	{
+		ID:            1,
 		Username:      "testing",
 		FullName:      "My Testing Account",
 		Email:         "testing@mail.com",
@@ -23,6 +24,7 @@ var Accounts = []*model.Accounts{
 		SellerBalance: decimal.NewFromInt(90000),
 	},
 	{
+		ID:           2,
 		Username:     "satoni",
 		FullName:     "Ahmad Satoni",
 		Email:        "satoni@mail.com",
@@ -34,6 +36,7 @@ var Accounts = []*model.Accounts{
 		Balance:      decimal.NewFromInt(0),
 	},
 	{
+		ID:            3,
 		Username:      "satrianusa",
 		FullName:      "Satria Nusa",
 		Email:         "satria@mail.com",
@@ -46,5 +49,23 @@ var Accounts = []*model.Accounts{
 		Balance:       decimal.NewFromInt(0),
 		WalletPin:     "123456",
 		SellerBalance: decimal.NewFromInt(0),
+	},
+	{
+		ID:             4,
+		FullName:       "Gita Purnama",
+		Username:       "gitapurnama",
+		Email:          "gitapurnama@mail.com",
+		PhoneNumber:    "+6224278394837",
+		Password:       "$2a$14$ggRGSX9uKrEfapylGVadWee/P1yCOKduFFqnzNdq7U3ble5nxtNqC",
+		ShopName:       "Jejak Trendi",
+		Gender:         "male",
+		Birthdate:      time.Date(2000, 10, 10, 0, 0, 0, 0, time.UTC),
+		ProfilePicture: "https://mangathrill.com/wp-content/uploads/2019/07/Portgas.D..Ace_.full_.5794251280x720.png",
+		WalletNumber:   "4200000000004",
+		WalletPin:      "123456",
+		Balance:        decimal.NewFromInt(0),
+		SellerBalance:  decimal.NewFromInt(0),
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	},
 }
