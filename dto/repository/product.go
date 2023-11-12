@@ -16,6 +16,7 @@ type ProductResponse struct {
 	Name        string
 	Description string
 	IsFavorite  bool
+	SellerId    int
 }
 
 type ProductLowestHighestPriceRequest struct {

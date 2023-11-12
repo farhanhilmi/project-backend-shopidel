@@ -23,7 +23,8 @@ func ErrorHandler() gin.HandlerFunc {
 			errMap, ok := err.Err.(*util.CustomError)
 
 			if !ok {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, dtogeneral.JSONResponse{Message: "Internal Server Error"})
+				c.AbortWithStatusJSON(http.StatusInternalServerError, dtogeneral.JSONResponse{Message: err.Err.Error()})
+				// c.AbortWithStatusJSON(http.StatusInternalServerError, dtogeneral.JSONResponse{Message: "Internal Server Error"})
 			}
 
 			switch errMap.Code {
@@ -35,7 +36,8 @@ func ErrorHandler() gin.HandlerFunc {
 				c.AbortWithStatusJSON(http.StatusNotFound, dtogeneral.JSONResponse{Message: errMap.Message})
 
 			default:
-				c.AbortWithStatusJSON(http.StatusInternalServerError, dtogeneral.JSONResponse{Message: "Internal Server Error"})
+				c.AbortWithStatusJSON(http.StatusInternalServerError, dtogeneral.JSONResponse{Message: err.Error()})
+				// c.AbortWithStatusJSON(http.StatusInternalServerError, dtogeneral.JSONResponse{Message: "Internal Server Error"})
 			}
 			c.Abort()
 		}

@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
+	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
 	"gorm.io/gorm"
@@ -23,6 +24,8 @@ type ProductRepository interface {
 	FindAllProductFavorites(ctx context.Context, req dtorepository.ProductFavoritesParams) ([]model.FavoriteProductList, int64, error)
 	AddProductFavorite(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
 	RemoveProductFavorite(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
+	FindSellerAnotherProducts(ctx context.Context, sellerId int) ([]dtousecase.AnotherProduct, error)
+	FindProductReviews(ctx context.Context, productId int) ([]dtousecase.ProductReview, error)
 }
 
 func NewProductRepository(db *gorm.DB) ProductRepository {
@@ -120,7 +123,8 @@ func (r *productRepository) First(ctx context.Context, req dtorepository.Product
 			case 
 				when fp.id is not null then true
 				else false
-			end as "IsFavorite"
+			end as "IsFavorite",
+			p.seller_id as "SellerId"
 		from products p 
 		left join favorite_products fp 
 			on fp.product_id = p.id 
@@ -256,4 +260,67 @@ func (r *productRepository) FindAllProductFavorites(ctx context.Context, req dto
 	}
 
 	return res, totalItems, nil
+}
+
+func (r *productRepository) FindSellerAnotherProducts(ctx context.Context, sellerId int) ([]dtousecase.AnotherProduct, error) {
+	res := []dtousecase.AnotherProduct{}
+
+	q := `
+		select
+			p.id as "ProductId",
+			p.name as "ProductName",
+			product_image.url as "ProductPictureUrl",
+			product_price.lowest_price as "ProductPrice"
+		from products p
+		left join lateral (
+			select
+				pi2.product_id,
+				url 
+			from product_images pi2
+			where pi2.product_id = p.id 
+			order by pi2.id asc
+			limit 1
+		) product_image on product_image.product_id = p.id 
+		left join (
+			select
+				pvsc.product_id,
+				min(pvsc.price) as lowest_price
+			from product_variant_selection_combinations pvsc 
+			group by pvsc.product_id 
+		) product_price on product_price.product_id = p.id 
+		where p.seller_id = ?
+		limit 12
+	`
+
+	err := r.db.Raw(q, sellerId).Scan(&res).Error
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (r *productRepository) FindProductReviews(ctx context.Context, productId int) ([]dtousecase.ProductReview, error) {
+	res := []dtousecase.ProductReview{}
+
+	q := `
+		select 
+			a.full_name as "CustomerName",
+			a.profile_picture as "CustomerPictureUrl",
+			por.rating as "Stars",
+			por.feedback as "Comment",
+			'normal' as "Variant",
+			por.created_at as "CreatedAt"
+		from product_order_reviews por 
+		inner join accounts a 
+			on a.id = por.account_id 
+		where por.product_id = ?
+	`
+
+	err := r.db.WithContext(ctx).Raw(q, productId).Scan(&res).Error
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
 }
