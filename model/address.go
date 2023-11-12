@@ -16,7 +16,7 @@ type Province struct {
 type District struct {
 	ID                   int    `gorm:"primaryKey;not null,autoIncrement;serial"`
 	Name                 string `gorm:"type:varchar;not null"`
-	ProvinceId           int
+	ProvinceId           int    `gorm:"foreignKey:ProvinceId;not null"`
 	RajaOngkirDistrictId string
 	CreatedAt            time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	UpdatedAt            time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`

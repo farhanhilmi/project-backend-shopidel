@@ -7,16 +7,12 @@ import (
 )
 
 type Products struct {
-	ID          int    `gorm:"primaryKey;not null,autoIncrement;serial"`
-	Name        string `gorm:"type:varchar;not null"`
-	Description string `gorm:"type:text;"`
-	CategoryID  int    `gorm:"foreignKey:CategoryID;type:bigint;not null"`
-	SellerID    int    `gorm:"foreignKey:SellerID;type:bigint;not null"`
-	Category    Category
-	// ProductImages     ProductImages
-	// ProductVideos     ProductVideos
-	// Variants          []Variant
-	// Images            []ProductImages
+	ID                int    `gorm:"primaryKey;not null,autoIncrement;serial"`
+	Name              string `gorm:"type:varchar;not null"`
+	Description       string `gorm:"type:text;"`
+	CategoryID        int    `gorm:"foreignKey:CategoryID;type:bigint;not null"`
+	SellerID          int    `gorm:"foreignKey:SellerID;type:bigint;not null"`
+	Category          Category
 	HazardousMaterial bool            `gorm:"type:boolean;not null"`
 	Weight            decimal.Decimal `gorm:"type:decimal;not null"`
 	Size              decimal.Decimal `gorm:"type:decimal;not null"`

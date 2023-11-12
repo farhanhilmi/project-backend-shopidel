@@ -45,6 +45,7 @@ type AccountRepository interface {
 	FindAddressByID(ctx context.Context, req dtorepository.UpdateAddressRequest) (dtorepository.UpdateAddressResponse, error)
 	FirstSeller(ctx context.Context, req dtorepository.SellerDataRequest) (dtorepository.SellerDataResponse, error)
 	FindSellerProducts(ctx context.Context, req dtorepository.FindSellerProductsRequest) (dtorepository.FindSellerProductsResponse, error)
+	FindSellerSelectedCategories(ctx context.Context, req dtorepository.FindSellerSelectedCategoriesRequest) ([]dtorepository.FindSellerSelectedCategoriesResponse, error)
 }
 
 type accountRepository struct {
@@ -1066,6 +1067,27 @@ func (r *accountRepository) FindSellerProducts(ctx context.Context, req dtorepos
 	}
 
 	res.Products = products
+
+	return res, nil
+}
+
+func (r *accountRepository) FindSellerSelectedCategories(ctx context.Context, req dtorepository.FindSellerSelectedCategoriesRequest) ([]dtorepository.FindSellerSelectedCategoriesResponse, error) {
+	res := []dtorepository.FindSellerSelectedCategoriesResponse{}
+
+	q := `
+		select
+			c.id as "CategoryId",
+			c."name" as "CategoryName"
+		from seller_page_selected_categories spsc 
+		inner join categories c 
+			on c.id = spsc.category_id 
+		where spsc.account_id = ?
+	`
+
+	err := r.db.WithContext(ctx).Raw(q, req.SellerId).Scan(&res).Error
+	if err != nil {
+		return res, err
+	}
 
 	return res, nil
 }

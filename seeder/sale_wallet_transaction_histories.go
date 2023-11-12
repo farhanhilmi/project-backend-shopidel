@@ -9,7 +9,7 @@ import (
 var SaleWalletTransactionHistories = []model.SaleWalletTransactionHistories{
 	{
 		ProductOrderID: 1,
-		AccountID:      1,
+		AccountID:      4,
 		Type:           constant.SaleMoneyIncomeType,
 		Amount:         decimal.NewFromInt(90000),
 		From:           "4200913923913",

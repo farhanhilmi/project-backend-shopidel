@@ -4,11 +4,11 @@ import "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupia
 
 var SellerCouriers = []model.SellerCouriers{
 	{
-		AccountID: 1,
+		AccountID: 4,
 		CourierID: 1,
 	},
 	{
-		AccountID: 1,
+		AccountID: 4,
 		CourierID: 2,
 	},
 }
