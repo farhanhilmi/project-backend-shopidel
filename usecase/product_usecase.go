@@ -17,6 +17,7 @@ type ProductUsecase interface {
 	AddToFavorite(ctx context.Context, req dtousecase.FavoriteProduct) (*dtousecase.FavoriteProduct, error)
 	GetProductFavorites(ctx context.Context, req dtousecase.ProductFavoritesParams) ([]model.FavoriteProductList, *dtogeneral.PaginationData, error)
 	GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error)
+	GetProductReviews(ctx context.Context, req dtousecase.GetProductReviewsRequest) (dtousecase.GetProductReviewsResponse, error)
 }
 
 type productUsecase struct {
@@ -175,11 +176,6 @@ func (u *productUsecase) GetProductDetail(ctx context.Context, req dtousecase.Ge
 		return res, err
 	}
 
-	productReviews, err := u.productRepository.FindProductReviews(ctx, req.ProductId)
-	if err != nil {
-		return res, err
-	}
-
 	res.Id = rRes.ID
 	res.ProductName = rRes.Name
 	res.Description = rRes.Description
@@ -187,7 +183,6 @@ func (u *productUsecase) GetProductDetail(ctx context.Context, req dtousecase.Ge
 	res.VariantOptions = options
 	res.IsFavorite = rRes.IsFavorite
 	res.AnotherProducts = anotherProducts
-	res.ProductReviews = productReviews
 
 	return res, nil
 }
@@ -263,6 +258,17 @@ func (u *productUsecase) convertVariantOptions(ctx context.Context, req dtorepos
 			VariantOptionName: key,
 			Childs:            vos,
 		})
+	}
+
+	return res, nil
+}
+
+func (u *productUsecase) GetProductReviews(ctx context.Context, req dtousecase.GetProductReviewsRequest) (dtousecase.GetProductReviewsResponse, error) {
+	req.Limit = 6
+
+	res, err := u.productRepository.FindProductReviews(ctx, req)
+	if err != nil {
+		return res, err
 	}
 
 	return res, nil

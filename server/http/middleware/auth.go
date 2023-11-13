@@ -51,7 +51,7 @@ func AuthenticateJWT() gin.HandlerFunc {
 	}
 }
 
-func IfExistAuthenticateJWTIf() gin.HandlerFunc {
+func IfExistAuthenticateJWT() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.GetHeader("Authorization") == "" {
 			c.Next()

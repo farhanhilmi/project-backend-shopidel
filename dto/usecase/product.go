@@ -177,3 +177,21 @@ type OrdersResponse struct {
 	Products     []OrderProduct  `json:"products"`
 	TotalPayment decimal.Decimal `json:"total_payment"`
 }
+
+type GetProductReviewsRequest struct {
+	ProductId int
+	Page      int
+	Stars     int
+	Comment   bool
+	Image     bool
+	OrderBy   string
+	Limit     int
+}
+
+type GetProductReviewsResponse struct {
+	Reviews     []ProductReview
+	TotalPage   int
+	TotalItem   int
+	CurrentPage int
+	Limit       int
+}
