@@ -54,7 +54,8 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 			p.created_at,
 			p.category_id,
 			p.updated_at,
-			p.deleted_at
+			p.deleted_at,
+			seller.shop_name as seller_name
 		from products p
 			inner join lateral (
 					select
@@ -85,6 +86,8 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 			left join account_addresses aa 
 				on aa.account_id = p.seller_id
 				and aa.is_seller_default is true
+			left join accounts as seller
+				on seller.id = p.seller_id
 	`
 
 	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q))
