@@ -13,8 +13,8 @@ type ErrResponse struct {
 }
 
 type PaginationData struct {
-	TotalPage   int `json:"total_page,omitempty"`
-	TotalItem   int `json:"total_item,omitempty"`
-	CurrentPage int `json:"current_page,omitempty"`
-	Limit       int `json:"limit,omitempty"`
+	TotalPage   int `json:"total_page"`
+	TotalItem   int `json:"total_item"`
+	CurrentPage int `json:"current_page"`
+	Limit       int `json:"limit"`
 }
