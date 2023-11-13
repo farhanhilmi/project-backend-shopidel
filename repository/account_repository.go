@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
@@ -752,16 +753,19 @@ func (r *accountRepository) AddProductToCart(ctx context.Context, req dtoreposit
 	}
 
 	if c.ID == 0 {
-		c = model.AccountCarts{
+		c1 := model.AccountCarts{
 			AccountID:                            req.AccountId,
 			ProductVariantSelectionCombinationId: req.ProductVariantCombinationId,
 			Quantity:                             req.Quantity,
 		}
+		fmt.Println(c1)
 
-		err = r.db.WithContext(ctx).Create(&c).Error
+		err = r.db.WithContext(ctx).Create(&c1).Error
 		if err != nil {
 			return res, err
 		}
+
+		c = c1
 	} else {
 		c.Quantity += req.Quantity
 
