@@ -48,6 +48,7 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 			aa.district,
 			product_sold.total_sold as total_sold, 
 			product_price.lowest_price as "price", 
+			CEIL (random() * 5) as rating,
 			product_image.picture_url, 
 			p.created_at,
 			p.category_id,
@@ -55,7 +56,7 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 			p.deleted_at
 		from products p
 			inner join lateral (
-					select
+					select	
 						pi2.product_id,
 						pi2.url as picture_url
 					from product_images pi2 
