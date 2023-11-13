@@ -129,6 +129,7 @@ type ProductListResponse struct {
 	District   string
 	TotalSold  int
 	Price      decimal.Decimal
+	Rating     int
 	PictureURL string
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
