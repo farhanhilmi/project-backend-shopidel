@@ -180,6 +180,31 @@ func (h *ProductHandler) GetProductReviews(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func (h *ProductHandler) GetProductDetailRecomendedProduct(c *gin.Context) {
+	id := c.Param("productId")
+	productId, err := strconv.Atoi(id)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	uReq := dtousecase.GetProductDetailRecomendedProductRequest{
+		ProductId: productId,
+	}
+
+	uRes, err := h.productUsecase.GetProductDetailRecomendedProducts(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res := dtogeneral.JSONResponse{
+		Data: uRes.AnotherProducts,
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
 func (h *ProductHandler) handleProductReviewsQueryParams(c *gin.Context, uReq *dtousecase.GetProductReviewsRequest) error {
 	uReq.OrderBy = "asc"
 	if c.Query("orderBy") != "" {

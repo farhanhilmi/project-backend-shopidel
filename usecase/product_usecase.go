@@ -20,6 +20,7 @@ type ProductUsecase interface {
 	GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error)
 	GetProductReviews(ctx context.Context, req dtousecase.GetProductReviewsRequest) (dtousecase.GetProductReviewsResponse, error)
 	GetProductPictures(ctx context.Context, req dtousecase.GetProductPicturesRequest) (*dtousecase.GetProductPicturesResponse, error)
+	GetProductDetailRecomendedProducts(ctx context.Context, req dtousecase.GetProductDetailRecomendedProductRequest) (*dtousecase.GetProductDetailRecomendedProductResponse, error)
 }
 
 type productUsecase struct {
@@ -173,18 +174,12 @@ func (u *productUsecase) GetProductDetail(ctx context.Context, req dtousecase.Ge
 		return res, err
 	}
 
-	anotherProducts, err := u.productRepository.FindSellerAnotherProducts(ctx, rRes.SellerId)
-	if err != nil {
-		return res, err
-	}
-
 	res.Id = rRes.ID
 	res.ProductName = rRes.Name
 	res.Description = rRes.Description
 	res.Variants = variants
 	res.VariantOptions = options
 	res.IsFavorite = rRes.IsFavorite
-	res.AnotherProducts = anotherProducts
 
 	return res, nil
 }
@@ -223,18 +218,12 @@ func (u *productUsecase) GetProductDetailV2(ctx context.Context, req dtousecase.
 		return res, err
 	}
 
-	anotherProducts, err := u.productRepository.FindSellerAnotherProducts(ctx, rRes.SellerId)
-	if err != nil {
-		return res, err
-	}
-
 	res.Id = rRes.ID
 	res.ProductName = rRes.Name
 	res.Description = rRes.Description
 	res.Variants = variants
 	res.VariantOptions = options
 	res.IsFavorite = rRes.IsFavorite
-	res.AnotherProducts = anotherProducts
 
 	return res, nil
 }
@@ -250,6 +239,24 @@ func (u *productUsecase) GetProductPictures(ctx context.Context, req dtousecase.
 	for _, picture := range rRes.ProductPictures {
 		res.PicturesUrl = append(res.PicturesUrl, picture.PictureUrl)
 	}
+
+	return res, nil
+}
+
+func (u *productUsecase) GetProductDetailRecomendedProducts(ctx context.Context, req dtousecase.GetProductDetailRecomendedProductRequest) (*dtousecase.GetProductDetailRecomendedProductResponse, error) {
+	res := &dtousecase.GetProductDetailRecomendedProductResponse{}
+
+	product, err := u.productRepository.First(ctx, dtorepository.ProductRequest{ProductID: req.ProductId})
+	if err != nil {
+		return res, err
+	}
+
+	anotherProducts, err := u.productRepository.FindSellerAnotherProducts(ctx, product.SellerId)
+	if err != nil {
+		return res, err
+	}
+
+	res.AnotherProducts = anotherProducts
 
 	return res, nil
 }

@@ -349,7 +349,8 @@ func (r *productRepository) FindSellerAnotherProducts(ctx context.Context, selle
 			p.id as "ProductId",
 			p.name as "ProductName",
 			product_image.url as "ProductPictureUrl",
-			product_price.lowest_price as "ProductPrice"
+			product_price.lowest_price as "ProductPrice",
+			seller.shop_name as "SellerName"
 		from products p
 		left join lateral (
 			select
@@ -367,6 +368,8 @@ func (r *productRepository) FindSellerAnotherProducts(ctx context.Context, selle
 			from product_variant_selection_combinations pvsc 
 			group by pvsc.product_id 
 		) product_price on product_price.product_id = p.id 
+		left join accounts seller
+			on seller.id = p.seller_id
 		where p.seller_id = ?
 		limit 12
 	`
