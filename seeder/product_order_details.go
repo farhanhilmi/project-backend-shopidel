@@ -18,4 +18,28 @@ var ProductOrderDetails = []model.ProductOrderDetails{
 		Quantity:                             1,
 		IndividualPrice:                      decimal.NewFromInt(17000),
 	},
+	{
+		ProductOrderID:                       2,
+		ProductVariantSelectionCombinationID: 9,
+		Quantity:                             2,
+		IndividualPrice:                      decimal.NewFromInt(20000),
+	},
+	{
+		ProductOrderID:                       3,
+		ProductVariantSelectionCombinationID: 11,
+		Quantity:                             1,
+		IndividualPrice:                      decimal.NewFromInt(18000),
+	},
+	{
+		ProductOrderID:                       4,
+		ProductVariantSelectionCombinationID: 10,
+		Quantity:                             1,
+		IndividualPrice:                      decimal.NewFromInt(19000),
+	},
+	{
+		ProductOrderID:                       4,
+		ProductVariantSelectionCombinationID: 59,
+		Quantity:                             2,
+		IndividualPrice:                      decimal.NewFromInt(37000),
+	},
 }

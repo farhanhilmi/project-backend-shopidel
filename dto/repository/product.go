@@ -149,6 +149,7 @@ type ProductListResponse struct {
 	District   string          `json:"district"`
 	TotalSold  int             `json:"total_sold"`
 	Price      decimal.Decimal `json:"price"`
+	Rating     int             `json:"rating"`
 	PictureURL string          `json:"picture_url"`
 	SellerName string          `json:"seller_name"`
 	CreatedAt  time.Time       `json:"created_at"`

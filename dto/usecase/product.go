@@ -127,6 +127,7 @@ type ProductListResponse struct {
 	District   string
 	TotalSold  int
 	Price      decimal.Decimal
+	Rating     int
 	PictureURL string
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
@@ -172,6 +173,7 @@ type OrderProduct struct {
 }
 type OrdersResponse struct {
 	OrderID      int             `json:"order_id"`
+	ShopName     string          `json:"shop_name"`
 	Products     []OrderProduct  `json:"products"`
 	TotalPayment decimal.Decimal `json:"total_payment"`
 }

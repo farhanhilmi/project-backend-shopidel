@@ -67,6 +67,7 @@ type ProductOrderHistories struct {
 	Feedback        string
 	Rating          int
 	ReviewID        int
+	ShopName        string
 	ReviewCreatedAt time.Time
 	CreatedAt       time.Time
 	UpdatedAt       time.Time

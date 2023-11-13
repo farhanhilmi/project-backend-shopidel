@@ -83,6 +83,13 @@ func createTable() {
 		panic(err)
 	}
 
+	err = db.Exec(`
+		ALTER TABLE accounts ALTER COLUMN wallet_number SET DEFAULT TO_CHAR(nextval('accounts_id_seq'::regclass),'"420"fm0000000000');
+	`).Error
+	if err != nil {
+		panic(err)
+	}
+
 	fmt.Println("successfully migrate tables")
 }
 
