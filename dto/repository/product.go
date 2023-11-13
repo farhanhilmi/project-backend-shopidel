@@ -11,6 +11,12 @@ type ProductRequest struct {
 	AccountId int
 }
 
+type ProductRequestV2 struct {
+	AccountId   int
+	ShopName    string
+	ProductName string
+}
+
 type ProductResponse struct {
 	ID          int
 	Name        string
@@ -169,4 +175,12 @@ type IsProductFavoriteResponse struct {
 	AccountId  int
 	ProductId  int
 	IsFavorite bool
+}
+
+type FindProductPicturesResponse struct {
+	ProductPictures []ProductPicture
+}
+
+type ProductPicture struct {
+	PictureUrl string
 }

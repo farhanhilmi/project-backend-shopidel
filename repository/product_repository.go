@@ -20,7 +20,9 @@ type productRepository struct {
 
 type ProductRepository interface {
 	First(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error)
+	FirstV2(ctx context.Context, req dtorepository.ProductRequestV2) (dtorepository.ProductResponse, error)
 	FindProducts(ctx context.Context, req dtorepository.ProductListParam) ([]dtorepository.ProductListResponse, int64, error)
+	FindImages(ctx context.Context, productId int) (dtorepository.FindProductPicturesResponse, error)
 	FindProductVariant(ctx context.Context, req dtorepository.FindProductVariantRequest) (dtorepository.FindProductVariantResponse, error)
 	FindProductVariantByID(ctx context.Context, req dtorepository.ProductCart) (dtorepository.ProductCart, error)
 	FindProductFavorites(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
@@ -161,6 +163,58 @@ func (r *productRepository) First(ctx context.Context, req dtorepository.Product
 	if err != nil {
 		return res, err
 	}
+
+	return res, nil
+}
+
+func (r *productRepository) FirstV2(ctx context.Context, req dtorepository.ProductRequestV2) (dtorepository.ProductResponse, error) {
+	res := dtorepository.ProductResponse{}
+
+	q := `
+		select 
+			p.Id as "ID",
+			p."name" as "Name",
+			p.description as "Description",
+			case 
+				when fp.id is not null then true
+				else false
+			end as "IsFavorite",
+			p.seller_id as "SellerId"
+		from products p 
+		left join favorite_products fp 
+			on fp.product_id = p.id 
+			and fp.account_id = $1
+		inner join accounts a 
+			on a.id = p.seller_id 
+			and a.shop_name ilike $2
+		where p.name ilike $3
+	`
+
+	err := r.db.WithContext(ctx).Raw(q, req.AccountId, req.ShopName, req.ProductName).Scan(&res).Error
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (r *productRepository) FindImages(ctx context.Context, productId int) (dtorepository.FindProductPicturesResponse, error) {
+	res := dtorepository.FindProductPicturesResponse{}
+	pictures := []dtorepository.ProductPicture{}
+
+	q := `
+		select
+			pi2.url as "PictureUrl"
+		from product_images pi2 
+		where pi2.product_id = $1
+	`
+
+	err := r.db.WithContext(ctx).Raw(q, productId).Scan(&pictures).Error
+	if err != nil {
+		return res, err
+	}
+
+	res.ProductPictures = pictures
 
 	return res, nil
 }

@@ -102,6 +102,47 @@ func (h *ProductHandler) GetProductDetail(c *gin.Context) {
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes})
 }
 
+func (h *ProductHandler) GetProductDetailV2(c *gin.Context) {
+	uReq := dtousecase.GetProductDetailRequestV2{
+		AccountId:   c.GetInt("userId"),
+		ShopName:    c.Param("shopName"),
+		ProductName: c.Param("productName"),
+	}
+
+	uRes, err := h.productUsecase.GetProductDetailV2(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes})
+}
+
+func (h *ProductHandler) GetProductPictures(c *gin.Context) {
+	id := c.Param("productId")
+	productId, err := strconv.Atoi(id)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	uReq := dtousecase.GetProductPicturesRequest{
+		ProductId: productId,
+	}
+
+	uRes, err := h.productUsecase.GetProductPictures(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res := dtogeneral.JSONResponse{
+		Data: uRes.PicturesUrl,
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
 func (h *ProductHandler) GetProductReviews(c *gin.Context) {
 	id := c.Param("productId")
 	productId, err := strconv.Atoi(id)

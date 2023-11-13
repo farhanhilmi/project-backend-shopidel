@@ -37,6 +37,12 @@ type GetProductDetailRequest struct {
 	AccountId int
 }
 
+type GetProductDetailRequestV2 struct {
+	ShopName    string
+	ProductName string
+	AccountId   int
+}
+
 type GetProductDetailResponse struct {
 	Id              int              `json:"id"`
 	ProductName     string           `json:"name"`
@@ -194,4 +200,12 @@ type GetProductReviewsResponse struct {
 	TotalItem   int
 	CurrentPage int
 	Limit       int
+}
+
+type GetProductPicturesRequest struct {
+	ProductId int
+}
+
+type GetProductPicturesResponse struct {
+	PicturesUrl []string
 }
