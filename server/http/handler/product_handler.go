@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -59,16 +60,16 @@ func (h *ProductHandler) ListProduct(c *gin.Context) {
 		sortBy = "created_at"
 	}
 
-	uReq := dtousecase.ProductListParam {	
+	uReq := dtousecase.ProductListParam{
 		CategoryId: categoryId,
-		SortBy:    sortBy,
-		Sort:      sort,
-		Limit:     limit,
-		Page:      page,
-		StartDate: startDate,
-		EndDate:   endDate,
-		AccountID: c.GetInt("userId"),
-		Search:    s,
+		SortBy:     sortBy,
+		Sort:       sort,
+		Limit:      limit,
+		Page:       page,
+		StartDate:  startDate,
+		EndDate:    endDate,
+		AccountID:  c.GetInt("userId"),
+		Search:     s,
 	}
 
 	uRes, pagination, err := h.productUsecase.GetProducts(c.Request.Context(), uReq)
@@ -77,7 +78,7 @@ func (h *ProductHandler) ListProduct(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONWithPagination{Data: uRes, Pagination: *pagination})
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes, Pagination: *pagination})
 }
 
 func (h *ProductHandler) GetProductDetail(c *gin.Context) {
@@ -99,6 +100,110 @@ func (h *ProductHandler) GetProductDetail(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes})
+}
+
+func (h *ProductHandler) GetProductReviews(c *gin.Context) {
+	id := c.Param("productId")
+	productId, err := strconv.Atoi(id)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	uReq := dtousecase.GetProductReviewsRequest{
+		ProductId: productId,
+	}
+
+	err = h.handleProductReviewsQueryParams(c, &uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	uRes, err := h.productUsecase.GetProductReviews(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res := dtogeneral.JSONResponse{
+		Data: uRes.Reviews,
+		Pagination: dtogeneral.PaginationData{
+			TotalPage:   uRes.TotalPage,
+			TotalItem:   uRes.TotalItem,
+			CurrentPage: uRes.CurrentPage,
+			Limit:       uRes.Limit,
+		},
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
+func (h *ProductHandler) handleProductReviewsQueryParams(c *gin.Context, uReq *dtousecase.GetProductReviewsRequest) error {
+	uReq.OrderBy = "asc"
+	if c.Query("orderBy") != "" {
+		if c.Query("orderBy") != "newest" {
+			uReq.OrderBy = "asc"
+		} else if c.Query("orderBy") != "oldest" {
+			uReq.OrderBy = "desc"
+		} else {
+			return errors.New("available orderBy query option is newest or oldest")
+		}
+	}
+
+	uReq.Comment = false
+	if c.Query("comment") != "" {
+		if c.Query("comment") == "true" {
+			uReq.Comment = true
+		} else if c.Query("comment") == "false" {
+			uReq.Comment = false
+		} else {
+			return errors.New("available comment query option is true or false")
+		}
+	}
+
+	uReq.Image = false
+	if c.Query("image") != "" {
+		if c.Query("image") == "true" {
+			uReq.Image = true
+		} else if c.Query("image") == "false" {
+			uReq.Image = false
+		} else {
+			return errors.New("available image query option is true or false")
+		}
+	}
+
+	uReq.Page = 1
+	if c.Query("page") != "" {
+		pageString := c.Query("page")
+		page, err := strconv.Atoi(pageString)
+		if err != nil {
+			return errors.New("available page query option is integer")
+		}
+
+		if page < 1 {
+			return errors.New("page query must above 0")
+		}
+
+		uReq.Page = page
+	}
+
+	uReq.Stars = 0
+	if c.Query("stars") != "" {
+		starsString := c.Query("stars")
+		stars, err := strconv.Atoi(starsString)
+		if err != nil {
+			return errors.New("available stars query option is integer")
+		}
+
+		if stars < 1 || stars > 5 {
+			return errors.New("available stars range is 1 - 5")
+		}
+
+		uReq.Stars = stars
+	}
+
+	return nil
 }
 
 func (h *ProductHandler) AddToFavorite(c *gin.Context) {
@@ -176,5 +281,5 @@ func (h *ProductHandler) GetListFavorite(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONWithPagination{Data: products, Pagination: *pagination})
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: products, Pagination: *pagination})
 }

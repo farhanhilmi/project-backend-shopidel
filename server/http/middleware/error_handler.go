@@ -33,7 +33,7 @@ func ErrorHandler() gin.HandlerFunc {
 			case util.Unauthorized:
 				c.AbortWithStatusJSON(http.StatusUnauthorized, dtogeneral.JSONResponse{Message: errMap.Message})
 			case util.NotFound:
-				c.AbortWithStatusJSON(http.StatusNotFound, dtogeneral.JSONResponse{Message: errMap.Message})
+				c.AbortWithStatusJSON(http.StatusBadRequest, dtogeneral.JSONResponse{Message: errMap.Message})
 
 			default:
 				c.AbortWithStatusJSON(http.StatusInternalServerError, dtogeneral.JSONResponse{Message: err.Error()})
