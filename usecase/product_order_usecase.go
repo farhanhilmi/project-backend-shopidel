@@ -381,7 +381,7 @@ func (u *productOrderUsecase) AddProductReview(ctx context.Context, req dtouseca
 }
 
 func (u *productOrderUsecase) convertOrderHistoriesReponse(ctx context.Context, pagination dtogeneral.PaginationData, orders []model.ProductOrderHistories) ([]dtousecase.OrdersResponse, dtogeneral.PaginationData, error) {
-	orderHistories := make(map[int][]dtousecase.OrderProduct)
+	orderHistories := make(map[string][]dtousecase.OrderProduct)
 	productOrders := []dtousecase.OrdersResponse{}
 
 	for _, o := range orders {
@@ -401,7 +401,8 @@ func (u *productOrderUsecase) convertOrderHistoriesReponse(ctx context.Context, 
 		}
 
 		product.Review = review
-		orderHistories[o.ID] = append(orderHistories[o.ID], product)
+		orderKey := fmt.Sprintf("%v*@*%v", o.ID, o.ShopName)
+		orderHistories[orderKey] = append(orderHistories[orderKey], product)
 	}
 
 	for k, products := range orderHistories {
@@ -414,10 +415,16 @@ func (u *productOrderUsecase) convertOrderHistoriesReponse(ctx context.Context, 
 
 			totalAmount = totalAmount.Add(o.IndividualPrice.Mul(qty))
 		}
+		orderKey := strings.Split(k, "*@*")
+		orderId, err := strconv.Atoi(orderKey[0])
+		if err != nil {
+			return nil, dtogeneral.PaginationData{}, err
+		}
 		order := dtousecase.OrdersResponse{
-			OrderID:      k,
+			OrderID:      orderId,
 			Products:     products,
 			TotalPayment: totalAmount,
+			ShopName:     orderKey[1],
 		}
 		productOrders = append(productOrders, order)
 	}
