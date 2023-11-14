@@ -40,6 +40,10 @@ func (h *ProductHandler) ListProduct(c *gin.Context) {
 	endDate := c.DefaultQuery("endDate", "")
 	categoryId := c.DefaultQuery("categoryId", "")
 	s := c.DefaultQuery("s", "")
+	minRating := c.DefaultQuery("minRating", "")
+	minPrice := c.DefaultQuery("minPrice", "")
+	maxPrice := c.DefaultQuery("maxPrice", "")
+	district := c.DefaultQuery("district", "")
 
 	if valid := util.IsDateValid(startDate); !valid && startDate != "" {
 		c.Error(util.ErrInvalidDateFormat)
@@ -64,6 +68,10 @@ func (h *ProductHandler) ListProduct(c *gin.Context) {
 		CategoryId: categoryId,
 		SortBy:     sortBy,
 		Sort:       sort,
+		MinRating:  util.StrToInt(minRating),
+		MinPrice:   util.StrToInt(minPrice),
+		MaxPrice:   util.StrToInt(maxPrice),
+		District:   district,
 		Limit:      limit,
 		Page:       page,
 		StartDate:  startDate,

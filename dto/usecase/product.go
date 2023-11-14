@@ -141,6 +141,10 @@ type ProductListParam struct {
 	SortBy     string
 	Search     string
 	Sort       string
+	MinRating  int
+	MinPrice   int
+	MaxPrice   int
+	District   string
 	Limit      int
 	Page       int
 	StartDate  string

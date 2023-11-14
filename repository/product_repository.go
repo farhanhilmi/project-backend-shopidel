@@ -52,8 +52,15 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 			product_price.lowest_price as "price", 
 			CEIL (random() * 5) as rating,
 			product_image.picture_url, 
+			case
+				when category_level_2.level_2_id is not null then category_level_2.level_2_id
+				when category_level_3.level_2_id is not null then category_level_3.level_2_id
+			end as "category_id",
+			case
+				when category_level_2.level_2_name is not null then category_level_2.level_2_name
+				when category_level_3.level_2_name is not null then category_level_3.level_2_name
+			end as "category_name",
 			p.created_at,
-			p.category_id,
 			p.updated_at,
 			p.deleted_at,
 			seller.shop_name as seller_name
@@ -89,6 +96,32 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 				and aa.is_seller_default is true
 			left join accounts as seller
 				on seller.id = p.seller_id
+			left join (
+				select
+					c.id as level_2_id,
+					c."name" level_2_name,
+					c2.id as level_1_id,
+					c2."name" as level_1_name
+				from categories c
+				inner join categories c2 
+					on c2.id = c.parent 
+				where c."level" = 2
+			) as category_level_2 on category_level_2.level_2_id = p.category_id 
+			left join (
+				select
+					c.id as level_3_id,
+					c."name" level_3_name,
+					c2.id as level_2_id,
+					c2."name" level_2_name,
+					c3.id as level_1_id,
+					c3."name" as level_1_name
+				from categories c
+				inner join categories c2 
+					on c2.id = c.parent 
+				inner join categories c3
+					on c3.id = c2.parent 
+				where c."level" = 3
+			) as category_level_3 on category_level_3.level_3_id = p.category_id  
 	`
 
 	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q))
@@ -101,8 +134,24 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 		query = query.Where("created_at <= ?", req.EndDate)
 	}
 
+	if req.MinRating > 0 && req.MinRating <= 5 {
+		query = query.Where("rating >= ?", req.MinRating)
+	}
+
+	if req.MinPrice > 0 {
+		query = query.Where("price >= ?", req.MinPrice)
+	}
+
+	if req.MaxPrice > 0 {
+		query = query.Where("price <= ?", req.MaxPrice)
+	}
+
+	if req.District != "" {
+		query = query.Where("district ilike ?", req.District)
+	}
+
 	if req.CategoryId != "" {
-		query = query.Where("category_id = ?", req.CategoryId)
+		query = query.Where("t.category_id = ?", req.CategoryId)
 	}
 
 	if req.Search != "" {
