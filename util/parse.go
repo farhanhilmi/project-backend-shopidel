@@ -1,6 +1,9 @@
 package util
 
-import "time"
+import (
+	"strconv"
+	"time"
+)
 
 func ConvertTimeStr(timeStr string) time.Time {
 	timeStr += " 00:00:00"
@@ -18,3 +21,7 @@ func IsDateValid(dateStr string) bool {
 	return err == nil
 }
 
+func StrToInt(str string) int {
+	integer, _ := strconv.Atoi(str)
+	return integer
+}
