@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"strconv"
 
 	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
@@ -29,18 +28,50 @@ func NewSellerHandler(config SellerHandlerConfig) *SellerHandler {
 }
 
 func (h *SellerHandler) GetProfile(c *gin.Context) {
-	sellerIdString := c.Param("sellerId")
-	sellerId, err := strconv.Atoi(sellerIdString)
+	shopName := c.Param("shopName")
+
+	uRes, err := h.sellerUsecase.GetProfile(c.Request.Context(), dtousecase.GetSellerProfileRequest{ShopName: shopName})
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	uRes, err := h.sellerUsecase.GetProfile(c.Request.Context(), dtousecase.GetSellerProfileRequest{SellerId: sellerId})
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes})
+}
+
+func (h *SellerHandler) GetBestSelling(c *gin.Context) {
+	shopName := c.Param("shopName")
+
+	uRes, err := h.sellerUsecase.GetBestSelling(c.Request.Context(), dtousecase.GetSellerProductsRequest{ShopName: shopName})
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "successfully get profile detail", Data: uRes})
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes.SellerProducts})
+}
+
+func (h *SellerHandler) GetCategories(c *gin.Context) {
+	shopName := c.Param("shopName")
+
+	uRes, err := h.sellerUsecase.GetCategories(c.Request.Context(), dtousecase.GetSellerCategoriesRequest{ShopName: shopName})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes.Categories})
+}
+
+func (h *SellerHandler) GetCategoryProducts(c *gin.Context) {
+	shopName := c.Param("shopName")
+	categoryId := c.Param("categoryId")
+
+	uRes, err := h.sellerUsecase.GetCategoryProducts(c.Request.Context(), dtousecase.GetSellerCategoryProductRequest{ShopName: shopName, CategoryId: categoryId})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes.SellerProducts})
 }
