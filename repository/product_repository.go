@@ -51,7 +51,7 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 			aa.district,
 			product_sold.total_sold as total_sold, 
 			product_price.lowest_price as "price", 
-			CEIL (random() * 5) as rating,
+			round( CAST(float8 (random() * 5) as numeric), 1) as rating,
 			product_image.picture_url, 
 			case
 				when category_level_2.level_2_id is not null then category_level_2.level_2_id
