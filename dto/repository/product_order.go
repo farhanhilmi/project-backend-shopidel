@@ -113,6 +113,11 @@ type ProductOrderHistoryRequest struct {
 	EndDate   string
 }
 
+type OrderDetailRequest struct {
+	AccountID int
+	OrderID   int
+}
+
 type AddProductReviewRequest struct {
 	AccountID int
 	ProductID int

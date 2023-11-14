@@ -50,7 +50,7 @@ var (
 	ErrCantUseThisPhonenumber    = &CustomError{Message: "phone number already used", Code: BadRequest}
 	ErrOrderStatusNotWaiting     = &CustomError{Message: "you can only cancel orders that are still awaiting seller confirmation", Code: BadRequest}
 	ErrWeakPassword              = &CustomError{Message: "password should have at least one uppercase, one lowercase with minimum length is 8", Code: BadRequest}
-	ErrOrderNotFound             = &CustomError{Message: "We could not find the order you are looking for or the order has been processed previously"}
+	ErrOrderNotFound             = &CustomError{Message: "We could not find the order you are looking for or the order has been processed previously", Code: BadRequest}
 	ErrInsufficientStock         = &CustomError{Message: "Insufficient product stock", Code: BadRequest}
 	ErrInsufficientBalance       = &CustomError{Message: "Your wallet balance is insufficient, please top up first to proceed with order checkout", Code: BadRequest}
 	ErrQtyInputZero              = &CustomError{Message: "Quantity must be minimum one", Code: BadRequest}
@@ -71,4 +71,5 @@ var (
 	EmailNotFound                = &CustomError{Message: "we can't find this email address", Code: BadRequest}
 	ErrRequestForgetToken        = &CustomError{Message: "The link you used is invalid or unable to be processed", Code: BadRequest}
 	ErrSellerNotFound            = &CustomError{Message: "Seller not found", Code: NotFound}
+	ErrOrderDetailNotFound       = &CustomError{Message: "We could not find the order you are looking for", Code: NotFound}
 )

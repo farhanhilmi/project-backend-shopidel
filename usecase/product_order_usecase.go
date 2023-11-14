@@ -25,6 +25,7 @@ type ProductOrderUsecase interface {
 	GetCouriers(ctx context.Context, req dtousecase.SellerCourier) ([]model.Couriers, error)
 	GetOrderHistories(ctx context.Context, req dtousecase.ProductOrderHistoryRequest) ([]dtousecase.OrdersResponse, dtogeneral.PaginationData, error)
 	AddProductReview(ctx context.Context, req dtousecase.AddProductReview) (*dtousecase.AddProductReviewResponse, error)
+	GetOrderDetail(ctx context.Context, req dtousecase.OrderDetailRequest) (*dtousecase.OrderDetailResponse, error)
 }
 
 type productOrderUsecase struct {
@@ -487,4 +488,75 @@ func (u *productOrderUsecase) GetOrderHistories(ctx context.Context, req dtousec
 	}
 
 	return u.convertOrderHistoriesReponse(ctx, pagination, orders)
+}
+
+func (u *productOrderUsecase) GetOrderDetail(ctx context.Context, req dtousecase.OrderDetailRequest) (*dtousecase.OrderDetailResponse, error) {
+	order, err := u.productOrderRepository.FindOrderByIDAndAccount(ctx, dtorepository.OrderDetailRequest{
+		AccountID: req.AccountID,
+		OrderID:   req.OrderID,
+	})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if len(order) < 1 {
+		return nil, util.ErrOrderDetailNotFound
+	}
+
+	products := []dtousecase.OrderProduct{}
+	var totalPayment decimal.Decimal
+
+	for _, o := range order {
+		review := dtousecase.ProductOrderReview{}
+		product := dtousecase.OrderProduct{
+			ProductID:       o.ProductID,
+			ProductName:     o.ProductName,
+			Quantity:        o.Quantity,
+			IndividualPrice: o.IndividualPrice,
+		}
+
+		if o.ReviewID > 0 {
+			review.ReviewID = o.ReviewID
+			review.ReviewFeedback = o.Feedback
+			review.ReviewRating = o.Rating
+			review.CreatedAt = o.ReviewCreatedAt
+			product.IsReviewed = true
+		}
+
+		qty, err := decimal.NewFromString(fmt.Sprintf("%v", o.Quantity))
+		if err != nil {
+			return nil, err
+		}
+
+		totalPayment = totalPayment.Add(o.IndividualPrice.Mul(qty))
+
+		product.Review = review
+		products = append(products, product)
+	}
+
+	promotions := dtousecase.OrderPromotions{}
+	shipping := dtousecase.AddressOrder{
+		Province:    order[0].Province,
+		District:    order[0].District,
+		ZipCode:     order[0].ZipCode,
+		SubDistrict: order[0].SubDistrict,
+		Kelurahan:   order[0].Kelurahan,
+		Detail:      order[0].Detail,
+	}
+
+	orderDetail := dtousecase.OrderDetailResponse{
+		ShopName:     order[0].ShopName,
+		OrderID:      order[0].ID,
+		Status:       order[0].Status,
+		Products:     products,
+		Promotions:   promotions,
+		DeliveryFee:  order[0].DeliveryFee,
+		Shipping:     shipping,
+		TotalPayment: totalPayment.Add(order[0].DeliveryFee),
+	}
+
+	return &orderDetail, nil
 }
