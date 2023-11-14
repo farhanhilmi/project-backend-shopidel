@@ -129,6 +129,7 @@ type ProductListResponse struct {
 	Price      decimal.Decimal
 	Rating     int
 	PictureURL string
+	ShopName   string
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	DeletedAt  time.Time

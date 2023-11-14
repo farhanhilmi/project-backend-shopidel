@@ -151,7 +151,7 @@ type ProductListResponse struct {
 	Price      decimal.Decimal `json:"price"`
 	Rating     int             `json:"rating"`
 	PictureURL string          `json:"picture_url"`
-	SellerName string          `json:"seller_name"`
+	ShopName   string          `json:"shop_name"`
 	CreatedAt  time.Time       `json:"created_at"`
 	UpdatedAt  time.Time       `json:"updated_at"`
 	DeletedAt  time.Time       `json:"deleted_at"`
