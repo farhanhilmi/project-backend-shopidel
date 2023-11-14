@@ -151,7 +151,7 @@ type DeleteAddressResponse struct {
 	AddressId int
 }
 type SellerDataRequest struct {
-	SellerId int
+	ShopName string
 }
 
 type SellerDataResponse struct {
@@ -164,31 +164,34 @@ type SellerDataResponse struct {
 	TimeZone            string
 }
 
-type FindSellerProductsRequest struct {
+type FindSellerBestSellingRequest struct {
 	SellerId int
 }
 
-type FindSellerProductsResponse struct {
+type FindSellerBestSellingResponse struct {
 	Products []SellerProduct
 }
 
 type SellerProduct struct {
-	Name           string
-	Price          decimal.Decimal
-	PictureUrl     string
-	Stars          decimal.Decimal
-	TotalSold      int
-	CreatedAt      string
-	CategoryLevel1 string
-	CategoryLevel2 string
-	CategoryLevel3 string
+	Name       string
+	Price      decimal.Decimal
+	PictureUrl string
+	Stars      decimal.Decimal
+	TotalSold  int
+	CreatedAt  string
+	Category   string
 }
 
-type FindSellerSelectedCategoriesRequest struct {
+type FindSellerCategoriesRequest struct {
 	SellerId int
 }
 
-type FindSellerSelectedCategoriesResponse struct {
+type FindSellerCategoriesResponse struct {
 	CategoryId   int
 	CategoryName string
+}
+
+type FindSellerCategoryProductRequest struct {
+	ShopName   string
+	CategoryId string
 }

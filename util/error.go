@@ -70,4 +70,5 @@ var (
 	ErrAlreadyReviewProduct      = &CustomError{Message: "You have given a review of this product", Code: BadRequest}
 	EmailNotFound                = &CustomError{Message: "we can't find this email address", Code: BadRequest}
 	ErrRequestForgetToken        = &CustomError{Message: "The link you used is invalid or unable to be processed", Code: BadRequest}
+	ErrSellerNotFound            = &CustomError{Message: "Seller not found", Code: NotFound}
 )
