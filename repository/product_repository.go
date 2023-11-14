@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strings"
 
 	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
@@ -47,10 +48,11 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 		select
 			p.id,
 			p.name,
+			p.description,
 			aa.district,
 			product_sold.total_sold as total_sold, 
 			product_price.lowest_price as "price", 
-			CEIL (random() * 5) as rating,
+			round( CAST(float8 (random() * 5) as numeric), 1) as rating,
 			product_image.picture_url, 
 			case
 				when category_level_2.level_2_id is not null then category_level_2.level_2_id
@@ -146,16 +148,28 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 		query = query.Where("price <= ?", req.MaxPrice)
 	}
 
-	if req.District != "" {
-		query = query.Where("district ilike ?", req.District)
+	if req.District != "" && !strings.Contains(req.District, "#") {
+		query = query.Or("district ilike ?", req.District)
+	} else if req.District != "" && strings.Contains(req.District, "#") {
+		districts := strings.Split(req.District, "#")
+		for _, district := range districts {
+			query = query.Or("district ilike ?", district)
+		}
 	}
 
-	if req.CategoryId != "" {
-		query = query.Where("t.category_id = ?", req.CategoryId)
+	if req.CategoryId != "" && !strings.Contains(req.CategoryId, "#") {
+		query = query.Or("t.category_id = ?", req.CategoryId)
+	} else if req.CategoryId != "" && strings.Contains(req.CategoryId, "#") {
+		categories := strings.Split(req.CategoryId, "#")
+		for _, category := range categories {
+			query = query.Or("t.category_id = ?", category)
+		}
 	}
 
 	if req.Search != "" {
-		query = query.Where("name ilike ?", "%"+req.Search+"%")
+		query = query.
+			Where("name ilike ?", "%"+req.Search+"%").
+			Or("description ilike ?", "%"+req.Search+"%")
 	}
 
 	if err := query.Count(&totalItems).Error; err != nil {
