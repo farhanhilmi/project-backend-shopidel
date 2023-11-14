@@ -38,7 +38,7 @@ var AccountAddress = []model.AccountAddress{
 		IsSellerDefault:      true,
 	},
 	{
-		AccountID:            1,
+		AccountID:            4,
 		Province:             "Jawa Barat",
 		District:             "Kabupaten Bandung",
 		SubDistrict:          "Bojongsoang",
