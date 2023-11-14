@@ -6,9 +6,12 @@ import (
 )
 
 func NewSellerProfileRouter(h *handler.SellerHandler, gin *gin.Engine) *gin.Engine {
-	seller := gin.Group("sellers/profile")
+	seller := gin.Group("sellers")
 	{
-		seller.GET("/:sellerId", h.GetProfile)
+		seller.GET("/:shopName/profile", h.GetProfile)
+		seller.GET("/:shopName/best-selling", h.GetBestSelling)
+		seller.GET("/:shopName/categories", h.GetCategories)
+		seller.GET("/:shopName/categories/:categoryId/products", h.GetCategoryProducts)
 	}
 
 	return gin

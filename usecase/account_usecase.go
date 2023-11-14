@@ -37,6 +37,7 @@ type AccountUsecase interface {
 	GetCouriers(ctx context.Context) ([]model.Couriers, error)
 	RegisterAccountAddress(ctx context.Context, req dtousecase.RegisterAddressRequest) (dtousecase.RegisterAddressResponse, error)
 	GetProvinces(ctx context.Context) (dtousecase.GetProvincesResponse, error)
+	GetDistricts(ctx context.Context) (dtousecase.GetDistrictResponse, error)
 	GetDistrictsByProvinceId(ctx context.Context, req dtousecase.GetDistrictRequest) (dtousecase.GetDistrictResponse, error)
 	RefreshToken(ctx context.Context, req dtousecase.RefreshTokenRequest) (*dtousecase.LoginResponse, error)
 	DeleteAddresses(ctx context.Context, req dtousecase.DeleteAddressRequest) error
@@ -762,6 +763,24 @@ func (u *accountUsecase) GetProvinces(ctx context.Context) (dtousecase.GetProvin
 	}
 
 	res.Provinces = provinces
+
+	return res, nil
+}
+
+func (u *accountUsecase) GetDistricts(ctx context.Context) (dtousecase.GetDistrictResponse, error) {
+	res := dtousecase.GetDistrictResponse{}
+
+	d, err := u.accountRepository.FindDistricts(ctx)
+	if err != nil {
+		return res, err
+	}
+
+	districts, err := u.convertDistrictsData(ctx, d)
+	if err != nil {
+		return res, err
+	}
+
+	res.Districts = districts
 
 	return res, nil
 }
