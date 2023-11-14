@@ -20,7 +20,9 @@ type productRepository struct {
 
 type ProductRepository interface {
 	First(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error)
+	FirstV2(ctx context.Context, req dtorepository.ProductRequestV2) (dtorepository.ProductResponse, error)
 	FindProducts(ctx context.Context, req dtorepository.ProductListParam) ([]dtorepository.ProductListResponse, int64, error)
+	FindImages(ctx context.Context, productId int) (dtorepository.FindProductPicturesResponse, error)
 	FindProductVariant(ctx context.Context, req dtorepository.FindProductVariantRequest) (dtorepository.FindProductVariantResponse, error)
 	FindProductVariantByID(ctx context.Context, req dtorepository.ProductCart) (dtorepository.ProductCart, error)
 	FindProductFavorites(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
@@ -53,7 +55,8 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 			p.created_at,
 			p.category_id,
 			p.updated_at,
-			p.deleted_at
+			p.deleted_at,
+			seller.shop_name as seller_name
 		from products p
 			inner join lateral (
 					select	
@@ -84,6 +87,8 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 			left join account_addresses aa 
 				on aa.account_id = p.seller_id
 				and aa.is_seller_default is true
+			left join accounts as seller
+				on seller.id = p.seller_id
 	`
 
 	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q))
@@ -162,6 +167,58 @@ func (r *productRepository) First(ctx context.Context, req dtorepository.Product
 	if err != nil {
 		return res, err
 	}
+
+	return res, nil
+}
+
+func (r *productRepository) FirstV2(ctx context.Context, req dtorepository.ProductRequestV2) (dtorepository.ProductResponse, error) {
+	res := dtorepository.ProductResponse{}
+
+	q := `
+		select 
+			p.Id as "ID",
+			p."name" as "Name",
+			p.description as "Description",
+			case 
+				when fp.id is not null then true
+				else false
+			end as "IsFavorite",
+			p.seller_id as "SellerId"
+		from products p 
+		left join favorite_products fp 
+			on fp.product_id = p.id 
+			and fp.account_id = $1
+		inner join accounts a 
+			on a.id = p.seller_id 
+			and a.shop_name ilike $2
+		where p.name ilike $3
+	`
+
+	err := r.db.WithContext(ctx).Raw(q, req.AccountId, req.ShopName, req.ProductName).Scan(&res).Error
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (r *productRepository) FindImages(ctx context.Context, productId int) (dtorepository.FindProductPicturesResponse, error) {
+	res := dtorepository.FindProductPicturesResponse{}
+	pictures := []dtorepository.ProductPicture{}
+
+	q := `
+		select
+			pi2.url as "PictureUrl"
+		from product_images pi2 
+		where pi2.product_id = $1
+	`
+
+	err := r.db.WithContext(ctx).Raw(q, productId).Scan(&pictures).Error
+	if err != nil {
+		return res, err
+	}
+
+	res.ProductPictures = pictures
 
 	return res, nil
 }
@@ -296,7 +353,8 @@ func (r *productRepository) FindSellerAnotherProducts(ctx context.Context, selle
 			p.id as "ProductId",
 			p.name as "ProductName",
 			product_image.url as "ProductPictureUrl",
-			product_price.lowest_price as "ProductPrice"
+			product_price.lowest_price as "ProductPrice",
+			seller.shop_name as "SellerName"
 		from products p
 		left join lateral (
 			select
@@ -314,6 +372,8 @@ func (r *productRepository) FindSellerAnotherProducts(ctx context.Context, selle
 			from product_variant_selection_combinations pvsc 
 			group by pvsc.product_id 
 		) product_price on product_price.product_id = p.id 
+		left join accounts seller
+			on seller.id = p.seller_id
 		where p.seller_id = ?
 		limit 12
 	`

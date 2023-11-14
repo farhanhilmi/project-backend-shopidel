@@ -37,19 +37,24 @@ type GetProductDetailRequest struct {
 	AccountId int
 }
 
+type GetProductDetailRequestV2 struct {
+	ShopName    string
+	ProductName string
+	AccountId   int
+}
+
 type GetProductDetailResponse struct {
-	Id              int              `json:"id"`
-	ProductName     string           `json:"name"`
-	Description     string           `json:"description"`
-	Stars           decimal.Decimal  `json:"stars"`
-	Sold            int              `json:"sold"`
-	Available       int              `json:"available"`
-	Images          []string         `json:"images"`
-	VariantOptions  []VariantOption  `json:"variant_options,omitempty"`
-	Variants        []ProductVariant `json:"variants,omitempty"`
-	IsFavorite      bool             `json:"is_favorite,omitempty"`
-	ProductReviews  []ProductReview  `json:"product_review"`
-	AnotherProducts []AnotherProduct `json:"another_products"`
+	Id             int              `json:"id"`
+	ProductName    string           `json:"name"`
+	Description    string           `json:"description"`
+	Stars          decimal.Decimal  `json:"stars"`
+	Sold           int              `json:"sold"`
+	Available      int              `json:"available"`
+	Images         []string         `json:"images"`
+	VariantOptions []VariantOption  `json:"variant_options,omitempty"`
+	Variants       []ProductVariant `json:"variants,omitempty"`
+	IsFavorite     bool             `json:"is_favorite,omitempty"`
+	ProductReviews []ProductReview  `json:"product_review"`
 }
 
 type ProductReview struct {
@@ -59,13 +64,6 @@ type ProductReview struct {
 	Comment            string          `json:"comment"`
 	Variant            string          `json:"variant,omitempty"`
 	CreatedAt          string          `json:"created_at"`
-}
-
-type AnotherProduct struct {
-	ProductId         int             `json:"product_id"`
-	ProductName       string          `json:"product_name"`
-	ProductPictureUrl string          `json:"product_picture_url"`
-	ProductPrice      decimal.Decimal `json:"product_price"`
 }
 
 type VariantOption struct {
@@ -196,4 +194,28 @@ type GetProductReviewsResponse struct {
 	TotalItem   int
 	CurrentPage int
 	Limit       int
+}
+
+type GetProductPicturesRequest struct {
+	ProductId int
+}
+
+type GetProductPicturesResponse struct {
+	PicturesUrl []string
+}
+
+type GetProductDetailRecomendedProductRequest struct {
+	ProductId int
+}
+
+type GetProductDetailRecomendedProductResponse struct {
+	AnotherProducts []AnotherProduct `json:"another_products"`
+}
+
+type AnotherProduct struct {
+	ProductId         int             `json:"product_id"`
+	ProductName       string          `json:"product_name"`
+	ProductPictureUrl string          `json:"product_picture_url"`
+	ProductPrice      decimal.Decimal `json:"product_price"`
+	SellerName        string          `json:"seller_name"`
 }

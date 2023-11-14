@@ -11,6 +11,12 @@ type ProductRequest struct {
 	AccountId int
 }
 
+type ProductRequestV2 struct {
+	AccountId   int
+	ShopName    string
+	ProductName string
+}
+
 type ProductResponse struct {
 	ID          int
 	Name        string
@@ -145,6 +151,7 @@ type ProductListResponse struct {
 	Price      decimal.Decimal `json:"price"`
 	Rating     int             `json:"rating"`
 	PictureURL string          `json:"picture_url"`
+	SellerName string          `json:"seller_name"`
 	CreatedAt  time.Time       `json:"created_at"`
 	UpdatedAt  time.Time       `json:"updated_at"`
 	DeletedAt  time.Time       `json:"deleted_at"`
@@ -170,4 +177,12 @@ type IsProductFavoriteResponse struct {
 	AccountId  int
 	ProductId  int
 	IsFavorite bool
+}
+
+type FindProductPicturesResponse struct {
+	ProductPictures []ProductPicture
+}
+
+type ProductPicture struct {
+	PictureUrl string
 }

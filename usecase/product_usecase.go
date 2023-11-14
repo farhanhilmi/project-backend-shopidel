@@ -14,10 +14,13 @@ import (
 
 type ProductUsecase interface {
 	GetProductDetail(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductDetailResponse, error)
+	GetProductDetailV2(ctx context.Context, req dtousecase.GetProductDetailRequestV2) (*dtousecase.GetProductDetailResponse, error)
 	AddToFavorite(ctx context.Context, req dtousecase.FavoriteProduct) (*dtousecase.FavoriteProduct, error)
 	GetProductFavorites(ctx context.Context, req dtousecase.ProductFavoritesParams) ([]model.FavoriteProductList, *dtogeneral.PaginationData, error)
 	GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error)
 	GetProductReviews(ctx context.Context, req dtousecase.GetProductReviewsRequest) (dtousecase.GetProductReviewsResponse, error)
+	GetProductPictures(ctx context.Context, req dtousecase.GetProductPicturesRequest) (*dtousecase.GetProductPicturesResponse, error)
+	GetProductDetailRecomendedProducts(ctx context.Context, req dtousecase.GetProductDetailRecomendedProductRequest) (*dtousecase.GetProductDetailRecomendedProductResponse, error)
 }
 
 type productUsecase struct {
@@ -171,7 +174,46 @@ func (u *productUsecase) GetProductDetail(ctx context.Context, req dtousecase.Ge
 		return res, err
 	}
 
-	anotherProducts, err := u.productRepository.FindSellerAnotherProducts(ctx, rRes.SellerId)
+	res.Id = rRes.ID
+	res.ProductName = rRes.Name
+	res.Description = rRes.Description
+	res.Variants = variants
+	res.VariantOptions = options
+	res.IsFavorite = rRes.IsFavorite
+
+	return res, nil
+}
+
+func (u *productUsecase) GetProductDetailV2(ctx context.Context, req dtousecase.GetProductDetailRequestV2) (*dtousecase.GetProductDetailResponse, error) {
+	res := &dtousecase.GetProductDetailResponse{}
+
+	rReq := dtorepository.ProductRequestV2{
+		AccountId:   req.AccountId,
+		ShopName:    req.ShopName,
+		ProductName: req.ProductName,
+	}
+	rRes, err := u.productRepository.FirstV2(ctx, rReq)
+	if err != nil {
+		return res, err
+	}
+	if rRes.ID == 0 {
+		return res, errors.New("product not found")
+	}
+
+	rReq2 := dtorepository.FindProductVariantRequest{
+		ProductId: rRes.ID,
+	}
+	rRes2, err := u.productRepository.FindProductVariant(ctx, rReq2)
+	if err != nil {
+		return res, err
+	}
+
+	variants, err := u.convertProductVariants(ctx, rRes.Name, rRes2)
+	if err != nil {
+		return res, err
+	}
+
+	options, err := u.convertVariantOptions(ctx, rRes2)
 	if err != nil {
 		return res, err
 	}
@@ -182,6 +224,38 @@ func (u *productUsecase) GetProductDetail(ctx context.Context, req dtousecase.Ge
 	res.Variants = variants
 	res.VariantOptions = options
 	res.IsFavorite = rRes.IsFavorite
+
+	return res, nil
+}
+
+func (u *productUsecase) GetProductPictures(ctx context.Context, req dtousecase.GetProductPicturesRequest) (*dtousecase.GetProductPicturesResponse, error) {
+	res := &dtousecase.GetProductPicturesResponse{}
+
+	rRes, err := u.productRepository.FindImages(ctx, req.ProductId)
+	if err != nil {
+		return res, err
+	}
+
+	for _, picture := range rRes.ProductPictures {
+		res.PicturesUrl = append(res.PicturesUrl, picture.PictureUrl)
+	}
+
+	return res, nil
+}
+
+func (u *productUsecase) GetProductDetailRecomendedProducts(ctx context.Context, req dtousecase.GetProductDetailRecomendedProductRequest) (*dtousecase.GetProductDetailRecomendedProductResponse, error) {
+	res := &dtousecase.GetProductDetailRecomendedProductResponse{}
+
+	product, err := u.productRepository.First(ctx, dtorepository.ProductRequest{ProductID: req.ProductId})
+	if err != nil {
+		return res, err
+	}
+
+	anotherProducts, err := u.productRepository.FindSellerAnotherProducts(ctx, product.SellerId)
+	if err != nil {
+		return res, err
+	}
+
 	res.AnotherProducts = anotherProducts
 
 	return res, nil
