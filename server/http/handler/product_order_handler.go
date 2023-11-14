@@ -247,5 +247,5 @@ func (h *ProductOrderHandler) GetOrderHistories(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response, Pagination: pagination})
+	c.JSON(http.StatusOK, dtogeneral.JSONPagination{Data: response, Pagination: pagination})
 }

@@ -86,7 +86,7 @@ func (h *ProductHandler) ListProduct(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes, Pagination: *pagination})
+	c.JSON(http.StatusOK, dtogeneral.JSONPagination{Data: uRes, Pagination: *pagination})
 }
 
 func (h *ProductHandler) GetProductDetail(c *gin.Context) {
@@ -175,7 +175,7 @@ func (h *ProductHandler) GetProductReviews(c *gin.Context) {
 		return
 	}
 
-	res := dtogeneral.JSONResponse{
+	res := dtogeneral.JSONPagination{
 		Data: uRes.Reviews,
 		Pagination: dtogeneral.PaginationData{
 			TotalPage:   uRes.TotalPage,
@@ -355,5 +355,5 @@ func (h *ProductHandler) GetListFavorite(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: products, Pagination: *pagination})
+	c.JSON(http.StatusOK, dtogeneral.JSONPagination{Data: products, Pagination: *pagination})
 }

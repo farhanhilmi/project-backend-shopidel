@@ -3,17 +3,39 @@ package dtousecase
 import "github.com/shopspring/decimal"
 
 type GetSellerProfileRequest struct {
-	SellerId int
+	ShopName string
 }
 
 type GetSellerProfileResponse struct {
-	SellerId                 int                      `json:"seller_id"`
-	SellerName               string                   `json:"seller_name"`
-	SellerPictureUrl         string                   `json:"seller_picture_url"`
-	SellerDistrict           string                   `json:"seller_district"`
-	SellerOperatingHour      SellerOperatingHour      `json:"seller_operating_hour"`
-	SellerProducts           []SellerProduct          `json:"seller_products"`
-	SellerSelectedCategories []SellerSelectedCategory `json:"seller_selected_categories"`
+	SellerName          string              `json:"seller_name"`
+	SellerPictureUrl    string              `json:"seller_picture_url"`
+	SellerDistrict      string              `json:"seller_district"`
+	SellerOperatingHour SellerOperatingHour `json:"seller_operating_hour"`
+}
+
+type GetSellerProductsRequest struct {
+	ShopName string
+}
+
+type GetSellerProductsResponse struct {
+	SellerProducts []SellerProduct `json:"seller_products"`
+}
+
+type GetSellerCategoriesRequest struct {
+	ShopName string
+}
+
+type GetSellerCategoriesResponse struct {
+	Categories []SellerCategory
+}
+
+type GetSellerCategoryProductRequest struct {
+	ShopName   string
+	CategoryId string
+}
+
+type GetSellerCategoryProductResponse struct {
+	SellerProducts []SellerProduct `json:"seller_products"`
 }
 
 type SellerOperatingHour struct {
@@ -22,18 +44,17 @@ type SellerOperatingHour struct {
 }
 
 type SellerProduct struct {
-	Name           string          `json:"name"`
-	Price          decimal.Decimal `json:"price"`
-	PictureUrl     string          `json:"picture_url"`
-	Stars          decimal.Decimal `json:"stars"`
-	TotalSold      int             `json:"total_sold"`
-	CreatedAt      string          `json:"created_at"`
-	CategoryLevel1 string          `json:"category_level_1"`
-	CategoryLevel2 string          `json:"category_level_2"`
-	CategoryLevel3 string          `json:"category_level_3"`
+	Name       string          `json:"name"`
+	Price      decimal.Decimal `json:"price"`
+	PictureUrl string          `json:"picture_url"`
+	Stars      decimal.Decimal `json:"stars"`
+	TotalSold  int             `json:"total_sold"`
+	CreatedAt  string          `json:"created_at"`
+	Category   string          `json:"category"`
+	ShopName   string          `json:"shop_name"`
 }
 
-type SellerSelectedCategory struct {
+type SellerCategory struct {
 	CategoryId   int    `json:"category_id"`
 	CategoryName string `json:"category_name"`
 }
