@@ -135,7 +135,7 @@ func (r *productOrdersRepository) FindAllOrderHistoriesByUser(ctx context.Contex
 	res := []model.ProductOrderHistories{}
 
 	q := `
-	select po.*, a.shop_name, pod.quantity, pod.individual_price, pvsc.picture_url, p.name as product_name, pvsc.product_id, 
+	select po.*, po.status, a.shop_name, pod.quantity, pod.individual_price, pvsc.picture_url, p.name as product_name, pvsc.product_id, 
 	por.feedback, por.rating, por.created_at as review_created_at, por.id as review_id
 		from product_orders po
 		left join product_order_details pod 
