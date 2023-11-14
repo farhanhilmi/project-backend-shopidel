@@ -857,7 +857,12 @@ func (r *accountRepository) SaveForgetPasswordToken(ctx context.Context, req dto
 func (r *accountRepository) UpdatePassword(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error) {
 	res := dtorepository.GetAccountResponse{}
 
-	err := r.db.WithContext(ctx).Model(&model.Accounts{}).Where("id = ?", req.UserId).Update("password", req.Password).Scan(&res).Error
+	err := r.db.WithContext(ctx).Model(&model.Accounts{}).
+		Where("id = ?", req.UserId).
+		Update("password", req.Password).
+		Update("forget_password_token", gorm.Expr("NULL")).
+		Update("forget_password_expired_at", gorm.Expr("NULL")).
+		Scan(&res).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound

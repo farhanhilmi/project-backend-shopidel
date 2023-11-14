@@ -1,11 +1,16 @@
 package dtogeneral
 
 type JSONResponse struct {
-	Data         any            `json:"data,omitempty"`
-	Message      string         `json:"message,omitempty"`
-	AccessToken  string         `json:"access_token,omitempty"`
-	RefreshToken string         `json:"refresh_token,omitempty"`
-	Pagination   PaginationData `json:"pagination,omitempty"`
+	Data         any    `json:"data,omitempty"`
+	Message      string `json:"message,omitempty"`
+	AccessToken  string `json:"access_token,omitempty"`
+	RefreshToken string `json:"refresh_token,omitempty"`
+}
+
+type JSONPagination struct {
+	Data       any            `json:"data,omitempty"`
+	Message    string         `json:"message,omitempty"`
+	Pagination PaginationData `json:"pagination,omitempty"`
 }
 
 type ErrResponse struct {
