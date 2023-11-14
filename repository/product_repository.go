@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strings"
 
 	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
@@ -146,12 +147,22 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 		query = query.Where("price <= ?", req.MaxPrice)
 	}
 
-	if req.District != "" {
-		query = query.Where("district ilike ?", req.District)
+	if req.District != "" && !strings.Contains(req.District, "#") {
+		query = query.Or("district ilike ?", req.District)
+	} else if req.District != "" && strings.Contains(req.District, "#") {
+		districts := strings.Split(req.District, "#")
+		for _, district := range districts {
+			query = query.Or("district ilike ?", district)
+		}
 	}
 
-	if req.CategoryId != "" {
-		query = query.Where("t.category_id = ?", req.CategoryId)
+	if req.CategoryId != "" && !strings.Contains(req.CategoryId, "#") {
+		query = query.Or("t.category_id = ?", req.CategoryId)
+	} else if req.CategoryId != "" && strings.Contains(req.CategoryId, "#") {
+		categories := strings.Split(req.CategoryId, "#")
+		for _, category := range categories {
+			query = query.Or("t.category_id = ?", category)
+		}
 	}
 
 	if req.Search != "" {
