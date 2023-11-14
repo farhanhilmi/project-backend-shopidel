@@ -48,6 +48,7 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 		select
 			p.id,
 			p.name,
+			p.description,
 			aa.district,
 			product_sold.total_sold as total_sold, 
 			product_price.lowest_price as "price", 
@@ -166,7 +167,9 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 	}
 
 	if req.Search != "" {
-		query = query.Where("name ilike ?", "%"+req.Search+"%")
+		query = query.
+			Where("name ilike ?", "%"+req.Search+"%").
+			Or("description ilike ?", "%"+req.Search+"%")
 	}
 
 	if err := query.Count(&totalItems).Error; err != nil {
