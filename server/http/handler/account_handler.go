@@ -28,6 +28,49 @@ func NewAccountHandler(accountUsecase usecase.AccountUsecase, myWalletTransactio
 	}
 }
 
+func (h *AccountHandler) RequestForgetPassword(c *gin.Context) {
+	var req dtohttp.ForgetPasswordRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.ForgetPasswordRequest{
+		Email: req.Email,
+	}
+
+	_, err = h.accountUsecase.RequestForgetPassword(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Forgot password request was successful. Please check your email to proceed"})
+}
+
+func (h *AccountHandler) RequestForgetChangePassword(c *gin.Context) {
+	var req dtohttp.ForgetChangePasswordRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.ForgetChangePasswordRequest{
+		Password: req.Password,
+		Token:    req.Token,
+	}
+
+	_, err = h.accountUsecase.RequestForgetChangePassword(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Successfully set new password"})
+}
+
 func (h *AccountHandler) RegisterSeller(c *gin.Context) {
 	res := dtohttp.RegisterSellerResponse{}
 	var req dtohttp.RegisterSellerRequest

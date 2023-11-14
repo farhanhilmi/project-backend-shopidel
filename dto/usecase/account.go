@@ -80,6 +80,22 @@ type LoginRequest struct {
 	Password string
 }
 
+type ForgetPasswordRequest struct {
+	Email string
+}
+
+type ForgetChangePasswordRequest struct {
+	Token    string
+	Password string
+}
+
+type SendEmailPayload struct {
+	RecipientName  string
+	RecipientEmail string
+	Token          string
+	ExpiresAt      time.Time
+}
+
 type RefreshTokenRequest struct {
 	RefreshToken string
 	UserId       int

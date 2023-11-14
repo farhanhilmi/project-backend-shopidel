@@ -38,6 +38,14 @@ type GetAccountRequest struct {
 	PhoneNumber string
 }
 
+type RequestForgetPasswordRequest struct {
+	UserId                  int
+	Email                   string
+	ForgetPasswordToken     string
+	ForgetPasswordExpiredAt time.Time
+	Password                string
+}
+
 type AddressRequest struct {
 	UserId int
 }
