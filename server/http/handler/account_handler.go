@@ -713,6 +713,16 @@ func (h *AccountHandler) GetProvinces(c *gin.Context) {
 }
 
 func (h *AccountHandler) GetDistricts(c *gin.Context) {
+	response, err := h.accountUsecase.GetDistricts(c.Request.Context())
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response.Districts})
+}
+
+func (h *AccountHandler) GetProvinceDistricts(c *gin.Context) {
 	provinceIdString := c.Param("provinceId")
 
 	provinceId, err := strconv.Atoi(provinceIdString)

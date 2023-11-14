@@ -41,8 +41,10 @@ type WalletHistoriesParams struct {
 type ValidateWAlletPINRequest struct {
 	WalletPIN string
 	UserID    int
+	CountFail int
 }
 
 type ValidateWAlletPINResponse struct {
+	CountFail int
 	IsCorrect bool
 }
