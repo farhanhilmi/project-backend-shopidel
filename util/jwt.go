@@ -1,6 +1,8 @@
 package util
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 
 	"strconv"
@@ -73,4 +75,13 @@ func ValidateToken(tokenStr string) (*jwt.Token, error) {
 
 		return []byte(config.GetEnv("JWT_SECRET_KEY")), nil
 	})
+}
+
+func GenerateRandomToken() (string, error) {
+	bytes := make([]byte, 32)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(bytes), nil
 }

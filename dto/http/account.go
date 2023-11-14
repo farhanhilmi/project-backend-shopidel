@@ -126,6 +126,15 @@ type RegisterSellerRequest struct {
 	ListCourierId []int  `json:"list_courier_id"`
 }
 
+type ForgetPasswordRequest struct {
+	Email string `json:"email" binding:"required"`
+}
+
+type ForgetChangePasswordRequest struct {
+	Password string `json:"password" binding:"required"`
+	Token    string `json:"token" binding:"required"`
+}
+
 type RegisterSellerResponse struct {
 	ShopName string
 }

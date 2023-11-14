@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto"
@@ -40,6 +41,8 @@ type AccountUsecase interface {
 	RefreshToken(ctx context.Context, req dtousecase.RefreshTokenRequest) (*dtousecase.LoginResponse, error)
 	DeleteAddresses(ctx context.Context, req dtousecase.DeleteAddressRequest) error
 	UpdateAccountAddress(ctx context.Context, req dtousecase.UpdateAddressRequest) (dtousecase.UpdateAddressResponse, error)
+	RequestForgetPassword(ctx context.Context, req dtousecase.ForgetPasswordRequest) (*dtousecase.ForgetPasswordRequest, error)
+	RequestForgetChangePassword(ctx context.Context, req dtousecase.ForgetChangePasswordRequest) (*dtousecase.ForgetPasswordRequest, error)
 }
 
 type accountUsecase struct {
@@ -136,6 +139,79 @@ func (u *accountUsecase) DeleteAddresses(ctx context.Context, req dtousecase.Del
 	err := u.accountRepository.DeleteAddress(ctx, dtorepository.DeleteAddressRequest{AddressId: req.AddressId})
 
 	return err
+}
+
+func (u *accountUsecase) RequestForgetPassword(ctx context.Context, req dtousecase.ForgetPasswordRequest) (*dtousecase.ForgetPasswordRequest, error) {
+	res := dtousecase.ForgetPasswordRequest{}
+
+	token, err := util.GenerateRandomToken()
+	if err != nil {
+		return nil, err
+	}
+
+	expirationTime := time.Now().Add(5 * time.Minute)
+
+	account, err := u.accountRepository.FindByEmail(ctx, dtorepository.GetAccountRequest{Email: req.Email})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.EmailNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	data := dtousecase.SendEmailPayload{
+		RecipientName:  account.FullName,
+		RecipientEmail: req.Email,
+		Token:          token,
+		ExpiresAt:      expirationTime,
+	}
+
+	err = util.SendMail(data)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = u.accountRepository.SaveForgetPasswordToken(ctx, dtorepository.RequestForgetPasswordRequest{
+		UserId:                  account.ID,
+		Email:                   req.Email,
+		ForgetPasswordToken:     token,
+		ForgetPasswordExpiredAt: expirationTime,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+func (u *accountUsecase) RequestForgetChangePassword(ctx context.Context, req dtousecase.ForgetChangePasswordRequest) (*dtousecase.ForgetPasswordRequest, error) {
+	res := dtousecase.ForgetPasswordRequest{}
+
+	account, err := u.accountRepository.FindByToken(ctx, dtorepository.RequestForgetPasswordRequest{ForgetPasswordToken: req.Token})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrRequestForgetToken
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if time.Now().After(account.ForgetPasswordExpiredAt) {
+		return nil, util.ErrRequestForgetToken
+	}
+
+	hashedPassword, err := util.HashPassword(req.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = u.accountRepository.UpdatePassword(ctx, dtorepository.RequestForgetPasswordRequest{UserId: account.ID, Password: hashedPassword})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrRequestForgetToken
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
 }
 
 func (u *accountUsecase) Login(ctx context.Context, req dtousecase.LoginRequest) (*dtousecase.LoginResponse, error) {

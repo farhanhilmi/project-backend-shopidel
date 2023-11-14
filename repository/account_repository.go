@@ -47,6 +47,9 @@ type AccountRepository interface {
 	FirstSeller(ctx context.Context, req dtorepository.SellerDataRequest) (dtorepository.SellerDataResponse, error)
 	FindSellerProducts(ctx context.Context, req dtorepository.FindSellerProductsRequest) (dtorepository.FindSellerProductsResponse, error)
 	FindSellerSelectedCategories(ctx context.Context, req dtorepository.FindSellerSelectedCategoriesRequest) ([]dtorepository.FindSellerSelectedCategoriesResponse, error)
+	FindByToken(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
+	SaveForgetPasswordToken(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
+	UpdatePassword(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
 }
 
 type accountRepository struct {
@@ -830,6 +833,52 @@ func (r *accountRepository) CreateAddress(ctx context.Context, req dtorepository
 	res.SubDistrict = req.SubDistrict
 	res.ZipCode = req.ZipCode
 	res.Detail = req.Detail
+
+	return res, nil
+}
+
+func (r *accountRepository) SaveForgetPasswordToken(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error) {
+	res := dtorepository.GetAccountResponse{}
+
+	err := r.db.WithContext(ctx).Model(&model.Accounts{}).Where("id = ?", req.UserId).Update("forget_password_token", req.ForgetPasswordToken).Update("forget_password_expired_at", req.ForgetPasswordExpiredAt).Scan(&res).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (r *accountRepository) UpdatePassword(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error) {
+	res := dtorepository.GetAccountResponse{}
+
+	err := r.db.WithContext(ctx).Model(&model.Accounts{}).Where("id = ?", req.UserId).Update("password", req.Password).Scan(&res).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (r *accountRepository) FindByToken(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error) {
+	res := dtorepository.GetAccountResponse{}
+
+	err := r.db.WithContext(ctx).Model(&model.Accounts{}).Where("forget_password_token = ?", req.ForgetPasswordToken).Scan(&res).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+
+	if err != nil {
+		return res, err
+	}
 
 	return res, nil
 }
