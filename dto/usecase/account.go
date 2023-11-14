@@ -257,6 +257,10 @@ type GetProvincesResponse struct {
 	Provinces []Province `json:"provinces"`
 }
 
+type GetDistrictsResponse struct {
+	Districts []District `json:"districts"`
+}
+
 type Province struct {
 	Id   int    `json:"id"`
 	Name string `json:"name"`

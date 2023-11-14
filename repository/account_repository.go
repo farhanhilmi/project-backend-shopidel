@@ -41,6 +41,7 @@ type AccountRepository interface {
 	DeleteCartProduct(ctx context.Context, req dtorepository.DeleteCartProductRequest) ([]model.AccountCarts, error)
 	CreateAddress(ctx context.Context, req dtorepository.RegisterAddressRequest) (dtorepository.RegisterAddressResponse, error)
 	FindProvinces(ctx context.Context) ([]model.Province, error)
+	FindDistricts(ctx context.Context) ([]model.District, error)
 	FindDistrictsByProvinceId(ctx context.Context, ProvinceId int) ([]model.District, error)
 	DeleteAddress(ctx context.Context, req dtorepository.DeleteAddressRequest) error
 	UpdateAddress(ctx context.Context, req dtorepository.UpdateAddressRequest) (dtorepository.UpdateAddressResponse, error)
@@ -1003,6 +1004,16 @@ func (r *accountRepository) FindAddressByID(ctx context.Context, req dtoreposito
 
 func (r *accountRepository) FindProvinces(ctx context.Context) ([]model.Province, error) {
 	p := []model.Province{}
+	err := r.db.WithContext(ctx).Order("id asc").Find(&p).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return p, nil
+}
+
+func (r *accountRepository) FindDistricts(ctx context.Context) ([]model.District, error) {
+	p := []model.District{}
 	err := r.db.WithContext(ctx).Order("id asc").Find(&p).Error
 	if err != nil {
 		return nil, err

@@ -50,7 +50,8 @@ func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 	address := gin.Group("/address")
 	{
 		address.GET("/provinces", h.GetProvinces)
-		address.GET("/provinces/:provinceId/districts", h.GetDistricts)
+		address.GET("/districts", h.GetDistricts)
+		address.GET("/provinces/:provinceId/districts", h.GetProvinceDistricts)
 	}
 
 	return gin
