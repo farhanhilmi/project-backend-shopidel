@@ -161,6 +161,35 @@ type ProductOrderHistoryRequest struct {
 	EndDate   string
 }
 
+type OrderPromotions struct {
+	MarketplaceVoucher string `json:"marketplace_voucher"`
+	ShopVoucher        string `json:"shop_voucher"`
+}
+
+type AddressOrder struct {
+	Province    string `json:"province"`
+	District    string `json:"district"`
+	ZipCode     string `json:"zip_code"`
+	SubDistrict string `json:"sub_district"`
+	Kelurahan   string `json:"kelurahan"`
+	Detail      string `json:"detaill"`
+}
+type OrderDetailResponse struct {
+	OrderID      int             `json:"order_id"`
+	ShopName     string          `json:"shop_name"`
+	Status       string          `json:"status"`
+	Products     []OrderProduct  `json:"products"`
+	TotalPayment decimal.Decimal `json:"total_payment"`
+	Promotions   OrderPromotions `json:"promotions"`
+	DeliveryFee  decimal.Decimal `json:"delivery_fee"`
+	Shipping     AddressOrder    `json:"shipping"`
+}
+
+type OrderDetailRequest struct {
+	AccountID int
+	OrderID   int
+}
+
 type ProductOrderReview struct {
 	ReviewID       int       `json:"review_id"`
 	ReviewFeedback string    `json:"review_feedback"`

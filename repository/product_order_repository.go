@@ -30,6 +30,7 @@ type ProductOrdersRepository interface {
 	FindByIDAndAccountAndStatus(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error)
 	AddProductReview(ctx context.Context, req dtorepository.AddProductReviewRequest) (dtorepository.AddProductReviewResponse, error)
 	FindReviewByID(ctx context.Context, req dtorepository.ProductReviewRequest) (dtorepository.ProductReviewResponse, error)
+	FindOrderByIDAndAccount(ctx context.Context, req dtorepository.OrderDetailRequest) ([]model.ProductOrderDetail, error)
 }
 
 func NewProductOrdersRepository(db *gorm.DB) ProductOrdersRepository {
@@ -96,6 +97,38 @@ func (r *productOrdersRepository) countOrderHistoriesByAccountID(ctx context.Con
 	}
 
 	return totalItems, nil
+}
+
+func (r *productOrdersRepository) FindOrderByIDAndAccount(ctx context.Context, req dtorepository.OrderDetailRequest) ([]model.ProductOrderDetail, error) {
+	res := []model.ProductOrderDetail{}
+
+	q := `
+	select po.*, a.shop_name, pod.quantity, pod.individual_price, pvsc.picture_url, p.name as product_name, pvsc.product_id, 
+		por.feedback, por.rating, por.created_at as review_created_at, por.id as review_id
+		from product_orders po 
+		left join product_order_details pod 
+			on pod.product_order_id = po.id
+		left join product_variant_selection_combinations pvsc 
+			on pvsc.id = pod.product_variant_selection_combination_id
+		left join products p 
+			on p.id = pvsc.product_id 
+		left join product_order_reviews por 
+			on por.product_order_id = po.id and por.product_id = pvsc.product_id
+		left join accounts a 
+			on a.id = p.seller_id 
+	where po.account_id = ? and po.id = ?
+	`
+
+	err := r.db.WithContext(ctx).Raw(q, req.AccountID, req.OrderID).Scan(&res).Error
+	if err != nil {
+		return res, err
+	}
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+
+	return res, nil
 }
 
 func (r *productOrdersRepository) countOrderHistoriesByAccountIDAndStatus(ctx context.Context, req dtorepository.ProductOrderHistoryRequest) (int64, error) {

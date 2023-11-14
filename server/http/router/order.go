@@ -13,6 +13,7 @@ func NewProductOrderRouter(h *handler.ProductOrderHandler, gin *gin.Engine) *gin
 	order.POST("/cost/check", h.CheckDeveliryFee)
 	order.GET("/couriers/:sellerId", h.GetCouriers)
 	order.GET("/histories", h.GetOrderHistories)
+	order.GET("/:orderId", h.GetOrderDetail)
 	order.POST("/:orderId/add-review", h.AddProductReview)
 
 	return gin

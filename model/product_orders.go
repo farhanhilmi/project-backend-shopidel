@@ -74,6 +74,31 @@ type ProductOrderHistories struct {
 	DeletedAt       time.Time
 }
 
+type ProductOrderDetail struct {
+	ID              int
+	ProductName     string
+	Quantity        int
+	Status          string
+	ProductID       int
+	IndividualPrice decimal.Decimal
+	PictureURL      string
+	Feedback        string
+	Rating          int
+	ReviewID        int
+	ShopName        string
+	Province        string
+	District        string
+	ZipCode         string
+	SubDistrict     string
+	Kelurahan       string
+	Detail          string
+	DeliveryFee     decimal.Decimal
+	ReviewCreatedAt time.Time
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	DeletedAt       time.Time
+}
+
 type ProductOrderReviews struct {
 	ID             int
 	AccountID      int
