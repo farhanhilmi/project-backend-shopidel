@@ -249,3 +249,25 @@ func (h *ProductOrderHandler) GetOrderHistories(c *gin.Context) {
 
 	c.JSON(http.StatusOK, dtogeneral.JSONPagination{Data: response, Pagination: pagination})
 }
+
+func (h *ProductOrderHandler) GetOrderDetail(c *gin.Context) {
+	id := c.Param("orderId")
+	orderId, err := strconv.Atoi(id)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	uReq := dtousecase.OrderDetailRequest{
+		AccountID: c.GetInt("userId"),
+		OrderID:   orderId,
+	}
+
+	response, err := h.productOrderUsecase.GetOrderDetail(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
+}
