@@ -89,6 +89,10 @@ func (h *ProductHandler) ListProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, dtogeneral.JSONPagination{Data: uRes, Pagination: *pagination})
 }
 
+func (h *ProductHandler) GetTopCategories(c *gin.Context) {
+
+}
+
 func (h *ProductHandler) GetProductDetail(c *gin.Context) {
 	id := c.Param("productId")
 	productId, err := strconv.Atoi(id)
