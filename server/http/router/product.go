@@ -18,5 +18,7 @@ func NewProductRouter(h *handler.ProductHandler, gin *gin.Engine) *gin.Engine {
 	product.GET("/detail/:shopName/:productName", middleware.IfExistAuthenticateJWT(), h.GetProductDetailV2)
 	product.GET("/favorites", middleware.AuthenticateJWT(), h.GetListFavorite)
 
+	product.POST("/upload", h.UploadPhotos)
+
 	return gin
 }
