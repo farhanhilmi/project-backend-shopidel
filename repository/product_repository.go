@@ -149,27 +149,87 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 	}
 
 	if req.District != "" && !strings.Contains(req.District, "#") {
-		query = query.Or("district ilike ?", req.District)
+		query = query.Where("district ilike ?", req.District)
 	} else if req.District != "" && strings.Contains(req.District, "#") {
 		districts := strings.Split(req.District, "#")
-		for _, district := range districts {
-			query = query.Or("district ilike ?", district)
+		var (
+			sql string
+			firstDistrict = districts[0]
+			secondDistrict = districts[1]
+			thirdDistrict = districts[2]
+		)
+		for id := range districts {
+			switch id {
+			case 0:
+				sql += "district ilike ?"
+			default:
+				sql += " or district ilike ?"
+			}
+		}
+
+		if len(districts) > 2 && len(districts) <= 3 {
+			query = query.Where(
+				sql,
+				firstDistrict,
+				secondDistrict,
+				thirdDistrict,
+			)
+		} else if len(districts) > 1 && len(districts) <= 2 {
+			query = query.Where(
+				sql,
+				firstDistrict,
+				secondDistrict,
+			)
+		} else {
+			return nil, 0, util.ErrOutOfParamLimit
 		}
 	}
 
 	if req.CategoryId != "" && !strings.Contains(req.CategoryId, "#") {
-		query = query.Or("t.category_id = ?", req.CategoryId)
+		query = query.Where("t.category_id = ?", req.CategoryId)
 	} else if req.CategoryId != "" && strings.Contains(req.CategoryId, "#") {
 		categories := strings.Split(req.CategoryId, "#")
-		for _, category := range categories {
-			query = query.Or("t.category_id = ?", category)
+		var (
+			sql            string
+			firstCategory  = categories[0]
+			secondCategory = categories[1]
+			thirdCategory  = categories[2]
+		)
+		for id := range categories {
+			switch id {
+			case 0:
+				sql += "t.category_id = ?"
+			default:
+				sql += " or t.category_id = ?"
+			}
+		}
+
+		if len(categories) > 2 && len(categories) <= 3 {
+			query = query.Where(
+				sql,
+				firstCategory,
+				secondCategory,
+				thirdCategory,
+			)
+		} else if len(categories) > 1 && len(categories) <= 2 {
+			query = query.Where(
+				sql,
+				firstCategory,
+				secondCategory,
+			)
+		} else {
+			return nil, 0, util.ErrOutOfParamLimit
 		}
 	}
 
 	if req.Search != "" {
+		find := "%" + req.Search + "%"
 		query = query.
-			Where("name ilike ?", "%"+req.Search+"%").
-			Or("description ilike ?", "%"+req.Search+"%")
+			Where(
+				"name ilike ? or description ilike ?",
+				find,
+				find,
+			)
 	}
 
 	if err := query.Count(&totalItems).Error; err != nil {
