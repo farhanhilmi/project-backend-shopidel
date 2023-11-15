@@ -51,17 +51,35 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 			p.name,
 			p.description,
 			aa.district,
-			product_sold.total_sold as total_sold, 
+			0 as total_sold, 
 			product_price.lowest_price as "price", 
 			round( CAST(float8 (random() * 5) as numeric), 1) as rating,
 			product_image.picture_url, 
 			case
-				when category_level_2.level_2_id is not null then category_level_2.level_2_id
-				when category_level_3.level_2_id is not null then category_level_3.level_2_id
+				when 0 in ($1) then
+					case 
+						when category_level_2.level_2_id is not null then category_level_2.level_2_id
+						when category_level_3.level_2_id is not null then category_level_3.level_2_id
+					end
+				else 
+					case 
+						when category_level_1.level_1_id is not null then category_level_1.level_1_id
+						when category_level_2.level_2_id is not null then category_level_2.level_2_id
+						when category_level_3.level_3_id is not null then category_level_3.level_3_id
+					end
 			end as "category_id",
 			case
-				when category_level_2.level_2_name is not null then category_level_2.level_2_name
-				when category_level_3.level_2_name is not null then category_level_3.level_2_name
+				when 0 in ($1) then
+					case
+						when category_level_2.level_2_name is not null then category_level_2.level_2_name
+						when category_level_3.level_2_name is not null then category_level_3.level_2_name
+					end
+				else
+					case
+						when category_level_1.level_1_name is not null then category_level_1.level_1_name
+						when category_level_2.level_2_name is not null then category_level_2.level_2_name
+						when category_level_3.level_3_name is not null then category_level_3.level_3_name
+					end
 			end as "category_name",
 			p.created_at,
 			p.updated_at,
@@ -85,20 +103,18 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 					where pvsc2.product_id = p.id
 					group by pvsc2.product_id 
 				) product_price on product_price.product_id = p.id
-			left join (
-					select
-						pvsc.product_id ,
-						sum(pod.quantity) total_sold
-					from product_variant_selection_combinations pvsc 
-					left join product_order_details pod
-						on pod.product_variant_selection_combination_id = pvsc.id
-					group by pvsc.product_id
-				) product_sold on product_sold.product_id = p.id
 			left join account_addresses aa 
 				on aa.account_id = p.seller_id
 				and aa.is_seller_default is true
 			left join accounts as seller
 				on seller.id = p.seller_id
+			left join (
+				select
+					c.id as level_1_id,
+					c."name" as level_1_name
+				from categories c
+				where c."level" = 1
+			) as category_level_1 on category_level_1.level_1_id = p.category_id 
 			left join (
 				select
 					c.id as level_2_id,
@@ -124,10 +140,59 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 				inner join categories c3
 					on c3.id = c2.parent 
 				where c."level" = 3
-			) as category_level_3 on category_level_3.level_3_id = p.category_id  
+			) as category_level_3 on category_level_3.level_3_id = p.category_id
+			left join (
+				(
+					select
+						level_3.id 
+					from categories level_3
+					left join categories level_2
+						on level_2.id = level_3.parent 
+						and level_2."level" = 2
+					left join categories level_1
+						on level_1.id = level_2.parent 
+						and level_1."level" = 1
+					where level_3."level" = 3
+						and (
+							level_3.id in ($1)
+							or level_2.id in ($1)
+							or level_1.id in ($1)
+						)
+				) union all (
+					select
+						level_2.id 
+					from categories level_2
+					left join categories level_1
+						on level_1.id = level_2.parent
+						and level_1."level" = 1
+					where level_2."level" = 2
+						and (
+							level_2.id in ($1)
+							or level_1.id in ($1)
+						) 
+				) union all (
+					select
+						level_1.id 
+					from categories level_1
+					where level_1."level" = 1
+						and level_1.id in ($1)
+				)
+			) as child on child.id = p.category_id 
+			where 
+				(
+					0 in ($1)
+					or child.id is not null
+				)
 	`
 
-	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q))
+	categoriesId := []string{"0"}
+	if req.CategoryId != "" && !strings.Contains(req.CategoryId, "#") {
+		categoriesId = []string{req.CategoryId}
+	} else if req.CategoryId != "" && strings.Contains(req.CategoryId, "#") {
+		categoriesId = strings.Split(req.CategoryId, "#")
+	}
+
+	query := r.db.WithContext(ctx).Table("(?) as t", r.db.Raw(q, categoriesId))
 	if req.StartDate != "" {
 		query = query.Where("created_at >= ?", req.StartDate)
 	}
@@ -154,13 +219,6 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 	} else if req.District != "" && strings.Contains(req.District, "#") {
 		districts := strings.Split(req.District, "#")
 		query = query.Where("district IN ?", districts)
-	}
-
-	if req.CategoryId != "" && !strings.Contains(req.CategoryId, "#") {
-		query = query.Where("t.category_id = ?", req.CategoryId)
-	} else if req.CategoryId != "" && strings.Contains(req.CategoryId, "#") {
-		categories := strings.Split(req.CategoryId, "#")
-		query = query.Where("t.category_id IN ?", categories)
 	}
 
 	if req.Search != "" {
