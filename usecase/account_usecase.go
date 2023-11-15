@@ -164,6 +164,7 @@ func (u *accountUsecase) RequestForgetPassword(ctx context.Context, req dtouseca
 		RecipientEmail: req.Email,
 		Token:          token,
 		ExpiresAt:      expirationTime,
+		Username:       account.Username,
 	}
 
 	err = util.SendMail(data)

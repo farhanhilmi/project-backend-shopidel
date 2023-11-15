@@ -41,6 +41,10 @@ func NewProductUsecase(config ProductUsecaseConfig) ProductUsecase {
 
 }
 
+// func (u *productUsecase) AddNewProduct(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error) {
+
+// }
+
 func (u *productUsecase) GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error) {
 	uReq := dtorepository.ProductListParam{
 		CategoryId: req.CategoryId,
