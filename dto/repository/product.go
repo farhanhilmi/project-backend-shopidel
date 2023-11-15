@@ -194,3 +194,9 @@ type FindProductPicturesResponse struct {
 type ProductPicture struct {
 	PictureUrl string
 }
+
+type TopCategoriesResponse struct {
+	CategoryID int    `json:"category_id"`
+	Name       string `json:"name"`
+	PictureURL string `json:"picture_url"`
+}
