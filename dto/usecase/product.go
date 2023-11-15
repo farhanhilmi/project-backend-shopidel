@@ -1,6 +1,7 @@
 package dtousecase
 
 import (
+	"mime/multipart"
 	"time"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -256,4 +257,31 @@ type AnotherProduct struct {
 	ProductPictureUrl string          `json:"product_picture_url"`
 	ProductPrice      decimal.Decimal `json:"product_price"`
 	SellerName        string          `json:"seller_name"`
+}
+
+type AddNewProductImages struct {
+	Image       multipart.File
+	ImageHeader *multipart.FileHeader
+}
+
+type AddNewProductVariant struct {
+	VariantName  string
+	VariantValue string
+	Stock        int
+	Price        decimal.Decimal
+	Images       []AddNewProductImages
+}
+
+type AddNewProductRequest struct {
+	SellerID          int
+	ProductName       string
+	Description       string
+	CategoryID        int
+	HazardousMaterial bool
+	IsNew             bool
+	InternalSKU       string
+	Weight            decimal.Decimal
+	Size              decimal.Decimal
+	IsActive          bool
+	Variants          []AddNewProductVariant
 }

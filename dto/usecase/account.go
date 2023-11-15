@@ -94,6 +94,7 @@ type SendEmailPayload struct {
 	RecipientEmail string
 	Token          string
 	ExpiresAt      time.Time
+	Username       string
 }
 
 type RefreshTokenRequest struct {
