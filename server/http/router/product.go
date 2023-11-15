@@ -11,6 +11,7 @@ func NewProductRouter(h *handler.ProductHandler, gin *gin.Engine) *gin.Engine {
 
 	product.GET("", h.ListProduct)
 	product.GET("/top-categories", h.GetTopCategories)
+	product.GET("/banners", h.GetBanners)
 	product.GET("/:productId/reviews", h.GetProductReviews)
 	product.GET("/:productId/pictures", h.GetProductPictures)
 	product.GET("/:productId/recommended-products", h.GetProductDetailRecomendedProduct)
