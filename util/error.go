@@ -71,5 +71,4 @@ var (
 	EmailNotFound                = &CustomError{Message: "we can't find this email address", Code: BadRequest}
 	ErrRequestForgetToken        = &CustomError{Message: "The link you used is invalid or unable to be processed", Code: BadRequest}
 	ErrSellerNotFound            = &CustomError{Message: "Seller not found", Code: NotFound}
-	ErrOutOfParamLimit           = &CustomError{Message: "Multiple Params Limit Reached more than Three condition, please add param between 1-3 values"}
 )
