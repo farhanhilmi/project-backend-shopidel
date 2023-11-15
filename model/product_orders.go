@@ -10,7 +10,7 @@ type ProductOrders struct {
 	ID            int             `gorm:"primaryKey;not null,autoIncrement;serial"`
 	AccountID     int             `gorm:"foreignKey:AccountID;type:bigint;not null"`
 	CourierName   string          `gorm:"type:varchar"`
-	VariantName   string          `gorm:"type:varchar"`
+	ProductName   string          `gorm:"type:varchar"`
 	DeliveryFee   decimal.Decimal `gorm:"type:decimal;not null"`
 	Province      string          `gorm:"type:varchar"`
 	District      string          `gorm:"type:varchar"`

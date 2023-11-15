@@ -85,7 +85,7 @@ type AddProductReview struct {
 	ProductOrderDetailID int
 	Feedback             string
 	Rating               int
-	Image                *multipart.File
+	Image                multipart.File
 	ImageHeader          *multipart.FileHeader
 }
 

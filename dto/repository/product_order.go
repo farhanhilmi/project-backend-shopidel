@@ -22,6 +22,7 @@ type ProductOrderRequest struct {
 	Notes              string
 	SellerWalletNumber string
 	BuyerWalletNumber  string
+	ProductName        string
 	DeliveryFee        decimal.Decimal
 	TotalAmount        decimal.Decimal
 	TotalSellerAmount  decimal.Decimal
@@ -72,6 +73,8 @@ type ProductOrderDetailRequest struct {
 	ProductVariantSelectionCombinationID int
 	Quantity                             int
 	IndividualPrice                      decimal.Decimal
+	VariantName                          string
+	ProductID                            int
 }
 
 type ProductOrderDetailResponse struct {
@@ -79,6 +82,7 @@ type ProductOrderDetailResponse struct {
 	ProductOrderID                       int
 	ProductVariantSelectionCombinationID int
 	Quantity                             int
+	VariantName                          string
 	IndividualPrice                      decimal.Decimal
 	CreatedAt                            time.Time
 	UpdatedAt                            time.Time

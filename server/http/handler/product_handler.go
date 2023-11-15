@@ -2,12 +2,8 @@ package handler
 
 import (
 	"errors"
-	"fmt"
-	"log"
 	"net/http"
-	"path"
 	"strconv"
-	"time"
 
 	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
@@ -25,32 +21,6 @@ func NewProductHandler(productUsecase usecase.ProductUsecase) *ProductHandler {
 	return &ProductHandler{
 		productUsecase: productUsecase,
 	}
-}
-
-func (h *ProductHandler) UploadPhotos(c *gin.Context) {
-	file, header, err := c.Request.FormFile("image")
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Bad request",
-		})
-		return
-	}
-	log.Println("FILE", file)
-
-	currentTime := time.Now().UnixNano()
-	fileExtension := path.Ext(header.Filename)
-
-	originalFilename := header.Filename[:len(header.Filename)-len(fileExtension)]
-
-	newFilename := fmt.Sprintf("%s_%d", originalFilename, currentTime)
-
-	imageUrl, err := util.UploadToCloudinary(file, newFilename)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: imageUrl})
 }
 
 func (h *ProductHandler) ListProduct(c *gin.Context) {

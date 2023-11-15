@@ -19,6 +19,7 @@ type ProductVariantCombinationRepository interface {
 	FindProductsByID(ctx context.Context, req dtorepository.ProductCombinationVariantListRequest) ([]dtorepository.ProductVariant, error)
 	FindById(ctx context.Context, req dtorepository.ProductCombinationVariantRequest) (dtorepository.ProductCombinationVariantRespponse, error)
 	DecreaseStockWithTx(ctx context.Context, tx *gorm.DB, req []model.ProductCombinationVariant) (model.ProductCombinationVariant, error)
+	// FindVariantNameById(ctx context.Context, req dtorepository.ProductCombinationVariantRequest) ([]dtorepository.ProductVariant, error)
 }
 
 func NewProductVariantCombinationRepository(db *gorm.DB) ProductVariantCombinationRepository {
@@ -69,11 +70,46 @@ func (r *productVariantCombinationRepository) FindProductsByID(ctx context.Conte
 	return res, err
 }
 
+// func (r *productVariantCombinationRepository) FindVariantNameById(ctx context.Context, req dtorepository.ProductCombinationVariantRequest) ([]dtorepository.ProductVariant, error) {
+// 	res := []dtorepository.ProductVariant{}
+
+// 	q := `
+// 	select pvsc.id, pvs1.name as variantName1, pvs2.name as variantName2 from product_variant_selection_combinations pvsc
+// 		left join product_variant_selections pvs1
+// 			on pvs1.id = pvsc.product_variant_selection_id1
+// 		left join product_variant_selections pvs2
+// 			on pvs2.id = pvsc.product_variant_selection_id2
+// 	where pvsc.id = ?
+// 	`
+
+// 	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q, req.ID))
+// 	err := query.Find(&res).Error
+
+// 	if errors.Is(err, gorm.ErrRecordNotFound) {
+// 		return res, util.ErrNoRecordFound
+// 	}
+
+// 	if err != nil {
+// 		return res, err
+// 	}
+
+// 	return res, err
+// }
+
 func (r *productVariantCombinationRepository) FindById(ctx context.Context, req dtorepository.ProductCombinationVariantRequest) (dtorepository.ProductCombinationVariantRespponse, error) {
-	product := model.ProductVariantSelectionCombinations{}
 	res := dtorepository.ProductCombinationVariantRespponse{}
 
-	err := r.db.WithContext(ctx).Where("id = ?", req.ID).First(&product).Error
+	q := `
+	select pvsc.id, pvsc.product_id, pvsc.price as individual_price,pvsc.stock, pvs1.name as variant_name1, pvs2.name as variant_name2 from product_variant_selection_combinations pvsc
+		left join product_variant_selections pvs1 
+			on pvs1.id = pvsc.product_variant_selection_id1
+		left join product_variant_selections pvs2 
+			on pvs2.id = pvsc.product_variant_selection_id2
+	where pvsc.id = ?
+	`
+
+	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q, req.ID))
+	err := query.Model(&model.ProductVariantSelectionCombinations{}).First(&res).Scan(&res).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound
@@ -81,11 +117,6 @@ func (r *productVariantCombinationRepository) FindById(ctx context.Context, req 
 	if err != nil {
 		return res, err
 	}
-
-	res.ID = product.ID
-	res.IndividualPrice = product.Price
-	res.Stock = product.Stock
-	res.ProductID = product.ProductID
 
 	return res, err
 }

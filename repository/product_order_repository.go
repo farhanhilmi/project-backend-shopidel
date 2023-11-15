@@ -105,19 +105,19 @@ func (r *productOrdersRepository) FindOrderByIDAndAccount(ctx context.Context, r
 	res := []model.ProductOrderDetail{}
 
 	q := `
-	select po.*, a.shop_name, pod.quantity, pod.individual_price, pvsc.picture_url, p.name as product_name, pvsc.product_id, 
+	select po.*, a.shop_name, pod.quantity, pod.individual_price, p.name as product_name, pod.product_id, 
 		por.feedback, por.rating, por.created_at as review_created_at, por.id as review_id
-		from product_orders po 
+		from product_orders po
 		left join product_order_details pod 
 			on pod.product_order_id = po.id
-		left join product_variant_selection_combinations pvsc 
-			on pvsc.id = pod.product_variant_selection_combination_id
 		left join products p 
-			on p.id = pvsc.product_id 
+			on p.id = pod.product_id 
 		left join product_order_reviews por 
-			on por.product_order_id = po.id and por.product_id = pvsc.product_id
+			on por.product_order_detail_id = po.id 
 		left join accounts a 
-			on a.id = p.seller_id 
+			on a.id = p.seller_id
+		left join product_order_review_images pori 
+			on pori.product_review_id = por.id
 	where po.account_id = ? and po.id = ?
 	`
 
@@ -172,7 +172,7 @@ func (r *productOrdersRepository) FindAllOrderHistoriesByUser(ctx context.Contex
 	res := []model.ProductOrderHistories{}
 
 	q := `
-	select po.*, pod.id as product_order_detail_id, po.status, a.shop_name, pod.quantity, pod.individual_price, p.name as product_name, p.id as product_id, 
+	select po.*, pod.variant_name, pod.id as product_order_detail_id, po.status, a.shop_name, pod.quantity, pod.individual_price, p.name as product_name, p.id as product_id, 
 	por.feedback, por.rating, por.created_at as review_created_at, por.id as review_id, pori.image_url as review_image_url
 		from product_orders po
 		left join product_order_details pod 
@@ -216,7 +216,7 @@ func (r *productOrdersRepository) FindAllOrderHistoriesByUserAndStatus(ctx conte
 	res := []model.ProductOrderHistories{}
 
 	q := `
-	select po.*, pod.id as product_order_detail_id, po.status, a.shop_name, pod.quantity, pod.individual_price, p.name as product_name, p.id as product_id, 
+	select po.*, pod.variant_name, pod.id as product_order_detail_id, po.status, a.shop_name, pod.quantity, pod.individual_price, p.name as product_name, p.id as product_id, 
 	por.feedback, por.rating, por.created_at as review_created_at, por.id as review_id, pori.image_url as review_image_url
 		from product_orders po
 		left join product_order_details pod 
@@ -391,6 +391,11 @@ func (r *productOrdersRepository) AddProductReview(ctx context.Context, req dtor
 		return res, err
 	}
 
+	if req.ImageURL == "" {
+		tx.Commit()
+		return res, err
+	}
+
 	reviewImage := model.ProductOrderReviewImages{
 		ImageURL:        req.ImageURL,
 		ProductReviewID: res.ID,
@@ -415,7 +420,7 @@ func (r *productOrdersRepository) AddProductReview(ctx context.Context, req dtor
 func (r *productOrdersRepository) FindReviewByID(ctx context.Context, req dtorepository.ProductReviewRequest) (dtorepository.ProductReviewResponse, error) {
 	res := dtorepository.ProductReviewResponse{}
 	review := model.ProductOrderReviews{}
-	err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountID).Where("product_order_id = ?", req.OrderID).Where("product_id", req.ProductID).First(&review).Scan(&res).Error
+	err := r.db.WithContext(ctx).Where("account_id = ?", req.AccountID).Where("product_order_detail_id = ?", req.OrderID).Where("product_id", req.ProductID).First(&review).Scan(&res).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound
 	}
@@ -524,6 +529,7 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 		AccountID:     req.AccountID,
 		DeliveryFee:   req.DeliveryFee,
 		District:      req.District,
+		ProductName:   req.ProductName,
 		Province:      req.Province,
 		SubDistrict:   req.SubDistrict,
 		Kelurahan:     req.Kelurahan,
@@ -551,7 +557,8 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 			ProductOrderID:  res.ID,
 			Quantity:        o.Quantity,
 			IndividualPrice: o.IndividualPrice,
-			VariantName:     "XL, Merah",
+			VariantName:     o.VariantName,
+			ProductID:       o.ProductID,
 		}
 		productVariants = append(productVariants, variant)
 		orderDetailReq = append(orderDetailReq, product)

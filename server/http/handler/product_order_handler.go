@@ -162,57 +162,32 @@ func (h *ProductOrderHandler) GetCouriers(c *gin.Context) {
 }
 
 func (h *ProductOrderHandler) AddProductReview(c *gin.Context) {
-	type AddProductReviewRequest struct {
-		// AccountID int
-		ProductID int `form:"product_id" binding:"required"`
-		// OrderID   int
-		Feedback string `form:"feedback" binding:"required"`
-		Rating   int    `form:"rating" binding:"required"`
-
-		// NestedAnonyStruct struct {
-		// 	FieldX string `form:"field_x"`
-		// }
-		// FieldD string `form:"field_d"`
-	}
-
-	var req AddProductReviewRequest
+	var req dtohttp.AddProductReviewRequest
 
 	err := c.ShouldBind(&req)
 	if err != nil {
 		c.Error(util.ErrInvalidInput)
 		return
 	}
-
-	file, header, err := c.Request.FormFile("image")
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Bad request",
-		})
-		return
-	}
-
-	// file, header, err := c.Request.FormFile("image")
-	// if err != nil {
-	// 	c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-	// 		"error": "Bad request",
-	// 	})
-	// 	return
-	// }
-
 	id := c.Param("productOrderDetailID")
 	productOrderDetailID, err := strconv.Atoi(id)
 	if err != nil {
 		c.Error(err)
 		return
 	}
+
 	uReq := dtousecase.AddProductReview{
 		AccountID:            c.GetInt("userId"),
 		ProductID:            req.ProductID,
 		ProductOrderDetailID: productOrderDetailID,
 		Feedback:             req.Feedback,
 		Rating:               req.Rating,
-		Image:                &file,
-		ImageHeader:          header,
+	}
+
+	file, header, err := c.Request.FormFile("image")
+	if err == nil {
+		uReq.Image = file
+		uReq.ImageHeader = header
 	}
 
 	response, err := h.productOrderUsecase.AddProductReview(c.Request.Context(), uReq)

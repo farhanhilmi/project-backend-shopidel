@@ -79,6 +79,8 @@ var ProductOrderDetails = []model.ProductOrderDetails{
 	{
 		ProductOrderID:  9,
 		Quantity:        1,
+		ProductID:       4,
+		VariantName:     "XL, Merah",
 		IndividualPrice: decimal.NewFromInt(37000),
 	},
 	{

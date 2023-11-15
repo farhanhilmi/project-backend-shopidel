@@ -94,6 +94,8 @@ type ProductCombinationVariantRequest struct {
 type ProductCombinationVariantRespponse struct {
 	ID              int
 	IndividualPrice decimal.Decimal
+	VariantName1    string
+	VariantName2    string
 	Stock           int
 	ProductID       int
 }

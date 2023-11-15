@@ -32,6 +32,7 @@ type ProductOrderUsecase interface {
 
 type productOrderUsecase struct {
 	productOrderRepository    repository.ProductOrdersRepository
+	productRepository         repository.ProductRepository
 	productCombinationVariant repository.ProductVariantCombinationRepository
 	accountAddressRepository  repository.AccountAddressRepository
 	accountRepository         repository.AccountRepository
@@ -40,6 +41,7 @@ type productOrderUsecase struct {
 
 type ProductOrderUsecaseConfig struct {
 	ProductOrderRepository              repository.ProductOrdersRepository
+	ProductRepository                   repository.ProductRepository
 	ProductVariantCombinationRepository repository.ProductVariantCombinationRepository
 	AccountAddressRepository            repository.AccountAddressRepository
 	AccountRepository                   repository.AccountRepository
@@ -63,6 +65,9 @@ func NewProductOrderUsecase(config ProductOrderUsecaseConfig) ProductOrderUsecas
 	if config.CourierRepository != nil {
 		au.courierRepository = config.CourierRepository
 	}
+	if config.ProductRepository != nil {
+		au.productRepository = config.ProductRepository
+	}
 
 	return au
 }
@@ -82,6 +87,7 @@ func (u *productOrderUsecase) CheckoutOrder(ctx context.Context, req dtousecase.
 
 	orderDetails := []dtorepository.ProductOrderDetailRequest{}
 	totalPayment := decimal.NewFromInt(0)
+	productId := 0
 
 	for _, p := range req.ProductVariant {
 		if p.Quantity < 1 {
@@ -98,11 +104,24 @@ func (u *productOrderUsecase) CheckoutOrder(ctx context.Context, req dtousecase.
 		if productVariant.Stock < 1 {
 			return nil, util.ErrInsufficientStock
 		}
+		productId = productVariant.ProductID
+
+		variantNames := productVariant.VariantName1
+
+		if productVariant.VariantName2 != "" && productVariant.VariantName2 != "default_reserved_keyword" {
+			variantNames += ", " + productVariant.VariantName2
+		}
+
+		if productVariant.VariantName1 == "default_reserved_keyword" {
+			variantNames = ""
+		}
 
 		order := dtorepository.ProductOrderDetailRequest{
 			Quantity:                             p.Quantity,
 			ProductVariantSelectionCombinationID: p.ID,
 			IndividualPrice:                      productVariant.IndividualPrice,
+			VariantName:                          variantNames,
+			ProductID:                            productVariant.ProductID,
 		}
 		qty, err := decimal.NewFromString(fmt.Sprintf("%v", p.Quantity))
 		if err != nil {
@@ -156,17 +175,25 @@ func (u *productOrderUsecase) CheckoutOrder(ctx context.Context, req dtousecase.
 		return nil, err
 	}
 
+	product, err := u.productRepository.FindByID(ctx, dtorepository.ProductRequest{ProductID: productId})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrProductNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	orderRequest := dtorepository.ProductOrderRequest{
-		Province:      address.Province,
-		District:      address.District,
-		SubDistrict:   address.SubDistrict,
-		Kelurahan:     address.Kelurahan,
-		AddressDetail: address.Detail,
-		ZipCode:       address.ZipCode,
-		AccountID:     req.UserID,
-		SellerID:      req.SellerID,
-		// CourierID:          req.CourierID,
-		CourierName:        "",
+		Province:           address.Province,
+		District:           address.District,
+		SubDistrict:        address.SubDistrict,
+		Kelurahan:          address.Kelurahan,
+		AddressDetail:      address.Detail,
+		ZipCode:            address.ZipCode,
+		AccountID:          req.UserID,
+		SellerID:           req.SellerID,
+		ProductName:        product.Name,
+		CourierName:        courier.Name,
 		Status:             constant.StatusOrderOnProcess,
 		Notes:              req.Notes,
 		DeliveryFee:        deliveryFee,
@@ -362,14 +389,18 @@ func (u *productOrderUsecase) AddProductReview(ctx context.Context, req dtouseca
 		return nil, err
 	}
 
-	currentTime := time.Now().UnixNano()
-	fileExtension := path.Ext(req.ImageHeader.Filename)
-	originalFilename := req.ImageHeader.Filename[:len(req.ImageHeader.Filename)-len(fileExtension)]
-	newFilename := fmt.Sprintf("%s_%d", originalFilename, currentTime)
+	var imageUrl string
 
-	imageUrl, err := util.UploadToCloudinary(*req.Image, newFilename)
-	if err != nil {
-		return nil, err
+	if req.Image != nil {
+		currentTime := time.Now().UnixNano()
+		fileExtension := path.Ext(req.ImageHeader.Filename)
+		originalFilename := req.ImageHeader.Filename[:len(req.ImageHeader.Filename)-len(fileExtension)]
+		newFilename := fmt.Sprintf("%s_%d", originalFilename, currentTime)
+
+		imageUrl, err = util.UploadToCloudinary(req.Image, newFilename)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	newReview, err := u.productOrderRepository.AddProductReview(ctx, dtorepository.AddProductReviewRequest{

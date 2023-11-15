@@ -49,8 +49,8 @@ type CheckoutOrderRequest struct {
 
 type AddProductReviewRequest struct {
 	AccountID int
-	ProductID int `json:"product_id" binding:"required"`
 	OrderID   int
-	Feedback  string `json:"feedback" binding:"required"`
-	Rating    int    `json:"rating" binding:"required"`
+	ProductID int    `form:"product_id" binding:"required"`
+	Feedback  string `form:"feedback" binding:"required"`
+	Rating    int    `form:"rating" binding:"required"`
 }
