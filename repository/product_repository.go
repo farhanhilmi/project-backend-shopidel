@@ -150,27 +150,27 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 	}
 
 	if req.District != "" && !strings.Contains(req.District, "#") {
-		query = query.Or("district ilike ?", req.District)
+		query = query.Where("district ilike ?", req.District)
 	} else if req.District != "" && strings.Contains(req.District, "#") {
 		districts := strings.Split(req.District, "#")
-		for _, district := range districts {
-			query = query.Or("district ilike ?", district)
-		}
+		query = query.Where("district IN ?", districts)
 	}
 
 	if req.CategoryId != "" && !strings.Contains(req.CategoryId, "#") {
-		query = query.Or("t.category_id = ?", req.CategoryId)
+		query = query.Where("t.category_id = ?", req.CategoryId)
 	} else if req.CategoryId != "" && strings.Contains(req.CategoryId, "#") {
 		categories := strings.Split(req.CategoryId, "#")
-		for _, category := range categories {
-			query = query.Or("t.category_id = ?", category)
-		}
+		query = query.Where("t.category_id IN ?", categories)
 	}
 
 	if req.Search != "" {
+		find := "%" + req.Search + "%"
 		query = query.
-			Where("name ilike ?", "%"+req.Search+"%").
-			Or("description ilike ?", "%"+req.Search+"%")
+			Where(
+				"name ilike ? or description ilike ?",
+				find,
+				find,
+			)
 	}
 
 	if err := query.Count(&totalItems).Error; err != nil {
