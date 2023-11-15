@@ -196,7 +196,7 @@ type ProductPicture struct {
 }
 
 type TopCategoriesResponse struct {
-	CategoryID int
-	Name       string
-	PictureURL string
+	CategoryID int    `json:"category_id"`
+	Name       string `json:"name"`
+	PictureURL string `json:"picture_url"`
 }
