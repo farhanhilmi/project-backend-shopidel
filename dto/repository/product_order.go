@@ -17,11 +17,12 @@ type ProductOrderRequest struct {
 	AddressDetail      string
 	AccountID          int
 	SellerID           int
-	CourierID          int
+	CourierName        string
 	Status             string
 	Notes              string
 	SellerWalletNumber string
 	BuyerWalletNumber  string
+	ProductName        string
 	DeliveryFee        decimal.Decimal
 	TotalAmount        decimal.Decimal
 	TotalSellerAmount  decimal.Decimal
@@ -42,7 +43,7 @@ type ReceiveOrderRequest struct {
 
 type ProductOrderResponse struct {
 	ID            int
-	CourierID     int
+	CourierName   string
 	AccountID     int
 	DeliveryFee   decimal.Decimal
 	Province      string
@@ -72,6 +73,8 @@ type ProductOrderDetailRequest struct {
 	ProductVariantSelectionCombinationID int
 	Quantity                             int
 	IndividualPrice                      decimal.Decimal
+	VariantName                          string
+	ProductID                            int
 }
 
 type ProductOrderDetailResponse struct {
@@ -79,6 +82,7 @@ type ProductOrderDetailResponse struct {
 	ProductOrderID                       int
 	ProductVariantSelectionCombinationID int
 	Quantity                             int
+	VariantName                          string
 	IndividualPrice                      decimal.Decimal
 	CreatedAt                            time.Time
 	UpdatedAt                            time.Time
@@ -119,11 +123,12 @@ type OrderDetailRequest struct {
 }
 
 type AddProductReviewRequest struct {
-	AccountID int
-	ProductID int
-	OrderID   int
-	Feedback  string
-	Rating    int
+	AccountID            int
+	ProductID            int
+	ProductOrderDetailID int
+	Feedback             string
+	ImageURL             string
+	Rating               int
 }
 
 type AddProductReviewResponse struct {

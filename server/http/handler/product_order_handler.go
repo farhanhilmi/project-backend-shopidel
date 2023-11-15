@@ -164,24 +164,30 @@ func (h *ProductOrderHandler) GetCouriers(c *gin.Context) {
 func (h *ProductOrderHandler) AddProductReview(c *gin.Context) {
 	var req dtohttp.AddProductReviewRequest
 
-	err := c.ShouldBindJSON(&req)
+	err := c.ShouldBind(&req)
 	if err != nil {
 		c.Error(util.ErrInvalidInput)
 		return
 	}
-
-	id := c.Param("orderId")
-	orderId, err := strconv.Atoi(id)
+	id := c.Param("productOrderDetailID")
+	productOrderDetailID, err := strconv.Atoi(id)
 	if err != nil {
 		c.Error(err)
 		return
 	}
+
 	uReq := dtousecase.AddProductReview{
-		AccountID: c.GetInt("userId"),
-		ProductID: req.ProductID,
-		OrderID:   orderId,
-		Feedback:  req.Feedback,
-		Rating:    req.Rating,
+		AccountID:            c.GetInt("userId"),
+		ProductID:            req.ProductID,
+		ProductOrderDetailID: productOrderDetailID,
+		Feedback:             req.Feedback,
+		Rating:               req.Rating,
+	}
+
+	file, header, err := c.Request.FormFile("image")
+	if err == nil {
+		uReq.Image = file
+		uReq.ImageHeader = header
 	}
 
 	response, err := h.productOrderUsecase.AddProductReview(c.Request.Context(), uReq)
