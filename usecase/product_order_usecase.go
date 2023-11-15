@@ -155,15 +155,16 @@ func (u *productOrderUsecase) CheckoutOrder(ctx context.Context, req dtousecase.
 	}
 
 	orderRequest := dtorepository.ProductOrderRequest{
-		Province:           address.Province,
-		District:           address.District,
-		SubDistrict:        address.SubDistrict,
-		Kelurahan:          address.Kelurahan,
-		AddressDetail:      address.Detail,
-		ZipCode:            address.ZipCode,
-		AccountID:          req.UserID,
-		SellerID:           req.SellerID,
-		CourierID:          req.CourierID,
+		Province:      address.Province,
+		District:      address.District,
+		SubDistrict:   address.SubDistrict,
+		Kelurahan:     address.Kelurahan,
+		AddressDetail: address.Detail,
+		ZipCode:       address.ZipCode,
+		AccountID:     req.UserID,
+		SellerID:      req.SellerID,
+		// CourierID:          req.CourierID,
+		CourierName:        "",
 		Status:             constant.StatusOrderOnProcess,
 		Notes:              req.Notes,
 		DeliveryFee:        deliveryFee,
@@ -364,6 +365,7 @@ func (u *productOrderUsecase) AddProductReview(ctx context.Context, req dtouseca
 		ProductID: req.ProductID,
 		OrderID:   req.OrderID,
 		Feedback:  req.Feedback,
+		ImageURL:  "",
 		Rating:    req.Rating,
 	})
 	if err != nil {

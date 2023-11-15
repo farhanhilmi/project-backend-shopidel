@@ -51,7 +51,7 @@ func (r *productOrdersRepository) FindByID(ctx context.Context, req dtorepositor
 
 	res.ID = order.ID
 	res.AccountID = order.AccountID
-	res.CourierID = order.CourierID
+	res.CourierName = order.CourierName
 	res.DeliveryFee = order.DeliveryFee
 	res.Province = order.Province
 	res.SubDistrict = order.SubDistrict
@@ -168,7 +168,7 @@ func (r *productOrdersRepository) FindAllOrderHistoriesByUser(ctx context.Contex
 	res := []model.ProductOrderHistories{}
 
 	q := `
-	select po.*, po.status, a.shop_name, pod.quantity, pod.individual_price, pvsc.picture_url, p.name as product_name, pvsc.product_id, 
+	select po.*, po.status, a.shop_name, pod.quantity, pod.individual_price, pvsc.picture_url, p.name as product_name, pvsc.id as product_id, 
 	por.feedback, por.rating, por.created_at as review_created_at, por.id as review_id
 		from product_orders po
 		left join product_order_details pod 
@@ -282,7 +282,7 @@ func (r *productOrdersRepository) FindByIDAndAccountID(ctx context.Context, req 
 
 	res.ID = order.ID
 	res.AccountID = order.AccountID
-	res.CourierID = order.CourierID
+	res.CourierName = order.CourierName
 	res.DeliveryFee = order.DeliveryFee
 	res.Province = order.Province
 	res.SubDistrict = order.SubDistrict
@@ -312,7 +312,7 @@ func (r *productOrdersRepository) FindByStatusAndAccountID(ctx context.Context, 
 
 	res.ID = order.ID
 	res.AccountID = order.AccountID
-	res.CourierID = order.CourierID
+	res.CourierName = order.CourierName
 	res.DeliveryFee = order.DeliveryFee
 	res.Province = order.Province
 	res.SubDistrict = order.SubDistrict
@@ -346,7 +346,7 @@ func (r *productOrdersRepository) FindByIDAndAccountAndStatus(ctx context.Contex
 
 	res.ID = order.ID
 	res.AccountID = order.AccountID
-	res.CourierID = order.CourierID
+	res.CourierName = order.CourierName
 	res.DeliveryFee = order.DeliveryFee
 	res.Province = order.Province
 	res.SubDistrict = order.SubDistrict
@@ -372,14 +372,36 @@ func (r *productOrdersRepository) AddProductReview(ctx context.Context, req dtor
 		Rating:         req.Rating,
 	}
 
+	tx := r.db.Begin()
+
 	err := r.db.WithContext(ctx).Model(&review).Create(&review).Scan(&res).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
+		tx.Rollback()
 		return res, util.ErrNoRecordFound
 	}
 	if err != nil {
+		tx.Rollback()
 		return res, err
 	}
+
+	reviewImage := model.ProductOrderReviewImages{
+		ImageURL:        req.ImageURL,
+		ProductReviewID: res.ID,
+	}
+
+	err = r.db.WithContext(ctx).Model(&model.ProductOrderReviewImages{}).Create(&reviewImage).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		tx.Rollback()
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	tx.Commit()
 
 	return res, err
 }
@@ -441,7 +463,7 @@ func (r *productOrdersRepository) UpdateOrderStatusByIDAndAccountID(ctx context.
 
 	res.ID = order.ID
 	res.AccountID = order.AccountID
-	res.CourierID = order.CourierID
+	res.CourierName = order.CourierName
 	res.DeliveryFee = order.DeliveryFee
 	res.Province = order.Province
 	res.SubDistrict = order.SubDistrict
@@ -472,7 +494,7 @@ func (r *productOrdersRepository) ProcessedOrder(ctx context.Context, req dtorep
 
 	res.ID = order.ID
 	res.AccountID = order.AccountID
-	res.CourierID = order.CourierID
+	res.CourierName = order.CourierName
 	res.DeliveryFee = order.DeliveryFee
 	res.Province = order.Province
 	res.SubDistrict = order.SubDistrict
@@ -492,7 +514,7 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 	tx := r.db.Begin()
 
 	a := model.ProductOrders{
-		CourierID:     req.CourierID,
+		CourierName:   req.CourierName,
 		AccountID:     req.AccountID,
 		DeliveryFee:   req.DeliveryFee,
 		District:      req.District,
@@ -568,7 +590,7 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 
 	res.ID = a.ID
 	res.AccountID = a.AccountID
-	res.CourierID = a.CourierID
+	res.CourierName = a.CourierName
 	res.DeliveryFee = a.DeliveryFee
 	res.Province = a.Province
 	res.SubDistrict = a.SubDistrict

@@ -17,7 +17,7 @@ type ProductOrderRequest struct {
 	AddressDetail      string
 	AccountID          int
 	SellerID           int
-	CourierID          int
+	CourierName        string
 	Status             string
 	Notes              string
 	SellerWalletNumber string
@@ -42,7 +42,7 @@ type ReceiveOrderRequest struct {
 
 type ProductOrderResponse struct {
 	ID            int
-	CourierID     int
+	CourierName   string
 	AccountID     int
 	DeliveryFee   decimal.Decimal
 	Province      string
@@ -123,6 +123,7 @@ type AddProductReviewRequest struct {
 	ProductID int
 	OrderID   int
 	Feedback  string
+	ImageURL  string
 	Rating    int
 }
 

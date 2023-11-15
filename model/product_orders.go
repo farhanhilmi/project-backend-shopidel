@@ -8,8 +8,9 @@ import (
 
 type ProductOrders struct {
 	ID            int             `gorm:"primaryKey;not null,autoIncrement;serial"`
-	CourierID     int             `gorm:"foreignKey:CourierID;type:bigint;not null"`
 	AccountID     int             `gorm:"foreignKey:AccountID;type:bigint;not null"`
+	CourierName   string          `gorm:"type:varchar"`
+	VariantName   string          `gorm:"type:varchar"`
 	DeliveryFee   decimal.Decimal `gorm:"type:decimal;not null"`
 	Province      string          `gorm:"type:varchar"`
 	District      string          `gorm:"type:varchar"`
@@ -38,6 +39,7 @@ type ProductOrderDetails struct {
 	ProductOrderID                       int             `gorm:"foreignKey:ProductOrderID;type:bigint;not null"`
 	ProductVariantSelectionCombinationID int             `gorm:"foreignKey:ProductVariantSelectionCombinationID;type:bigint;not null"`
 	Quantity                             int             `gorm:"type:int;not null"`
+	VariantName                          string          `gorm:"type:varchar"`
 	IndividualPrice                      decimal.Decimal `gorm:"type:decimal;not null"`
 	CreatedAt                            time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	UpdatedAt                            time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
@@ -109,4 +111,13 @@ type ProductOrderReviews struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	DeletedAt      time.Time
+}
+
+type ProductOrderReviewImages struct {
+	ID              int
+	ProductReviewID int
+	ImageURL        string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	DeletedAt       time.Time
 }
