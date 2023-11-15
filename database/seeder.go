@@ -77,6 +77,7 @@ func createTable() {
 		&model.Province{},
 		&model.District{},
 		&model.SellerPageSelectedCategory{},
+		&model.ProductOrderReviewImages{},
 	)
 
 	if err != nil {

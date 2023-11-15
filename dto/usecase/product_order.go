@@ -1,6 +1,7 @@
 package dtousecase
 
 import (
+	"mime/multipart"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -79,11 +80,13 @@ type SellerCourier struct {
 }
 
 type AddProductReview struct {
-	AccountID int
-	ProductID int
-	OrderID   int
-	Feedback  string
-	Rating    int
+	AccountID            int
+	ProductID            int
+	ProductOrderDetailID int
+	Feedback             string
+	Rating               int
+	Image                *multipart.File
+	ImageHeader          *multipart.FileHeader
 }
 
 type AddProductReviewResponse struct {

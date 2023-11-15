@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
@@ -339,7 +341,7 @@ func (u *productOrderUsecase) AddProductReview(ctx context.Context, req dtouseca
 	_, err := u.productOrderRepository.FindByIDAndAccountAndStatus(ctx, dtorepository.ProductOrderRequest{
 		Status:    constant.StatusOrderCompleted,
 		AccountID: req.AccountID,
-		ID:        req.OrderID,
+		ID:        req.ProductOrderDetailID,
 	})
 	if errors.Is(err, util.ErrNoRecordFound) {
 		return nil, util.ErrProductOrderNotFound
@@ -350,7 +352,7 @@ func (u *productOrderUsecase) AddProductReview(ctx context.Context, req dtouseca
 
 	_, err = u.productOrderRepository.FindReviewByID(ctx, dtorepository.ProductReviewRequest{
 		AccountID: req.AccountID,
-		OrderID:   req.OrderID,
+		OrderID:   req.ProductOrderDetailID,
 		ProductID: req.ProductID,
 	})
 	if !errors.Is(err, util.ErrNoRecordFound) {
@@ -360,13 +362,23 @@ func (u *productOrderUsecase) AddProductReview(ctx context.Context, req dtouseca
 		return nil, err
 	}
 
+	currentTime := time.Now().UnixNano()
+	fileExtension := path.Ext(req.ImageHeader.Filename)
+	originalFilename := req.ImageHeader.Filename[:len(req.ImageHeader.Filename)-len(fileExtension)]
+	newFilename := fmt.Sprintf("%s_%d", originalFilename, currentTime)
+
+	imageUrl, err := util.UploadToCloudinary(*req.Image, newFilename)
+	if err != nil {
+		return nil, err
+	}
+
 	newReview, err := u.productOrderRepository.AddProductReview(ctx, dtorepository.AddProductReviewRequest{
-		AccountID: req.AccountID,
-		ProductID: req.ProductID,
-		OrderID:   req.OrderID,
-		Feedback:  req.Feedback,
-		ImageURL:  "",
-		Rating:    req.Rating,
+		AccountID:            req.AccountID,
+		ProductID:            req.ProductID,
+		ProductOrderDetailID: req.ProductOrderDetailID,
+		Feedback:             req.Feedback,
+		ImageURL:             imageUrl,
+		Rating:               req.Rating,
 	})
 	if err != nil {
 		return nil, err
@@ -376,7 +388,7 @@ func (u *productOrderUsecase) AddProductReview(ctx context.Context, req dtouseca
 		ID:        newReview.ID,
 		AccountID: newReview.AccountID,
 		ProductID: newReview.ProductID,
-		OrderID:   req.OrderID,
+		OrderID:   req.ProductOrderDetailID,
 		Feedback:  newReview.Feedback,
 		Rating:    newReview.Rating,
 		CreatedAt: newReview.CreatedAt,
@@ -391,16 +403,19 @@ func (u *productOrderUsecase) convertOrderHistoriesReponse(ctx context.Context, 
 	for _, o := range orders {
 		review := dtousecase.ProductOrderReview{}
 		product := dtousecase.OrderProduct{
-			ProductName:     o.ProductName,
-			Quantity:        o.Quantity,
-			IndividualPrice: o.IndividualPrice,
-			ProductID:       o.ProductID,
+			ProductName:          o.ProductName,
+			Quantity:             o.Quantity,
+			IndividualPrice:      o.IndividualPrice,
+			ProductID:            o.ProductID,
+			ProductOrderDetailID: o.ProductOrderDetailID,
+			VariantName:          o.VariantName,
 		}
 		if o.ReviewID > 0 {
 			review.ReviewID = o.ReviewID
 			review.ReviewFeedback = o.Feedback
 			review.ReviewRating = o.Rating
 			review.CreatedAt = o.ReviewCreatedAt
+			review.ReviewImageURL = o.ReviewImageURL
 			product.IsReviewed = true
 		}
 

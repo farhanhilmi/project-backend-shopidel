@@ -35,15 +35,15 @@ type Couriers struct {
 }
 
 type ProductOrderDetails struct {
-	ID                                   int             `gorm:"primaryKey;not null,autoIncrement;serial"`
-	ProductOrderID                       int             `gorm:"foreignKey:ProductOrderID;type:bigint;not null"`
-	ProductVariantSelectionCombinationID int             `gorm:"foreignKey:ProductVariantSelectionCombinationID;type:bigint;not null"`
-	Quantity                             int             `gorm:"type:int;not null"`
-	VariantName                          string          `gorm:"type:varchar"`
-	IndividualPrice                      decimal.Decimal `gorm:"type:decimal;not null"`
-	CreatedAt                            time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
-	UpdatedAt                            time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
-	DeletedAt                            time.Time       `gorm:"type:timestamp;default:null"`
+	ID              int             `gorm:"primaryKey;not null,autoIncrement;serial"`
+	ProductOrderID  int             `gorm:"foreignKey:ProductOrderID;type:bigint;not null"`
+	ProductID       int             `gorm:"foreignKey:ProductID;type:bigint;not null"`
+	Quantity        int             `gorm:"type:int;not null"`
+	VariantName     string          `gorm:"type:varchar"`
+	IndividualPrice decimal.Decimal `gorm:"type:decimal;not null"`
+	CreatedAt       time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
+	UpdatedAt       time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
+	DeletedAt       time.Time       `gorm:"type:timestamp;default:null"`
 }
 
 type ProductOrderSeller struct {
@@ -59,21 +59,25 @@ type ProductOrderSeller struct {
 }
 
 type ProductOrderHistories struct {
-	ID              int
-	ProductName     string
-	Quantity        int
-	Status          string
-	ProductID       int
-	IndividualPrice decimal.Decimal
-	PictureURL      string
-	Feedback        string
-	Rating          int
-	ReviewID        int
-	ShopName        string
-	ReviewCreatedAt time.Time
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	DeletedAt       time.Time
+	ID                   int
+	ProductOrderDetailID int
+	ProductName          string
+	CourierName          string
+	VariantName          string
+	Quantity             int
+	Status               string
+	ProductID            int
+	IndividualPrice      decimal.Decimal
+	PictureURL           string
+	Feedback             string
+	Rating               int
+	ReviewID             int
+	ReviewImageURL       string
+	ShopName             string
+	ReviewCreatedAt      time.Time
+	CreatedAt            time.Time
+	UpdatedAt            time.Time
+	DeletedAt            time.Time
 }
 
 type ProductOrderDetail struct {
@@ -102,15 +106,16 @@ type ProductOrderDetail struct {
 }
 
 type ProductOrderReviews struct {
-	ID             int
-	AccountID      int
-	ProductID      int
-	ProductOrderID int
-	Feedback       string
-	Rating         int
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-	DeletedAt      time.Time
+	ID                   int
+	AccountID            int
+	ProductID            int
+	ProductOrderDetailID int
+	Feedback             string
+	Rating               int
+	VariantName          string
+	CreatedAt            time.Time
+	UpdatedAt            time.Time
+	DeletedAt            time.Time
 }
 
 type ProductOrderReviewImages struct {

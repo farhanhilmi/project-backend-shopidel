@@ -119,12 +119,12 @@ type OrderDetailRequest struct {
 }
 
 type AddProductReviewRequest struct {
-	AccountID int
-	ProductID int
-	OrderID   int
-	Feedback  string
-	ImageURL  string
-	Rating    int
+	AccountID            int
+	ProductID            int
+	ProductOrderDetailID int
+	Feedback             string
+	ImageURL             string
+	Rating               int
 }
 
 type AddProductReviewResponse struct {

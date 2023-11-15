@@ -4,10 +4,10 @@ import "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupia
 
 var ProductOrderReviews = []model.ProductOrderReviews{
 	{
-		AccountID:      2,
-		ProductOrderID: 1,
-		Feedback:       "Ini product nya sangat bagus ya bang, menarik untuk beli lagi nanti aha",
-		Rating:         5,
-		ProductID:      5,
+		AccountID:            2,
+		ProductOrderDetailID: 1,
+		Feedback:             "Ini product nya sangat bagus ya bang, menarik untuk beli lagi nanti aha",
+		Rating:               5,
+		ProductID:            5,
 	},
 }

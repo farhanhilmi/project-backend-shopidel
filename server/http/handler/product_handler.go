@@ -28,7 +28,7 @@ func NewProductHandler(productUsecase usecase.ProductUsecase) *ProductHandler {
 }
 
 func (h *ProductHandler) UploadPhotos(c *gin.Context) {
-	file, header, err := c.Request.FormFile("file[]")
+	file, header, err := c.Request.FormFile("image")
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Bad request",
@@ -36,7 +36,6 @@ func (h *ProductHandler) UploadPhotos(c *gin.Context) {
 		return
 	}
 	log.Println("FILE", file)
-	return
 
 	currentTime := time.Now().UnixNano()
 	fileExtension := path.Ext(header.Filename)

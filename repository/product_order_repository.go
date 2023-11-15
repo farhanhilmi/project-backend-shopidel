@@ -73,12 +73,14 @@ func (r *productOrdersRepository) countOrderHistoriesByAccountID(ctx context.Con
 		from product_orders po
 		left join product_order_details pod 
 			on pod.product_order_id = po.id
-		left join product_variant_selection_combinations pvsc 
-			on pvsc.id = pod.product_variant_selection_combination_id
 		left join products p 
-			on p.id = pvsc.product_id 
+			on p.id = pod.product_id 
 		left join product_order_reviews por 
-			on por.product_order_id = po.id and por.product_id = pvsc.product_id
+			on por.product_order_detail_id = po.id 
+		left join accounts a 
+			on a.id = p.seller_id
+		left join product_order_review_images pori 
+			on pori.product_review_id = por.id
 	where po.account_id = ?
 	`
 
@@ -138,12 +140,14 @@ func (r *productOrdersRepository) countOrderHistoriesByAccountIDAndStatus(ctx co
 		from product_orders po
 		left join product_order_details pod 
 			on pod.product_order_id = po.id
-		left join product_variant_selection_combinations pvsc 
-			on pvsc.id = pod.product_variant_selection_combination_id
 		left join products p 
-			on p.id = pvsc.product_id 
+			on p.id = pod.product_id 
 		left join product_order_reviews por 
-			on por.product_order_id = po.id and por.product_id = pvsc.product_id
+			on por.product_order_detail_id = po.id 
+		left join accounts a 
+			on a.id = p.seller_id
+		left join product_order_review_images pori 
+			on pori.product_review_id = por.id
 	where po.account_id = ? and status ilike ?
 	`
 
@@ -168,18 +172,19 @@ func (r *productOrdersRepository) FindAllOrderHistoriesByUser(ctx context.Contex
 	res := []model.ProductOrderHistories{}
 
 	q := `
-	select po.*, po.status, a.shop_name, pod.quantity, pod.individual_price, pvsc.picture_url, p.name as product_name, pvsc.id as product_id, 
-	por.feedback, por.rating, por.created_at as review_created_at, por.id as review_id
+	select po.*, pod.id as product_order_detail_id, po.status, a.shop_name, pod.quantity, pod.individual_price, p.name as product_name, p.id as product_id, 
+	por.feedback, por.rating, por.created_at as review_created_at, por.id as review_id, pori.image_url as review_image_url
 		from product_orders po
 		left join product_order_details pod 
 			on pod.product_order_id = po.id
-		left join product_variant_selection_combinations pvsc 
-			on pvsc.id = pod.product_variant_selection_combination_id
 		left join products p 
-			on p.id = pvsc.product_id 
+			on p.id = pod.product_id 
 		left join product_order_reviews por 
-			on por.product_order_id = po.id and por.product_id = pvsc.product_id
-		left join accounts a on a.id = p.seller_id
+			on por.product_order_detail_id = po.id 
+		left join accounts a 
+			on a.id = p.seller_id
+		left join product_order_review_images pori 
+			on pori.product_review_id = por.id
 	where po.account_id = ?
 	`
 
@@ -211,18 +216,19 @@ func (r *productOrdersRepository) FindAllOrderHistoriesByUserAndStatus(ctx conte
 	res := []model.ProductOrderHistories{}
 
 	q := `
-	select po.*, a.shop_name, pod.quantity, pod.individual_price, pvsc.picture_url, p.name as product_name, pvsc.product_id, 
-	por.feedback, por.rating, por.created_at as review_created_at, por.id as review_id
+	select po.*, pod.id as product_order_detail_id, po.status, a.shop_name, pod.quantity, pod.individual_price, p.name as product_name, p.id as product_id, 
+	por.feedback, por.rating, por.created_at as review_created_at, por.id as review_id, pori.image_url as review_image_url
 		from product_orders po
 		left join product_order_details pod 
 			on pod.product_order_id = po.id
-		left join product_variant_selection_combinations pvsc 
-			on pvsc.id = pod.product_variant_selection_combination_id
 		left join products p 
-			on p.id = pvsc.product_id 
+			on p.id = pod.product_id 
 		left join product_order_reviews por 
-			on por.product_order_id = po.id and por.product_id = pvsc.product_id
-		left join accounts a on a.id = p.seller_id
+			on por.product_order_detail_id = po.id 
+		left join accounts a 
+			on a.id = p.seller_id
+		left join product_order_review_images pori 
+			on pori.product_review_id = por.id
 	where po.account_id = ? and status ilike ?
 	`
 	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q, req.AccountID, req.Status))
@@ -365,11 +371,11 @@ func (r *productOrdersRepository) AddProductReview(ctx context.Context, req dtor
 	res := dtorepository.AddProductReviewResponse{}
 
 	review := model.ProductOrderReviews{
-		AccountID:      req.AccountID,
-		ProductID:      req.ProductID,
-		ProductOrderID: req.OrderID,
-		Feedback:       req.Feedback,
-		Rating:         req.Rating,
+		AccountID:            req.AccountID,
+		ProductID:            req.ProductID,
+		ProductOrderDetailID: req.ProductOrderDetailID,
+		Feedback:             req.Feedback,
+		Rating:               req.Rating,
 	}
 
 	tx := r.db.Begin()
@@ -542,10 +548,10 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 			Stock: o.Quantity,
 		}
 		product := model.ProductOrderDetails{
-			ProductOrderID:                       res.ID,
-			ProductVariantSelectionCombinationID: o.ProductVariantSelectionCombinationID,
-			Quantity:                             o.Quantity,
-			IndividualPrice:                      o.IndividualPrice,
+			ProductOrderID:  res.ID,
+			Quantity:        o.Quantity,
+			IndividualPrice: o.IndividualPrice,
+			VariantName:     "XL, Merah",
 		}
 		productVariants = append(productVariants, variant)
 		orderDetailReq = append(orderDetailReq, product)
