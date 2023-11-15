@@ -41,7 +41,8 @@ func dropTable() {
 			product_images,
 			my_wallet_transaction_histories,
 			categories,
-			accounts
+			accounts,
+			product_Order_review_images
 		;
 	`
 
@@ -77,6 +78,7 @@ func createTable() {
 		&model.Province{},
 		&model.District{},
 		&model.SellerPageSelectedCategory{},
+		&model.ProductOrderReviewImages{},
 	)
 
 	if err != nil {

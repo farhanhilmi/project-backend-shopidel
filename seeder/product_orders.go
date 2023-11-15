@@ -9,7 +9,7 @@ import (
 var ProductOrders = []model.ProductOrders{
 	{
 		ID:            1,
-		CourierID:     1,
+		CourierName:   "jne",
 		AccountID:     2,
 		DeliveryFee:   decimal.NewFromInt(15000),
 		Province:      "Jawa Barat",
@@ -22,7 +22,7 @@ var ProductOrders = []model.ProductOrders{
 	},
 	{
 		ID:            2,
-		CourierID:     1,
+		CourierName:   "jne",
 		AccountID:     2,
 		DeliveryFee:   decimal.NewFromInt(20000),
 		Province:      "Jawa Barat",
@@ -35,7 +35,7 @@ var ProductOrders = []model.ProductOrders{
 	},
 	{
 		ID:            3,
-		CourierID:     1,
+		CourierName:   "jne",
 		AccountID:     2,
 		DeliveryFee:   decimal.NewFromInt(17000),
 		Province:      "Jawa Barat",
@@ -48,7 +48,7 @@ var ProductOrders = []model.ProductOrders{
 	},
 	{
 		ID:            4,
-		CourierID:     1,
+		CourierName:   "jne",
 		AccountID:     2,
 		DeliveryFee:   decimal.NewFromInt(20000),
 		Province:      "Jawa Barat",
@@ -61,7 +61,7 @@ var ProductOrders = []model.ProductOrders{
 	},
 	{
 		ID:            5,
-		CourierID:     1,
+		CourierName:   "jne",
 		AccountID:     2,
 		DeliveryFee:   decimal.NewFromInt(20000),
 		Province:      "Jawa Barat",
@@ -74,7 +74,7 @@ var ProductOrders = []model.ProductOrders{
 	},
 	{
 		ID:            6,
-		CourierID:     1,
+		CourierName:   "jne",
 		AccountID:     2,
 		DeliveryFee:   decimal.NewFromInt(20000),
 		Province:      "Jawa Barat",
@@ -87,7 +87,7 @@ var ProductOrders = []model.ProductOrders{
 	},
 	{
 		ID:            7,
-		CourierID:     1,
+		CourierName:   "jne",
 		AccountID:     2,
 		DeliveryFee:   decimal.NewFromInt(20000),
 		Province:      "Jawa Barat",
@@ -100,7 +100,7 @@ var ProductOrders = []model.ProductOrders{
 	},
 	{
 		ID:            8,
-		CourierID:     1,
+		CourierName:   "jne",
 		AccountID:     2,
 		DeliveryFee:   decimal.NewFromInt(20000),
 		Province:      "Jawa Barat",
@@ -113,7 +113,7 @@ var ProductOrders = []model.ProductOrders{
 	},
 	{
 		ID:            9,
-		CourierID:     1,
+		CourierName:   "jne",
 		AccountID:     2,
 		DeliveryFee:   decimal.NewFromInt(20000),
 		Province:      "Jawa Barat",
@@ -126,7 +126,7 @@ var ProductOrders = []model.ProductOrders{
 	},
 	{
 		ID:            10,
-		CourierID:     1,
+		CourierName:   "jne",
 		AccountID:     2,
 		DeliveryFee:   decimal.NewFromInt(20000),
 		Province:      "Jawa Barat",
@@ -139,7 +139,7 @@ var ProductOrders = []model.ProductOrders{
 	},
 	{
 		ID:            11,
-		CourierID:     1,
+		CourierName:   "jne",
 		AccountID:     2,
 		DeliveryFee:   decimal.NewFromInt(20000),
 		Province:      "Jawa Barat",
@@ -152,7 +152,7 @@ var ProductOrders = []model.ProductOrders{
 	},
 	{
 		ID:            12,
-		CourierID:     1,
+		CourierName:   "jne",
 		AccountID:     2,
 		DeliveryFee:   decimal.NewFromInt(20000),
 		Province:      "Jawa Barat",
@@ -165,7 +165,7 @@ var ProductOrders = []model.ProductOrders{
 	},
 	{
 		ID:            13,
-		CourierID:     1,
+		CourierName:   "jne",
 		AccountID:     2,
 		DeliveryFee:   decimal.NewFromInt(20000),
 		Province:      "Jawa Barat",

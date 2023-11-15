@@ -194,16 +194,19 @@ type ProductOrderReview struct {
 	ReviewID       int       `json:"review_id"`
 	ReviewFeedback string    `json:"review_feedback"`
 	ReviewRating   int       `json:"review_rating"`
+	ReviewImageURL string    `json:"review_image_url"`
 	CreatedAt      time.Time `json:"created_at"`
 }
 
 type OrderProduct struct {
-	ProductID       int                `json:"product_id"`
-	ProductName     string             `json:"product_name"`
-	Quantity        int                `json:"quantity"`
-	IndividualPrice decimal.Decimal    `json:"individual_price"`
-	Review          ProductOrderReview `json:"review,omitempty"`
-	IsReviewed      bool               `json:"is_reviewed"`
+	ProductID            int                `json:"product_id"`
+	ProductOrderDetailID int                `json:"product_order_detail_id"`
+	ProductName          string             `json:"product_name"`
+	VariantName          string             `json:"variant_name"`
+	Quantity             int                `json:"quantity"`
+	IndividualPrice      decimal.Decimal    `json:"individual_price"`
+	Review               ProductOrderReview `json:"review,omitempty"`
+	IsReviewed           bool               `json:"is_reviewed"`
 }
 type OrdersResponse struct {
 	OrderID      int             `json:"order_id"`

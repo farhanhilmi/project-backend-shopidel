@@ -32,6 +32,7 @@ type ProductRepository interface {
 	RemoveProductFavorite(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
 	FindSellerAnotherProducts(ctx context.Context, sellerId int) ([]dtousecase.AnotherProduct, error)
 	FindProductReviews(ctx context.Context, req dtousecase.GetProductReviewsRequest) (dtousecase.GetProductReviewsResponse, error)
+	FindByID(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error)
 }
 
 func NewProductRepository(db *gorm.DB) ProductRepository {
@@ -204,6 +205,21 @@ func (r *productRepository) FindProductVariantByID(ctx context.Context, req dtor
 		Quantity:  account.Stock,
 		ID:        account.ID,
 	}, nil
+}
+
+func (r *productRepository) FindByID(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error) {
+	res := dtorepository.ProductResponse{}
+
+	err := r.db.WithContext(ctx).Model(&model.Products{}).Where("id = ?", req.ProductID).First(&model.Products{}).Scan(&res).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
 }
 
 func (r *productRepository) First(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error) {
