@@ -89,6 +89,16 @@ func (h *ProductHandler) ListProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, dtogeneral.JSONPagination{Data: uRes, Pagination: *pagination})
 }
 
+func (h *ProductHandler) GetBanners(c *gin.Context) {
+	banners := []string {
+		"https://images.tokopedia.net/img/cache/1208/NsjrJu/2023/11/14/55e4422c-a3a7-4248-9c63-aade2a214ba6.jpg.webp?ect=4g",
+		"https://images.tokopedia.net/img/cache/1208/NsjrJu/2023/11/14/329a7a18-cd48-45b7-b70b-49a1413bedbc.jpg.webp?ect=4g",
+		"https://images.tokopedia.net/img/cache/1208/NsjrJu/2023/11/14/26c62498-33d4-4db6-bad2-bac7710d2746.jpg.webp?ect=4g",
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: banners})
+}
+
 func (h *ProductHandler) GetProductDetail(c *gin.Context) {
 	id := c.Param("productId")
 	productId, err := strconv.Atoi(id)
