@@ -96,7 +96,7 @@ func (h *ProductHandler) GetBanners(c *gin.Context) {
 		"https://images.tokopedia.net/img/cache/1208/NsjrJu/2023/11/14/26c62498-33d4-4db6-bad2-bac7710d2746.jpg.webp?ect=4g",
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: banners})
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Successfully listed banners", Data: banners})
 }
 
 func (h *ProductHandler) GetProductDetail(c *gin.Context) {
