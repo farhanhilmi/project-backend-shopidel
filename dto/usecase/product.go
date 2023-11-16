@@ -215,6 +215,7 @@ type OrdersResponse struct {
 	Status       string          `json:"status"`
 	Products     []OrderProduct  `json:"products"`
 	TotalPayment decimal.Decimal `json:"total_payment"`
+	CreateAt     string          `json:"created_at"`
 }
 
 type GetProductReviewsRequest struct {
@@ -259,12 +260,17 @@ type AnotherProduct struct {
 	SellerName        string          `json:"seller_name"`
 }
 
+type AddNewProductVariantType struct {
+	Name  string `form:"name"`
+	Value string `form:"value"`
+}
+
 type AddNewProductVariant struct {
-	VariantName  string          `json:"variant_name"`
-	VariantValue string          `json:"variant_value"`
-	Stock        int             `json:"stock"`
-	Price        decimal.Decimal `json:"price"`
-	Images       *multipart.FileHeader
+	Variant1 AddNewProductVariantType `form:"variant1"`
+	Variant2 AddNewProductVariantType `form:"variant2"`
+	Stock    int                      `form:"stock"`
+	Price    decimal.Decimal          `form:"price"`
+	ImageID  string                   `form:"image_id"`
 }
 
 type AddNewProductRequest struct {
@@ -272,16 +278,23 @@ type AddNewProductRequest struct {
 	ProductName       string
 	Description       string
 	CategoryID        int
-	HazardousMaterial bool
-	IsNew             bool
+	HazardousMaterial *bool
+	IsNew             *bool
 	InternalSKU       string
 	Weight            decimal.Decimal
 	Size              decimal.Decimal
-	IsActive          bool
+	IsActive          *bool
 	Variants          []AddNewProductVariant
 	Images            []*multipart.FileHeader
+	VideoURL          string
 }
 
 type AddNewProductResponse struct {
 	ProductName string
+}
+
+type UploadNewPhoto struct {
+	ImageID     string                `form:"image_id" binding:"required" json:"image_id"`
+	Image       multipart.File        `json:"-"`
+	ImageHeader *multipart.FileHeader `json:"-"`
 }
