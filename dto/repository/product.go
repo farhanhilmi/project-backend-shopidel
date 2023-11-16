@@ -146,19 +146,21 @@ type ProductFavoritesParams struct {
 }
 
 type ProductListResponse struct {
-	ID           int             `json:"id"`
-	Name         string          `json:"name"`
-	District     string          `json:"district"`
-	TotalSold    int             `json:"total_sold"`
-	Price        decimal.Decimal `json:"price"`
-	Rating       float64         `json:"rating"`
-	PictureURL   string          `json:"picture_url"`
-	CategoryId   int             `json:"category_id"`
-	CategoryName string          `json:"category_name"`
-	ShopName     string          `json:"shop_name"`
-	CreatedAt    time.Time       `json:"created_at"`
-	UpdatedAt    time.Time       `json:"updated_at"`
-	DeletedAt    time.Time       `json:"deleted_at"`
+	ID              int             `json:"id"`
+	Name            string          `json:"name"`
+	District        string          `json:"district"`
+	TotalSold       int             `json:"total_sold"`
+	Price           decimal.Decimal `json:"price"`
+	Rating          float64         `json:"rating"`
+	PictureURL      string          `json:"picture_url"`
+	CategoryId      int             `json:"category_id"`
+	CategoryName    string          `json:"category_name"`
+	ShopName        string          `json:"shop_name"`
+	ProductNameSlug string          `json:"product_name_slug"`
+	ShopNameSlug    string          `json:"shop_name_slug"`
+	CreatedAt       time.Time       `json:"created_at"`
+	UpdatedAt       time.Time       `json:"updated_at"`
+	DeletedAt       time.Time       `json:"deleted_at"`
 }
 
 type ProductListParam struct {

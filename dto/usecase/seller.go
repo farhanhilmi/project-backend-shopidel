@@ -44,14 +44,16 @@ type SellerOperatingHour struct {
 }
 
 type SellerProduct struct {
-	Name       string          `json:"name"`
-	Price      decimal.Decimal `json:"price"`
-	PictureUrl string          `json:"picture_url"`
-	Stars      decimal.Decimal `json:"stars"`
-	TotalSold  int             `json:"total_sold"`
-	CreatedAt  string          `json:"created_at"`
-	Category   string          `json:"category"`
-	ShopName   string          `json:"shop_name"`
+	Name            string          `json:"name"`
+	Price           decimal.Decimal `json:"price"`
+	PictureUrl      string          `json:"picture_url"`
+	Stars           decimal.Decimal `json:"stars"`
+	TotalSold       int             `json:"total_sold"`
+	CreatedAt       string          `json:"created_at"`
+	Category        string          `json:"category"`
+	ShopName        string          `json:"shop_name"`
+	ProductNameSlug string          `json:"product_name_slug"`
+	ShopNameSlug    string          `json:"shop_name_slug"`
 }
 
 type SellerShowcase struct {

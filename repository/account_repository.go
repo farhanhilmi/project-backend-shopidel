@@ -1074,7 +1074,25 @@ func (r *accountRepository) FindSellerBestSelling(ctx context.Context, req dtore
 				when category_level_3.level_3_id is not null then category_level_3.level_2_name
 				when category_level_2.level_2_id is not null then category_level_2.level_2_name
 			end as "Category",
-			seller.shop_name
+			seller.shop_name,
+			TRIM(BOTH '-' FROM 
+				REGEXP_REPLACE(
+					REGEXP_REPLACE(
+						LOWER(p."name"), 
+						'[^a-z0-9]+', '-', 'g'
+					), 
+					'-+', '-', 'g'
+				)
+			) AS "ProductNameSlug",
+			TRIM(BOTH '-' FROM 
+				REGEXP_REPLACE(
+					REGEXP_REPLACE(
+						LOWER(seller.shop_name), 
+						'[^a-z0-9]+', '-', 'g'
+					), 
+					'-+', '-', 'g'
+				)
+			) AS "ShopNameSlug"
 		from products p 
 		left join (
 			select
