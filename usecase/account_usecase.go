@@ -164,7 +164,6 @@ func (u *accountUsecase) RequestForgetPassword(ctx context.Context, req dtouseca
 		RecipientEmail: req.Email,
 		Token:          token,
 		ExpiresAt:      expirationTime,
-		Username:       account.Username,
 	}
 
 	err = util.SendMail(data)
@@ -194,6 +193,10 @@ func (u *accountUsecase) RequestForgetChangePassword(ctx context.Context, req dt
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if strings.Contains(strings.ToLower(req.Password), strings.ToLower(account.Username)) {
+		return nil, util.ErrPasswordContainUsername
 	}
 
 	if time.Now().After(account.ForgetPasswordExpiredAt) {
