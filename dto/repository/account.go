@@ -196,3 +196,9 @@ type FindSellerCategoryProductRequest struct {
 	ShopName   string
 	CategoryId string
 }
+
+type ChangePasswordRequest struct {
+	AccountID   int
+	OldPassword string
+	NewPassword string
+}

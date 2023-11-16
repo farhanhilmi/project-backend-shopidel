@@ -44,6 +44,7 @@ type AccountUsecase interface {
 	UpdateAccountAddress(ctx context.Context, req dtousecase.UpdateAddressRequest) (dtousecase.UpdateAddressResponse, error)
 	RequestForgetPassword(ctx context.Context, req dtousecase.ForgetPasswordRequest) (*dtousecase.ForgetPasswordRequest, error)
 	RequestForgetChangePassword(ctx context.Context, req dtousecase.ForgetChangePasswordRequest) (*dtousecase.ForgetPasswordRequest, error)
+	ChangePassword(ctx context.Context, req dtousecase.ChangePasswordRequest) error
 }
 
 type accountUsecase struct {
@@ -103,6 +104,35 @@ func (u *accountUsecase) RegisterSeller(ctx context.Context, req dtousecase.Regi
 	res.ShopName = registeredSeller.ShopName
 
 	return &res, nil
+}
+
+func (u *accountUsecase) ChangePassword(ctx context.Context, req dtousecase.ChangePasswordRequest) error {
+	account, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{
+		UserId: req.AccountID,
+	})
+	if err != nil {
+		return err
+	}
+
+	isValid := util.CheckPasswordHash(req.OldPassword, account.Password)
+	if !isValid {
+		return util.ErrInvalidPassword
+	}
+
+	password, err := util.HashPassword(req.NewPassword)
+	if err != nil {
+		return err
+	}
+	rReq := dtorepository.ChangePasswordRequest{
+		AccountID:   req.AccountID,
+		NewPassword: password,
+	}
+	err = u.accountRepository.UpdatePassord(ctx, rReq)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (u *accountUsecase) GetAddresses(ctx context.Context, req dtousecase.AddressRequest) (*[]dtousecase.AddressResponse, error) {

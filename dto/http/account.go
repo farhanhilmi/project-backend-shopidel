@@ -182,3 +182,8 @@ type UpdateAddressResponse struct {
 	IsBuyerDefault  bool   `json:"is_buyer_default" `
 	IsSellerDefault bool   `json:"is_seller_default" `
 }
+
+type ChangePasswordRequest struct {
+	OldPassword string `json:"old_password"`
+	NewPassword string `json:"new_password"`
+}

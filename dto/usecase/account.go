@@ -282,3 +282,9 @@ type District struct {
 type DeleteAddressRequest struct {
 	AddressId int
 }
+
+type ChangePasswordRequest struct {
+	AccountID   int
+	OldPassword string
+	NewPassword string
+}
