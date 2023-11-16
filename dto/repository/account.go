@@ -180,6 +180,7 @@ type SellerProduct struct {
 	TotalSold  int
 	CreatedAt  string
 	Category   string
+	ShopName   string
 }
 
 type FindSellerCategoriesRequest struct {
