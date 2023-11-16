@@ -69,7 +69,8 @@ var (
 	ErrInvalidRating             = &CustomError{Message: "Ratings should be between 1 - 5", Code: BadRequest}
 	ErrAlreadyReviewProduct      = &CustomError{Message: "You have given a review of this product", Code: BadRequest}
 	EmailNotFound                = &CustomError{Message: "we can't find this email address", Code: BadRequest}
-	ErrRequestForgetToken        = &CustomError{Message: "The link you used is invalid or unable to be processed", Code: BadRequest}
+	ErrRequestForgetToken        = &CustomError{Message: "The link you used is invalid or unable to be processed", Code: Unauthorized}
 	ErrSellerNotFound            = &CustomError{Message: "Seller not found", Code: NotFound}
 	ErrOrderDetailNotFound       = &CustomError{Message: "We could not find the order you are looking for", Code: NotFound}
+	ErrSamePassword              = &CustomError{Message: "New Password cannot be the same with previous password", Code: BadRequest}
 )

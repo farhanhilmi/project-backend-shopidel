@@ -259,17 +259,12 @@ type AnotherProduct struct {
 	SellerName        string          `json:"seller_name"`
 }
 
-type AddNewProductImages struct {
-	Image       multipart.File
-	ImageHeader *multipart.FileHeader
-}
-
 type AddNewProductVariant struct {
-	VariantName  string
-	VariantValue string
-	Stock        int
-	Price        decimal.Decimal
-	Images       []AddNewProductImages
+	VariantName  string          `json:"variant_name"`
+	VariantValue string          `json:"variant_value"`
+	Stock        int             `json:"stock"`
+	Price        decimal.Decimal `json:"price"`
+	Images       *multipart.FileHeader
 }
 
 type AddNewProductRequest struct {
@@ -284,4 +279,9 @@ type AddNewProductRequest struct {
 	Size              decimal.Decimal
 	IsActive          bool
 	Variants          []AddNewProductVariant
+	Images            []*multipart.FileHeader
+}
+
+type AddNewProductResponse struct {
+	ProductName string
 }

@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"log"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
@@ -14,6 +15,7 @@ type SellerUsecase interface {
 	GetBestSelling(ctx context.Context, req dtousecase.GetSellerProductsRequest) (dtousecase.GetSellerProductsResponse, error)
 	GetCategories(ctx context.Context, req dtousecase.GetSellerCategoriesRequest) (dtousecase.GetSellerCategoriesResponse, error)
 	GetCategoryProducts(ctx context.Context, req dtousecase.GetSellerCategoryProductRequest) (dtousecase.GetSellerCategoryProductResponse, error)
+	AddNewProduct(ctx context.Context, req dtousecase.AddNewProductRequest) (dtousecase.AddNewProductResponse, error)
 }
 
 type sellerUsecase struct {
@@ -134,6 +136,23 @@ func (u *sellerUsecase) GetCategoryProducts(ctx context.Context, req dtousecase.
 	}
 
 	res.SellerProducts = products
+
+	return res, nil
+}
+
+func (u *sellerUsecase) AddNewProduct(ctx context.Context, req dtousecase.AddNewProductRequest) (dtousecase.AddNewProductResponse, error) {
+	res := dtousecase.AddNewProductResponse{}
+
+	log.Println("REQ", req)
+
+	for i, header := range req.Images {
+		_, err := req.Images[i].Open()
+		if err != nil {
+			log.Println("ERR", err)
+			return res, err
+		}
+		log.Println("FILENAME", header.Filename)
+	}
 
 	return res, nil
 }
