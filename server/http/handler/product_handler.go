@@ -96,22 +96,22 @@ func (h *ProductHandler) GetTopCategories(c *gin.Context) {
 		{
 			CategoryID: 504,
 			Name: "Fashion Anak & Bayi",
-			PictureURL: "https://down-id.img.susercontent.com/file/9251edd6d6dd98855ff5a99497835d9c_tn&quot",
+			PictureURL: "https://down-id.img.susercontent.com/file/9251edd6d6dd98855ff5a99497835d9c_tn",
 		},
 		{
 			CategoryID: 1,
 			Name: "Audio, Kamera & Elektronik Lainnya",
-			PictureURL: "https://down-id.img.susercontent.com/file/dcd61dcb7c1448a132f49f938b0cb553_tn&quot",
+			PictureURL: "https://down-id.img.susercontent.com/file/dcd61dcb7c1448a132f49f938b0cb553_tn",
 		},
 		{
 			CategoryID: 694,
 			Name: "Fashion Pria",
-			PictureURL: "https://down-id.img.susercontent.com/file/04dba508f1ad19629518defb94999ef9_tn&quot",
+			PictureURL: "https://down-id.img.susercontent.com/file/04dba508f1ad19629518defb94999ef9_tn",
 		},
 		{
 			CategoryID: 1659,
 			Name: "Makanan & Minuman",
-			PictureURL: "https://down-id.img.susercontent.com/file/7873b8c3824367239efb02d18eeab4f5_tn&quot",
+			PictureURL: "https://down-id.img.susercontent.com/file/7873b8c3824367239efb02d18eeab4f5_tn",
 		},
 		{
 			CategoryID: 222,
