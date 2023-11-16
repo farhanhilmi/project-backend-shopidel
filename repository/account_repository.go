@@ -48,8 +48,8 @@ type AccountRepository interface {
 	FindAddressByID(ctx context.Context, req dtorepository.UpdateAddressRequest) (dtorepository.UpdateAddressResponse, error)
 	FirstSeller(ctx context.Context, req dtorepository.SellerDataRequest) (dtorepository.SellerDataResponse, error)
 	FindSellerBestSelling(ctx context.Context, req dtorepository.FindSellerBestSellingRequest) (dtorepository.FindSellerBestSellingResponse, error)
-	FindSellerCategories(ctx context.Context, req dtorepository.FindSellerCategoriesRequest) ([]dtorepository.FindSellerCategoriesResponse, error)
-	FindSellerCategoryProduct(ctx context.Context, req dtorepository.FindSellerCategoryProductRequest) ([]dtousecase.SellerProduct, error)
+	FindSellerShowcases(ctx context.Context, req dtorepository.FindSellerShowcasesRequest) ([]dtorepository.FindSellerShowcasesResponse, error)
+	FindSellerShowcaseProduct(ctx context.Context, req dtorepository.FindSellerShowcaseProductRequest) ([]dtousecase.SellerProduct, error)
 	FindByToken(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
 	SaveForgetPasswordToken(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
 	UpdatePassword(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
@@ -1144,17 +1144,15 @@ func (r *accountRepository) FindSellerBestSelling(ctx context.Context, req dtore
 	return res, nil
 }
 
-func (r *accountRepository) FindSellerCategories(ctx context.Context, req dtorepository.FindSellerCategoriesRequest) ([]dtorepository.FindSellerCategoriesResponse, error) {
-	res := []dtorepository.FindSellerCategoriesResponse{}
+func (r *accountRepository) FindSellerShowcases(ctx context.Context, req dtorepository.FindSellerShowcasesRequest) ([]dtorepository.FindSellerShowcasesResponse, error) {
+	res := []dtorepository.FindSellerShowcasesResponse{}
 
 	q := `
 		select
-			c.id as "CategoryId",
-			c."name" as "CategoryName"
-		from seller_page_selected_categories spsc 
-		inner join categories c 
-			on c.id = spsc.category_id 
-		where spsc.account_id = ?
+			ss.id as "ShowcaseId",
+			ss.name as "ShowcaseName"
+		from seller_showcases ss
+		where ss.seller_id = ?
 	`
 
 	err := r.db.WithContext(ctx).Raw(q, req.SellerId).Scan(&res).Error
@@ -1165,86 +1163,48 @@ func (r *accountRepository) FindSellerCategories(ctx context.Context, req dtorep
 	return res, nil
 }
 
-func (r *accountRepository) FindSellerCategoryProduct(ctx context.Context, req dtorepository.FindSellerCategoryProductRequest) ([]dtousecase.SellerProduct, error) {
+func (r *accountRepository) FindSellerShowcaseProduct(ctx context.Context, req dtorepository.FindSellerShowcaseProductRequest) ([]dtousecase.SellerProduct, error) {
 	res := []dtousecase.SellerProduct{}
 
 	q := `
-		select 
+		select
 			p.id as "Id",
 			p."name" as  "Name",
 			product_lowest_price.lowest_price as "Price",
 			product_image.url as "PictureUrl",
 			4.8 as stars,
 			p.created_at as "CreatedAt",
-			case 
-				when category_level_3.level_3_id is not null then category_level_3.level_2_name
-				when category_level_2.level_2_id is not null then category_level_2.level_2_name
-			end as "Category",
 			seller.shop_name as "ShopName"
-		from products p 
-		left join (
-			select
-				pvsc.product_id,
-				min (
-					case
-						when pvsc.price > 0 then pvsc.price 
-						else null
-					end
-				) as lowest_price
-			from product_variant_selection_combinations pvsc 
-			group by pvsc.product_id
-		) product_lowest_price on product_lowest_price.product_id = p.id 
-		left join lateral (
-			select
-				pi2.product_id,
-				pi2.url 
-			from product_images pi2 
-			where pi2.product_id = p.id
-			limit 1
-		) product_image on product_image.product_id = p.id 
-		left join (
-			select
-				c.id as level_1_id,
-				c."name" level_1_name
-			from categories c
-			where c."level" = 1
-		) as category_level_1 on category_level_1.level_1_id = p.category_id 
-		left join (
-			select
-				c.id as level_2_id,
-				c."name" level_2_name,
-				c2.id as level_1_id,
-				c2."name" as level_1_name
-			from categories c
-			inner join categories c2 
-				on c2.id = c.parent 
-			where c."level" = 2
-		) as category_level_2 on category_level_2.level_2_id = p.category_id 
-		left join (
-			select
-				c.id as level_3_id,
-				c."name" level_3_name,
-				c2.id as level_2_id,
-				c2."name" level_2_name,
-				c3.id as level_1_id,
-				c3."name" as level_1_name
-			from categories c
-			inner join categories c2 
-				on c2.id = c.parent 
-			inner join categories c3
-				on c3.id = c2.parent 
-			where c."level" = 3
-		) as category_level_3 on category_level_3.level_3_id = p.category_id 
-		left join accounts seller
-			on seller.id = p.seller_id
-		where seller.shop_name = $1
-			and (
-				category_level_2.level_2_id = $2
-				OR category_level_3.level_2_id = $2
-			)
+		from seller_showcase_products ssp
+			inner join products p
+				on p.id = ssp.product_id
+			left join (
+				select
+					pvsc.product_id,
+					min (
+						case
+							when pvsc.price > 0 then pvsc.price 
+							else null
+						end
+					) as lowest_price
+				from product_variant_selection_combinations pvsc 
+				group by pvsc.product_id
+			) product_lowest_price on product_lowest_price.product_id = p.id 
+			left join lateral (
+				select
+					pi2.product_id,
+					pi2.url 
+				from product_images pi2 
+				where pi2.product_id = p.id
+				limit 1
+			) product_image on product_image.product_id = p.id 
+			left join accounts seller
+				on seller.id = p.seller_id
+			where seller.shop_name = $1
+				and ssp.seller_showcase_id = $2
 	`
 
-	err := r.db.WithContext(ctx).Raw(q, req.ShopName, req.CategoryId).Scan(&res).Error
+	err := r.db.WithContext(ctx).Raw(q, req.ShopName, req.ShowcaseId).Scan(&res).Error
 	if err != nil {
 		return res, err
 	}

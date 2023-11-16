@@ -183,16 +183,16 @@ type SellerProduct struct {
 	ShopName   string
 }
 
-type FindSellerCategoriesRequest struct {
+type FindSellerShowcasesRequest struct {
 	SellerId int
 }
 
-type FindSellerCategoriesResponse struct {
-	CategoryId   int
-	CategoryName string
+type FindSellerShowcasesResponse struct {
+	ShowcaseId   int
+	ShowcaseName string
 }
 
-type FindSellerCategoryProductRequest struct {
+type FindSellerShowcaseProductRequest struct {
 	ShopName   string
-	CategoryId string
+	ShowcaseId string
 }
