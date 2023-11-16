@@ -78,14 +78,16 @@ func (u *sellerUsecase) GetBestSelling(ctx context.Context, req dtousecase.GetSe
 
 	for _, data := range rRes.Products {
 		p := dtousecase.SellerProduct{
-			Name:       data.Name,
-			Price:      data.Price,
-			PictureUrl: data.PictureUrl,
-			Stars:      data.Stars,
-			TotalSold:  data.TotalSold,
-			CreatedAt:  data.CreatedAt,
-			Category:   data.Category,
-			ShopName:   data.ShopName,
+			Name:            data.Name,
+			Price:           data.Price,
+			PictureUrl:      data.PictureUrl,
+			Stars:           data.Stars,
+			TotalSold:       data.TotalSold,
+			CreatedAt:       data.CreatedAt,
+			Category:        data.Category,
+			ShopName:        data.ShopName,
+			ProductNameSlug: data.ProductNameSlug,
+			ShopNameSlug:    data.ShopNameSlug,
 		}
 
 		res.SellerProducts = append(res.SellerProducts, p)
