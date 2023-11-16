@@ -106,20 +106,20 @@ type AddressRequest struct {
 }
 
 type GetAccountResponse struct {
-	ID                      int
-	FullName                string
-	Username                string
-	Email                   string
-	PhoneNumber             string
-	ShopName                string
-	Gender                  string
-	Birthdate               time.Time
-	ProfilePicture          string
-	WalletNumber            string
-	WalletPin               string
-	Balance                 decimal.Decimal
-	ForgetPasswordToken     string
-	ForgetPasswordExpiredAt time.Time
+	ID                  int
+	FullName            string
+	Username            string
+	Email               string
+	PhoneNumber         string
+	ShopName            string
+	Gender              string
+	Birthdate           time.Time
+	ProfilePicture      string
+	WalletNumber        string
+	WalletPin           string
+	Balance             decimal.Decimal
+	ForgetPasswordToken string
+	IsSeller            bool
 }
 
 type EditAccountResponse struct {
