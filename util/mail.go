@@ -2,9 +2,6 @@ package util
 
 import (
 	"bytes"
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -16,39 +13,14 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
-func encrypt(plaintext string) string {
-	secretKey := config.GetEnv("USERNAME_SECRET_KEY")
-
-	aes, err := aes.NewCipher([]byte(secretKey))
-	if err != nil {
-		panic(err)
-	}
-
-	gcm, err := cipher.NewGCM(aes)
-	if err != nil {
-		panic(err)
-	}
-
-	nonce := make([]byte, gcm.NonceSize())
-	_, err = rand.Read(nonce)
-	if err != nil {
-		panic(err)
-	}
-
-	ciphertext := gcm.Seal(nonce, nonce, []byte(plaintext), nil)
-
-	return string(ciphertext)
-}
-
 func SendMail(payload dtousecase.SendEmailPayload) error {
-	u := encrypt(payload.Username)
 	data := struct {
 		Link      string
 		Recipient string
 		ExpiresAt time.Time
 		Email     string
 	}{
-		Link:      fmt.Sprintf("%v%v&id=%x", config.GetEnv("CLIENT_RESET_PASSWORD_URL"), payload.Token, u),
+		Link:      fmt.Sprintf("%v%v", config.GetEnv("CLIENT_RESET_PASSWORD_URL"), payload.Token),
 		Recipient: payload.RecipientName,
 		ExpiresAt: payload.ExpiresAt,
 		Email:     payload.RecipientEmail,
