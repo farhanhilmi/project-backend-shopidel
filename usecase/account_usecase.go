@@ -113,10 +113,17 @@ func (u *accountUsecase) ChangePassword(ctx context.Context, req dtousecase.Chan
 	if err != nil {
 		return err
 	}
-
-	isValid := util.CheckPasswordHash(req.OldPassword, account.Password)
-	if !isValid {
+	
+	if util.CheckPasswordHash(req.OldPassword, account.Password) {
 		return util.ErrInvalidPassword
+	}
+
+	if !util.ValidatePassword(req.NewPassword) {
+		return util.ErrWeakPassword
+	}
+
+	if len(req.NewPassword) < 8 {
+		return util.ErrWeakPassword
 	}
 
 	password, err := util.HashPassword(req.NewPassword)
