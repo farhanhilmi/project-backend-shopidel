@@ -594,6 +594,7 @@ func (r *accountRepository) FindById(ctx context.Context, req dtorepository.GetA
 	res.ID = account.ID
 	res.ForgetPasswordExpiredAt = account.ForgetPasswordExpiredAt
 	res.ForgetPasswordToken = account.ForgetPasswordToken
+	res.ShopName = account.ShopName
 
 	return res, err
 }
