@@ -1087,11 +1087,13 @@ func (r *accountRepository) FindSellerBestSelling(ctx context.Context, req dtore
 			from product_variant_selection_combinations pvsc 
 			group by pvsc.product_id
 		) product_lowest_price on product_lowest_price.product_id = p.id 
-		left join (
+		left join lateral (
 			select
 				pi2.product_id,
 				pi2.url 
 			from product_images pi2 
+				where pi2.product_id = p.id
+			order by pi2.id asc
 			limit 1
 		) product_image on product_image.product_id = p.id 
 		left join (
