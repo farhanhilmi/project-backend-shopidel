@@ -38,12 +38,7 @@ func NewProductUsecase(config ProductUsecaseConfig) ProductUsecase {
 	}
 
 	return au
-
 }
-
-// func (u *productUsecase) AddNewProduct(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error) {
-
-// }
 
 func (u *productUsecase) GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error) {
 	uReq := dtorepository.ProductListParam{

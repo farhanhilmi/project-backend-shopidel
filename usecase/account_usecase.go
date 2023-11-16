@@ -195,6 +195,10 @@ func (u *accountUsecase) RequestForgetChangePassword(ctx context.Context, req dt
 		return nil, err
 	}
 
+	if util.CheckPasswordHash(req.Password, account.Password) {
+		return nil, util.ErrSamePassword
+	}
+
 	if strings.Contains(strings.ToLower(req.Password), strings.ToLower(account.Username)) {
 		return nil, util.ErrPasswordContainUsername
 	}

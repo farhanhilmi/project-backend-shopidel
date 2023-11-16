@@ -3,6 +3,7 @@ package dtohttp
 import (
 	"time"
 
+	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"github.com/shopspring/decimal"
 )
 
@@ -40,3 +41,24 @@ type UpdateCartRequest struct {
 	ProductID int `json:"product_id" binding:"required"`
 	Quantity  int `json:"quantity" binding:"required"`
 }
+
+type AddNewProductRequest struct {
+	ProductName       string                            `json:"product_name" binding:"required"`
+	Description       string                            `json:"description"`
+	CategoryID        int                               `json:"category_id" binding:"required"`
+	HazardousMaterial *bool                             `json:"hazardous_material" binding:"required"`
+	IsNew             *bool                             `json:"is_new" binding:"required"`
+	InternalSKU       string                            `json:"internal_sku" binding:"required"`
+	Weight            decimal.Decimal                   `json:"weight" binding:"required"`
+	Size              decimal.Decimal                   `json:"size" binding:"required"`
+	IsActive          *bool                             `json:"is_active" binding:"required"`
+	Variants          []dtousecase.AddNewProductVariant `json:"variants"`
+}
+
+// type AddNewProductVariant struct {
+// 	VariantName  string          `json:"variant_name" binding:"required"`
+// 	VariantValue string          `json:"variant_value" binding:"required"`
+// 	Stock        int             `json:"stock" binding:"required"`
+// 	Price        decimal.Decimal `json:"price" binding:"required"`
+// 	// Images       *multipart.FileHeader
+// }

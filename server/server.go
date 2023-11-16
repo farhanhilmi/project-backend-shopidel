@@ -86,6 +86,7 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 	router.NewProductRouter(productHandler, gin)
 	router.NewProductOrderRouter(productOrderHandler, gin)
 	router_seller.NewSellerProfileRouter(sellerHandler, gin)
+	router_seller.NewSellerProductRouter(sellerHandler, gin)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", config.GetEnv("PORT")),
