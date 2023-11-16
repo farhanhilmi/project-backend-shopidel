@@ -21,20 +21,20 @@ type GetSellerProductsResponse struct {
 	SellerProducts []SellerProduct `json:"seller_products"`
 }
 
-type GetSellerCategoriesRequest struct {
+type GetSellerShowcasesRequest struct {
 	ShopName string
 }
 
-type GetSellerCategoriesResponse struct {
-	Categories []SellerCategory
+type GetSellerShowcasesResponse struct {
+	Showcases []SellerShowcase
 }
 
-type GetSellerCategoryProductRequest struct {
+type GetSellerShowcaseProductRequest struct {
 	ShopName   string
-	CategoryId string
+	ShowcaseId string
 }
 
-type GetSellerCategoryProductResponse struct {
+type GetSellerShowcaseProductResponse struct {
 	SellerProducts []SellerProduct `json:"seller_products"`
 }
 
@@ -54,7 +54,7 @@ type SellerProduct struct {
 	ShopName   string          `json:"shop_name"`
 }
 
-type SellerCategory struct {
-	CategoryId   int    `json:"category_id"`
-	CategoryName string `json:"category_name"`
+type SellerShowcase struct {
+	ShowcaseId   int    `json:"showcase_id"`
+	ShowcaseName string `json:"showcase_name"`
 }
