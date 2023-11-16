@@ -84,7 +84,7 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 			p.created_at,
 			p.updated_at,
 			p.deleted_at,
-			seller.shop_name as seller_name
+			seller.shop_name
 		from products p
 			inner join lateral (
 					select	
@@ -555,7 +555,7 @@ func (r *productRepository) FindProductReviews(ctx context.Context, req dtouseca
 
 	lq := ` limit ` + fmt.Sprint(req.Limit, " ")
 
-	ofq := ` offset ` + fmt.Sprint(req.Page-1, " ")
+	ofq := ` offset ` + fmt.Sprint((req.Page-1)*req.Limit, " ")
 
 	if req.Stars != 0 {
 		wq += fmt.Sprint(` and por.rating::int = `, req.Stars, " ")
