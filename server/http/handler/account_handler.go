@@ -365,6 +365,7 @@ func (h *AccountHandler) GetProfile(c *gin.Context) {
 		ProfilePicture: uRes.ProfilePicture,
 		WalletNumber:   uRes.WalletNumber,
 		Balance:        uRes.Balance,
+		IsSeller:       uRes.IsSeller,
 	}
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "successfully get profile detail", Data: res})
