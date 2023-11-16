@@ -232,16 +232,16 @@ func (u *accountUsecase) RequestForgetChangePassword(ctx context.Context, req dt
 		return nil, err
 	}
 
+	if time.Now().After(account.ForgetPasswordExpiredAt) {
+		return nil, util.ErrRequestForgetToken
+	}
+
 	if util.CheckPasswordHash(req.Password, account.Password) {
 		return nil, util.ErrSamePassword
 	}
 
 	if strings.Contains(strings.ToLower(req.Password), strings.ToLower(account.Username)) {
 		return nil, util.ErrPasswordContainUsername
-	}
-
-	if time.Now().After(account.ForgetPasswordExpiredAt) {
-		return nil, util.ErrRequestForgetToken
 	}
 
 	hashedPassword, err := util.HashPassword(req.Password)
@@ -507,6 +507,12 @@ func (u *accountUsecase) GetProfile(ctx context.Context, req dtousecase.GetAccou
 		return nil, err
 	}
 
+	isSeller := false
+
+	if userAccount.ShopName != "" {
+		isSeller = true
+	}
+
 	res.ID = userAccount.ID
 	res.FullName = userAccount.FullName
 	res.Username = userAccount.Username
@@ -517,6 +523,7 @@ func (u *accountUsecase) GetProfile(ctx context.Context, req dtousecase.GetAccou
 	res.ProfilePicture = userAccount.ProfilePicture
 	res.WalletNumber = userAccount.WalletNumber
 	res.Balance = userAccount.Balance
+	res.IsSeller = isSeller
 
 	return &res, nil
 }

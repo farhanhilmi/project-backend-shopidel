@@ -452,7 +452,7 @@ func (u *productOrderUsecase) convertOrderHistoriesReponse(ctx context.Context, 
 
 		product.Review = review
 
-		orderKey := fmt.Sprintf("%v*@*%v*@*%v", o.ID, o.ShopName, o.Status)
+		orderKey := fmt.Sprintf("%v*@*%v*@*%v*@*%v", o.ID, o.ShopName, o.Status, o.CreatedAt)
 		if _, exists := orderHistories[orderKey]; !exists {
 			orderKeys = append(orderKeys, orderKey)
 		}
@@ -481,6 +481,7 @@ func (u *productOrderUsecase) convertOrderHistoriesReponse(ctx context.Context, 
 			Status:       orderKey[2],
 			TotalPayment: totalAmount,
 			ShopName:     orderKey[1],
+			CreateAt:     orderKey[3],
 		}
 		productOrders = append(productOrders, order)
 	}

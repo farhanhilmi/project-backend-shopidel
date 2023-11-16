@@ -84,7 +84,25 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 			p.created_at,
 			p.updated_at,
 			p.deleted_at,
-			seller.shop_name
+			seller.shop_name,
+			TRIM(BOTH '-' FROM 
+				REGEXP_REPLACE(
+					REGEXP_REPLACE(
+						LOWER(p."name"), 
+						'[^a-z0-9]+', '-', 'g'
+					), 
+					'-+', '-', 'g'
+				)
+			) AS "ProductNameSlug",
+			TRIM(BOTH '-' FROM 
+				REGEXP_REPLACE(
+					REGEXP_REPLACE(
+						LOWER(seller.shop_name), 
+						'[^a-z0-9]+', '-', 'g'
+					), 
+					'-+', '-', 'g'
+				)
+			) AS "ShopNameSlug"
 		from products p
 			inner join lateral (
 					select	
@@ -327,8 +345,24 @@ func (r *productRepository) FirstV2(ctx context.Context, req dtorepository.Produ
 			and fp.account_id = $1
 		inner join accounts a 
 			on a.id = p.seller_id 
-			and a.shop_name ilike $2
-		where p.name ilike $3
+			and TRIM(BOTH '-' FROM 
+					REGEXP_REPLACE(
+						REGEXP_REPLACE(
+							LOWER(a.shop_name), 
+							'[^a-z0-9]+', '-', 'g'
+						), 
+						'-+', '-', 'g'
+					)
+				) ilike $2
+		where TRIM(BOTH '-' FROM 
+				REGEXP_REPLACE(
+					REGEXP_REPLACE(
+						LOWER(p.name), 
+						'[^a-z0-9]+', '-', 'g'
+					), 
+					'-+', '-', 'g'
+				)
+			) ilike $3
 	`
 
 	err := r.db.WithContext(ctx).Raw(q, req.AccountId, req.ShopName, req.ProductName).Scan(&res).Error

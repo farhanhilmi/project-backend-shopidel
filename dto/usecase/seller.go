@@ -21,20 +21,20 @@ type GetSellerProductsResponse struct {
 	SellerProducts []SellerProduct `json:"seller_products"`
 }
 
-type GetSellerCategoriesRequest struct {
+type GetSellerShowcasesRequest struct {
 	ShopName string
 }
 
-type GetSellerCategoriesResponse struct {
-	Categories []SellerCategory
+type GetSellerShowcasesResponse struct {
+	Showcases []SellerShowcase
 }
 
-type GetSellerCategoryProductRequest struct {
+type GetSellerShowcaseProductRequest struct {
 	ShopName   string
-	CategoryId string
+	ShowcaseId string
 }
 
-type GetSellerCategoryProductResponse struct {
+type GetSellerShowcaseProductResponse struct {
 	SellerProducts []SellerProduct `json:"seller_products"`
 }
 
@@ -44,17 +44,19 @@ type SellerOperatingHour struct {
 }
 
 type SellerProduct struct {
-	Name       string          `json:"name"`
-	Price      decimal.Decimal `json:"price"`
-	PictureUrl string          `json:"picture_url"`
-	Stars      decimal.Decimal `json:"stars"`
-	TotalSold  int             `json:"total_sold"`
-	CreatedAt  string          `json:"created_at"`
-	Category   string          `json:"category"`
-	ShopName   string          `json:"shop_name"`
+	Name            string          `json:"name"`
+	Price           decimal.Decimal `json:"price"`
+	PictureUrl      string          `json:"picture_url"`
+	Stars           decimal.Decimal `json:"stars"`
+	TotalSold       int             `json:"total_sold"`
+	CreatedAt       string          `json:"created_at"`
+	Category        string          `json:"category"`
+	ShopName        string          `json:"shop_name"`
+	ProductNameSlug string          `json:"product_name_slug"`
+	ShopNameSlug    string          `json:"shop_name_slug"`
 }
 
-type SellerCategory struct {
-	CategoryId   int    `json:"category_id"`
-	CategoryName string `json:"category_name"`
+type SellerShowcase struct {
+	ShowcaseId   int    `json:"showcase_id"`
+	ShowcaseName string `json:"showcase_name"`
 }

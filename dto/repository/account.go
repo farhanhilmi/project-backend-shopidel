@@ -173,28 +173,30 @@ type FindSellerBestSellingResponse struct {
 }
 
 type SellerProduct struct {
-	Name       string
-	Price      decimal.Decimal
-	PictureUrl string
-	Stars      decimal.Decimal
-	TotalSold  int
-	CreatedAt  string
-	Category   string
-	ShopName   string
+	Name            string
+	Price           decimal.Decimal
+	PictureUrl      string
+	Stars           decimal.Decimal
+	TotalSold       int
+	CreatedAt       string
+	Category        string
+	ShopName        string
+	ProductNameSlug string
+	ShopNameSlug    string
 }
 
-type FindSellerCategoriesRequest struct {
+type FindSellerShowcasesRequest struct {
 	SellerId int
 }
 
-type FindSellerCategoriesResponse struct {
-	CategoryId   int
-	CategoryName string
+type FindSellerShowcasesResponse struct {
+	ShowcaseId   int
+	ShowcaseName string
 }
 
-type FindSellerCategoryProductRequest struct {
+type FindSellerShowcaseProductRequest struct {
 	ShopName   string
-	CategoryId string
+	ShowcaseId string
 }
 
 type ChangePasswordRequest struct {

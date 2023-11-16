@@ -54,23 +54,23 @@ func (h *SellerHandler) GetBestSelling(c *gin.Context) {
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes.SellerProducts})
 }
 
-func (h *SellerHandler) GetCategories(c *gin.Context) {
+func (h *SellerHandler) GetShowcases(c *gin.Context) {
 	shopName := c.Param("shopName")
 
-	uRes, err := h.sellerUsecase.GetCategories(c.Request.Context(), dtousecase.GetSellerCategoriesRequest{ShopName: shopName})
+	uRes, err := h.sellerUsecase.GetShowcases(c.Request.Context(), dtousecase.GetSellerShowcasesRequest{ShopName: shopName})
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes.Categories})
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes.Showcases})
 }
 
-func (h *SellerHandler) GetCategoryProducts(c *gin.Context) {
+func (h *SellerHandler) GetShowcaseProducts(c *gin.Context) {
 	shopName := c.Param("shopName")
-	categoryId := c.Param("categoryId")
+	showcaseId := c.Param("showcaseId")
 
-	uRes, err := h.sellerUsecase.GetCategoryProducts(c.Request.Context(), dtousecase.GetSellerCategoryProductRequest{ShopName: shopName, CategoryId: categoryId})
+	uRes, err := h.sellerUsecase.GetShowcaseProducts(c.Request.Context(), dtousecase.GetSellerShowcaseProductRequest{ShopName: shopName, ShowcaseId: showcaseId})
 	if err != nil {
 		c.Error(err)
 		return

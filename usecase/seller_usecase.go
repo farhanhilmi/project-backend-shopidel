@@ -13,8 +13,8 @@ import (
 type SellerUsecase interface {
 	GetProfile(ctx context.Context, req dtousecase.GetSellerProfileRequest) (dtousecase.GetSellerProfileResponse, error)
 	GetBestSelling(ctx context.Context, req dtousecase.GetSellerProductsRequest) (dtousecase.GetSellerProductsResponse, error)
-	GetCategories(ctx context.Context, req dtousecase.GetSellerCategoriesRequest) (dtousecase.GetSellerCategoriesResponse, error)
-	GetCategoryProducts(ctx context.Context, req dtousecase.GetSellerCategoryProductRequest) (dtousecase.GetSellerCategoryProductResponse, error)
+	GetShowcases(ctx context.Context, req dtousecase.GetSellerShowcasesRequest) (dtousecase.GetSellerShowcasesResponse, error)
+	GetShowcaseProducts(ctx context.Context, req dtousecase.GetSellerShowcaseProductRequest) (dtousecase.GetSellerShowcaseProductResponse, error)
 	AddNewProduct(ctx context.Context, req dtousecase.AddNewProductRequest) (dtousecase.AddNewProductResponse, error)
 }
 
@@ -78,14 +78,16 @@ func (u *sellerUsecase) GetBestSelling(ctx context.Context, req dtousecase.GetSe
 
 	for _, data := range rRes.Products {
 		p := dtousecase.SellerProduct{
-			Name:       data.Name,
-			Price:      data.Price,
-			PictureUrl: data.PictureUrl,
-			Stars:      data.Stars,
-			TotalSold:  data.TotalSold,
-			CreatedAt:  data.CreatedAt,
-			Category:   data.Category,
-			ShopName:   data.ShopName,
+			Name:            data.Name,
+			Price:           data.Price,
+			PictureUrl:      data.PictureUrl,
+			Stars:           data.Stars,
+			TotalSold:       data.TotalSold,
+			CreatedAt:       data.CreatedAt,
+			Category:        data.Category,
+			ShopName:        data.ShopName,
+			ProductNameSlug: data.ProductNameSlug,
+			ShopNameSlug:    data.ShopNameSlug,
 		}
 
 		res.SellerProducts = append(res.SellerProducts, p)
@@ -94,8 +96,9 @@ func (u *sellerUsecase) GetBestSelling(ctx context.Context, req dtousecase.GetSe
 	return res, nil
 }
 
-func (u *sellerUsecase) GetCategories(ctx context.Context, req dtousecase.GetSellerCategoriesRequest) (dtousecase.GetSellerCategoriesResponse, error) {
-	res := dtousecase.GetSellerCategoriesResponse{}
+func (u *sellerUsecase) GetShowcases(ctx context.Context, req dtousecase.GetSellerShowcasesRequest) (dtousecase.GetSellerShowcasesResponse, error) {
+	res := dtousecase.GetSellerShowcasesResponse{}
+	res.Showcases = []dtousecase.SellerShowcase{}
 
 	seller, err := u.accountRepository.FirstSeller(ctx, dtorepository.SellerDataRequest{ShopName: req.ShopName})
 	if err != nil {
@@ -106,20 +109,21 @@ func (u *sellerUsecase) GetCategories(ctx context.Context, req dtousecase.GetSel
 		return res, util.ErrSellerNotFound
 	}
 
-	rRes, err := u.accountRepository.FindSellerCategories(ctx, dtorepository.FindSellerCategoriesRequest{SellerId: seller.Id})
+	rRes, err := u.accountRepository.FindSellerShowcases(ctx, dtorepository.FindSellerShowcasesRequest{SellerId: seller.Id})
 	if err != nil {
 		return res, err
 	}
 
 	for _, data := range rRes {
-		res.Categories = append(res.Categories, dtousecase.SellerCategory{CategoryId: data.CategoryId, CategoryName: data.CategoryName})
+		res.Showcases = append(res.Showcases, dtousecase.SellerShowcase{ShowcaseId: data.ShowcaseId, ShowcaseName: data.ShowcaseName})
 	}
 
 	return res, nil
 }
 
-func (u *sellerUsecase) GetCategoryProducts(ctx context.Context, req dtousecase.GetSellerCategoryProductRequest) (dtousecase.GetSellerCategoryProductResponse, error) {
-	res := dtousecase.GetSellerCategoryProductResponse{}
+func (u *sellerUsecase) GetShowcaseProducts(ctx context.Context, req dtousecase.GetSellerShowcaseProductRequest) (dtousecase.GetSellerShowcaseProductResponse, error) {
+	res := dtousecase.GetSellerShowcaseProductResponse{}
+	res.SellerProducts = []dtousecase.SellerProduct{}
 
 	seller, err := u.accountRepository.FirstSeller(ctx, dtorepository.SellerDataRequest{ShopName: req.ShopName})
 	if err != nil {
@@ -130,7 +134,7 @@ func (u *sellerUsecase) GetCategoryProducts(ctx context.Context, req dtousecase.
 		return res, util.ErrSellerNotFound
 	}
 
-	products, err := u.accountRepository.FindSellerCategoryProduct(ctx, dtorepository.FindSellerCategoryProductRequest{ShopName: req.ShopName, CategoryId: req.CategoryId})
+	products, err := u.accountRepository.FindSellerShowcaseProduct(ctx, dtorepository.FindSellerShowcaseProductRequest{ShopName: req.ShopName, ShowcaseId: req.ShowcaseId})
 	if err != nil {
 		return res, err
 	}
