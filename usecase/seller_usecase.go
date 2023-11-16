@@ -83,6 +83,7 @@ func (u *sellerUsecase) GetBestSelling(ctx context.Context, req dtousecase.GetSe
 			TotalSold:  data.TotalSold,
 			CreatedAt:  data.CreatedAt,
 			Category:   data.Category,
+			ShopName:   data.ShopName,
 		}
 
 		res.SellerProducts = append(res.SellerProducts, p)

@@ -1072,7 +1072,8 @@ func (r *accountRepository) FindSellerBestSelling(ctx context.Context, req dtore
 			case 
 				when category_level_3.level_3_id is not null then category_level_3.level_2_name
 				when category_level_2.level_2_id is not null then category_level_2.level_2_name
-			end as "Category"
+			end as "Category",
+			seller.shop_name
 		from products p 
 		left join (
 			select
@@ -1126,6 +1127,8 @@ func (r *accountRepository) FindSellerBestSelling(ctx context.Context, req dtore
 				on c3.id = c2.parent 
 			where c."level" = 3
 		) as category_level_3 on category_level_3.level_3_id = p.category_id 
+		left join accounts seller
+			on seller.id = p.seller_id
 		where p.seller_id = ?
 	`
 
