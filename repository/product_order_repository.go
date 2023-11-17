@@ -27,6 +27,7 @@ type ProductOrdersRepository interface {
 	Create(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error)
 	FindAllOrderHistoriesByUser(ctx context.Context, req dtorepository.ProductOrderHistoryRequest) ([]model.ProductOrderHistories, int64, error)
 	FindAllOrderHistoriesByUserAndStatus(ctx context.Context, req dtorepository.ProductOrderHistoryRequest) ([]model.ProductOrderHistories, int64, error)
+	FindAllOrderHistoriesBySellerAndStatus(ctx context.Context, req dtorepository.ProductSellerOrderHistoryRequest) ([]dtorepository.ProductSellerOrderHistoriesResponse, int64, error)
 	FindByIDAndAccountAndStatus(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error)
 	AddProductReview(ctx context.Context, req dtorepository.AddProductReviewRequest) (dtorepository.AddProductReviewResponse, error)
 	FindReviewByID(ctx context.Context, req dtorepository.ProductReviewRequest) (dtorepository.ProductReviewResponse, error)
@@ -37,6 +38,91 @@ func NewProductOrdersRepository(db *gorm.DB) ProductOrdersRepository {
 	return &productOrdersRepository{
 		db: db,
 	}
+}
+
+func (r *productOrdersRepository) FindAllOrderHistoriesBySellerAndStatus(ctx context.Context, req dtorepository.ProductSellerOrderHistoryRequest) ([]dtorepository.ProductSellerOrderHistoriesResponse, int64, error) {
+	res := []dtorepository.ProductSellerOrderHistoriesResponse{}
+
+	q := `
+	select 
+		po.id,
+		pod.product_order_id as product_order_id,
+		po.status, 
+		a.full_name as buyer_name,
+		p.id as product_id,
+		p.name as product_name, 
+		pod.variant_name, 
+		pod.id as product_order_detail_id, 
+		po.delivery_fee,
+		pod.quantity, 
+		pod.individual_price,
+		po.created_at,
+		po.updated_at,
+		po.deleted_at
+			from product_orders po
+			left join product_order_details pod 
+				on pod.product_order_id = po.id
+			left join products p 
+				on p.id = pod.product_id 
+			left join accounts a 
+				on a.id = po.account_id 
+		where po.account_id = ? and po.status ilike ?;
+	`
+	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q, req.AccountID, req.Status))
+	if req.StartDate != "" {
+		query = query.Where("created_at >= ?", req.StartDate)
+	}
+
+	if req.EndDate != "" {
+		req.EndDate += " 23:59:59"
+		query = query.Where("created_at <= ?", req.EndDate)
+	}
+
+	query = query.Order(req.SortBy + " " + req.Sort)
+	offset := (req.Page - 1) * req.Limit
+	query = query.Offset(offset).Limit(req.Limit)
+
+	if err := query.Find(&res).Error; err != nil {
+		return nil, 0, err
+	}
+
+	totalItems, err := r.countSellerOrderHistoriesByAccountIDAndStatus(ctx, req)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return res, totalItems, nil
+}
+
+func (r *productOrdersRepository) countSellerOrderHistoriesByAccountIDAndStatus(ctx context.Context, req dtorepository.ProductSellerOrderHistoryRequest) (int64, error) {
+	var totalItems int64
+	q := `
+	select count(distinct(po.id))
+		from product_orders po
+		left join product_order_details pod 
+			on pod.product_order_id = po.id
+		left join products p 
+			on p.id = pod.product_id 
+		left join accounts a 
+			on a.id = po.account_id 
+	where po.account_id = ? and po.status ilike ?;
+	`
+
+	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q, req.AccountID, req.Status))
+	if req.StartDate != "" {
+		query = query.Where("created_at >= ?", req.StartDate)
+	}
+
+	if req.EndDate != "" {
+		req.EndDate += " 23:59:59"
+		query = query.Where("created_at <= ?", req.EndDate)
+	}
+
+	if err := query.Find(&totalItems).Error; err != nil {
+		return 0, err
+	}
+
+	return totalItems, nil
 }
 
 func (r *productOrdersRepository) FindByID(ctx context.Context, req dtorepository.ProductOrderRequest) (dtorepository.ProductOrderResponse, error) {

@@ -199,6 +199,63 @@ func (h *ProductOrderHandler) AddProductReview(c *gin.Context) {
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
 }
 
+func (h *ProductOrderHandler) GetSellerOrderHistories(c *gin.Context) {
+	status := c.DefaultQuery("status", constant.StatusOrderAll)
+
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	sortBy := c.DefaultQuery("sortBy", "date")
+	sort := c.DefaultQuery("sort", "desc")
+	startDate := c.DefaultQuery("startDate", "")
+	endDate := c.DefaultQuery("endDate", "")
+
+	if valid := util.IsDateValid(startDate); !valid && startDate != "" {
+		c.Error(util.ErrInvalidDateFormat)
+		return
+	}
+	if valid := util.IsDateValid(endDate); !valid && endDate != "" {
+		c.Error(util.ErrInvalidDateFormat)
+		return
+	}
+
+	if !slices.Contains([]string{"date", "price"}, sortBy) {
+		c.Error(util.ErrProductFavoriteSortBy)
+		return
+	}
+
+	switch sortBy {
+	case "date":
+		sortBy = "created_at"
+	}
+
+	uReq := dtousecase.ProductSellerOrderHistoryRequest{
+		AccountID: c.GetInt("userId"),
+		Status:    status,
+		SortBy:    sortBy,
+		Sort:      sort,
+		Limit:     limit,
+		Page:      page,
+		StartDate: startDate,
+		EndDate:   endDate,
+	}
+
+	response, pagination, err := h.productOrderUsecase.GetSellerOrderHistories(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONPagination{Data: response, Pagination: pagination})
+}
+
 func (h *ProductOrderHandler) GetOrderHistories(c *gin.Context) {
 	status := c.DefaultQuery("status", constant.StatusOrderAll)
 

@@ -26,6 +26,7 @@ type ProductOrderUsecase interface {
 	CheckDeliveryFee(ctx context.Context, req dtousecase.CheckDeliveryFeeRequest) (*dtousecase.CourierFeeResponse, error)
 	GetCouriers(ctx context.Context, req dtousecase.SellerCourier) ([]model.Couriers, error)
 	GetOrderHistories(ctx context.Context, req dtousecase.ProductOrderHistoryRequest) ([]dtousecase.OrdersResponse, dtogeneral.PaginationData, error)
+	GetSellerOrderHistories(ctx context.Context, req dtousecase.ProductSellerOrderHistoryRequest) ([]dtousecase.SellerOrdersResponse, dtogeneral.PaginationData, error)
 	AddProductReview(ctx context.Context, req dtousecase.AddProductReview) (*dtousecase.AddProductReviewResponse, error)
 	GetOrderDetail(ctx context.Context, req dtousecase.OrderDetailRequest) (*dtousecase.OrderDetailResponse, error)
 }
@@ -489,6 +490,58 @@ func (u *productOrderUsecase) convertOrderHistoriesReponse(ctx context.Context, 
 	return productOrders, pagination, nil
 }
 
+func (u *productOrderUsecase) convertSellerOrderHistoriesReponse(ctx context.Context, pagination dtogeneral.PaginationData, orders []dtorepository.ProductSellerOrderHistoriesResponse) ([]dtousecase.SellerOrdersResponse, dtogeneral.PaginationData, error) {
+	orderHistories := make(map[string][]dtousecase.OrderProduct)
+	productOrders := []dtousecase.SellerOrdersResponse{}
+	orderKeys := []string{}
+
+	for _, o := range orders {
+		product := dtousecase.OrderProduct{
+			ProductName:          o.ProductName,
+			Quantity:             o.Quantity,
+			IndividualPrice:      o.IndividualPrice,
+			ProductID:            o.ProductID,
+			ProductOrderDetailID: o.ProductOrderDetailID,
+			VariantName:          o.VariantName,
+		}
+
+		orderKey := fmt.Sprintf("%v*@*%v*@*%v*@*%v", o.ID, o.BuyerName, o.Status, o.CreatedAt)
+		if _, exists := orderHistories[orderKey]; !exists {
+			orderKeys = append(orderKeys, orderKey)
+		}
+		orderHistories[orderKey] = append(orderHistories[orderKey], product)
+	}
+
+	for _, k := range orderKeys {
+		products := orderHistories[k]
+		var totalAmount decimal.Decimal
+		for _, o := range products {
+			qty, err := decimal.NewFromString(fmt.Sprintf("%v", o.Quantity))
+			if err != nil {
+				return nil, dtogeneral.PaginationData{}, err
+			}
+
+			totalAmount = totalAmount.Add(o.IndividualPrice.Mul(qty))
+		}
+		orderKey := strings.Split(k, "*@*")
+		orderId, err := strconv.Atoi(orderKey[0])
+		if err != nil {
+			return nil, dtogeneral.PaginationData{}, err
+		}
+		order := dtousecase.SellerOrdersResponse{
+			OrderID:      orderId,
+			Products:     products,
+			Status:       orderKey[2],
+			TotalPayment: totalAmount,
+			BuyerName:     orderKey[1],
+			CreateAt:     orderKey[3],
+		}
+		productOrders = append(productOrders, order)
+	}
+
+	return productOrders, pagination, nil
+}
+
 func (u *productOrderUsecase) GetOrderHistories(ctx context.Context, req dtousecase.ProductOrderHistoryRequest) ([]dtousecase.OrdersResponse, dtogeneral.PaginationData, error) {
 	var err error
 	if req.Status == "" || strings.EqualFold(req.Status, constant.StatusOrderAll) {
@@ -537,6 +590,33 @@ func (u *productOrderUsecase) GetOrderHistories(ctx context.Context, req dtousec
 	}
 
 	return u.convertOrderHistoriesReponse(ctx, pagination, orders)
+}
+
+func (u *productOrderUsecase) GetSellerOrderHistories(ctx context.Context, req dtousecase.ProductSellerOrderHistoryRequest) ([]dtousecase.SellerOrdersResponse, dtogeneral.PaginationData, error) {
+	var err error
+
+	orders, totalItems, err := u.productOrderRepository.FindAllOrderHistoriesBySellerAndStatus(ctx, dtorepository.ProductSellerOrderHistoryRequest{
+		AccountID: req.AccountID,
+		Status:    req.Status,
+		SortBy:    req.SortBy,
+		Sort:      req.Sort,
+		Limit:     req.Limit,
+		Page:      req.Page,
+		StartDate: req.StartDate,
+		EndDate:   req.EndDate,
+	})
+	if err != nil {
+		return nil, dtogeneral.PaginationData{}, err
+	}
+
+	pagination := dtogeneral.PaginationData{
+		TotalItem:   int(totalItems),
+		TotalPage:   (int(totalItems) + req.Limit - 1) / req.Limit,
+		CurrentPage: req.Page,
+		Limit:       req.Limit,
+	}
+
+	return u.convertSellerOrderHistoriesReponse(ctx, pagination, orders)
 }
 
 func (u *productOrderUsecase) GetOrderDetail(ctx context.Context, req dtousecase.OrderDetailRequest) (*dtousecase.OrderDetailResponse, error) {

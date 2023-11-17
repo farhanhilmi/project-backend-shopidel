@@ -209,14 +209,6 @@ type OrderProduct struct {
 	Review               ProductOrderReview `json:"review,omitempty"`
 	IsReviewed           bool               `json:"is_reviewed"`
 }
-type OrdersResponse struct {
-	OrderID      int             `json:"order_id"`
-	ShopName     string          `json:"shop_name"`
-	Status       string          `json:"status"`
-	Products     []OrderProduct  `json:"products"`
-	TotalPayment decimal.Decimal `json:"total_payment"`
-	CreateAt     string          `json:"created_at"`
-}
 
 type GetProductReviewsRequest struct {
 	ProductId int

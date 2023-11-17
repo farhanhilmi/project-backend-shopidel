@@ -12,6 +12,7 @@ func NewProductOrderRouter(h *handler.ProductOrderHandler, gin *gin.Engine) *gin
 	group.Use(middleware.IsRoleSeller())
 	group.PUT("/:orderId/cancel", h.CanceledOrderBySeller)
 	group.PUT("/:orderId/processed", h.ProcessedOrderBySeller)
+	group.GET("", h.GetSellerOrderHistories)
 
 	return gin
 }
