@@ -290,7 +290,7 @@ type ChangePasswordRequest struct {
 }
 
 type GetCategoriesResponse struct {
-	Categories []Category
+	Categories []Category `json:"categories"`
 }
 
 type Category struct {

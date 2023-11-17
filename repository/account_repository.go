@@ -722,13 +722,13 @@ func (r *accountRepository) FindAccountCartItems(ctx context.Context, req dtorep
 			seller.id as "ShopId",
 			seller.shop_name as "ShopName",
 			pvsc.id as "ProductId",
-			pvsc.picture_url as "ProductUrl",
+			product_image.url as "ProductUrl",
 			case 
 				when pvs."name" = 'default_reserved_keyword' then p."name"
 				when pvs2."name" is null then concat(p."name", ' - ', pvs."name")
 				when pvs2."name" is not null then concat(p."name", ' - ', pvs."name", ', ', pvs2."name")
 			end as "ProductName",
-			pvsc.price as "ProductPrice",
+			product_lowest_price.lowest_price as "ProductPrice",
 			ac.quantity as "Quantity"
 		from account_carts ac 
 			left join product_variant_selection_combinations pvsc 
@@ -739,6 +739,26 @@ func (r *accountRepository) FindAccountCartItems(ctx context.Context, req dtorep
 				on pvs2.id = pvsc.product_variant_selection_id2 
 			left join products p 
 				on p.id = pvsc.product_id 
+			left join (
+					select
+						pvsc.product_id,
+						min (
+							case
+								when pvsc.price > 0 then pvsc.price 
+								else null
+							end
+						) as lowest_price
+					from product_variant_selection_combinations pvsc 
+					group by pvsc.product_id
+				) product_lowest_price on product_lowest_price.product_id = p.id 
+			left join lateral (
+					select
+						pi2.product_id,
+						pi2.url 
+					from product_images pi2 
+					where pi2.product_id = p.id
+					limit 1
+				) product_image on product_image.product_id = p.id 
 			left join accounts seller
 				on seller.id = p.seller_id 
 		where ac.account_id = ?

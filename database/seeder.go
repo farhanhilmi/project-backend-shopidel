@@ -122,6 +122,7 @@ func seeding() {
 		seeder.SellerPageSelectedCategory,
 		seeder.SellerShowcases,
 		seeder.SellerShowcaseProducts,
+		seeder.ProductOrderReviewImages,
 	}
 
 	for _, seed := range seeders {

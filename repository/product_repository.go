@@ -31,8 +31,9 @@ type ProductRepository interface {
 	AddProductFavorite(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
 	RemoveProductFavorite(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
 	FindSellerAnotherProducts(ctx context.Context, sellerId int) ([]dtousecase.AnotherProduct, error)
-	FindProductReviews(ctx context.Context, req dtousecase.GetProductReviewsRequest) (dtousecase.GetProductReviewsResponse, error)
+	FindProductReviews(ctx context.Context, req dtousecase.GetProductReviewsRequest) (dtorepository.GetProductReviewsResponse, error)
 	FindByID(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error)
+	FindProductReviewPictures(ctx context.Context, reviewId int) ([]dtousecase.ReviewImage, error)
 }
 
 func NewProductRepository(db *gorm.DB) ProductRepository {
@@ -473,18 +474,39 @@ func (r *productRepository) FindAllProductFavorites(ctx context.Context, req dto
 	var totalItems int64
 
 	q := `
-	select distinct on (fp.product_id) fp.product_id, sum(pod.quantity) as total_sold, fp.*, p.name, pvsc.price, pvsc.picture_url, aa.district 
+		select 
+			distinct on (fp.product_id) fp.product_id, 
+			0 as total_sold, 
+			fp.*, 
+			p.name, 
+			product_price.lowest_price as price, 
+			product_image.picture_url, 
+			aa.district 
 		from favorite_products fp 
-		left join products p 
-			on p.id = fp.product_id
-		left join product_variant_selection_combinations pvsc 
-			on pvsc.product_id = fp.product_id
-		left join account_addresses aa 
-			on aa.account_id = fp.account_id  
-		left join product_order_details pod 
-			on pod.product_variant_selection_combination_id = pvsc.id
+			left join products p 
+					on p.id = fp.product_id
+			left join product_variant_selection_combinations pvsc 
+					on pvsc.product_id = fp.product_id
+			left join account_addresses aa 
+					on aa.account_id = fp.account_id 
+			inner join lateral (
+					select	
+						pi2.product_id,
+						pi2.url as picture_url
+					from product_images pi2 
+					where pi2.product_id = p.id 
+					order by pi2.id asc
+					limit 1
+				) product_image on product_image.product_id = p.id 
+			inner join lateral (
+					select
+						pvsc2.product_id,
+						min(pvsc2.price) as lowest_price
+					from product_variant_selection_combinations pvsc2
+					where pvsc2.product_id = p.id
+					group by pvsc2.product_id 
+				) product_price on product_price.product_id = p.id
 		where fp.account_id = ?
-	group by fp.product_id, fp.id, p.name, pvsc.price, pvsc.picture_url, aa.district
 	`
 	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q, req.AccountID))
 
@@ -575,13 +597,14 @@ func (r *productRepository) FindSellerAnotherProducts(ctx context.Context, selle
 	return res, nil
 }
 
-func (r *productRepository) FindProductReviews(ctx context.Context, req dtousecase.GetProductReviewsRequest) (dtousecase.GetProductReviewsResponse, error) {
-	res := dtousecase.GetProductReviewsResponse{}
-	pr := []dtousecase.ProductReview{}
+func (r *productRepository) FindProductReviews(ctx context.Context, req dtousecase.GetProductReviewsRequest) (dtorepository.GetProductReviewsResponse, error) {
+	res := dtorepository.GetProductReviewsResponse{}
+	pr := []dtorepository.ProductReview{}
 	pg := dtogeneral.PaginationData{}
 
 	q := `
 		select 
+			por.id as "Id",
 			a.full_name as "CustomerName",
 			a.profile_picture as "CustomerPictureUrl",
 			por.rating as "Stars",
@@ -631,6 +654,24 @@ func (r *productRepository) FindProductReviews(ctx context.Context, req dtouseca
 	res.Limit = req.Limit
 	res.TotalPage = int(math.Ceil(float64(pg.TotalItem) / float64(res.Limit)))
 	res.CurrentPage = req.Page
+
+	return res, nil
+}
+
+func (r *productRepository) FindProductReviewPictures(ctx context.Context, reviewId int) ([]dtousecase.ReviewImage, error) {
+	res := []dtousecase.ReviewImage{}
+
+	q := `
+		select 
+			pori.image_url as url
+		from product_order_review_images pori 
+		where pori.product_review_id = ?
+	`
+
+	err := r.db.WithContext(ctx).Raw(q, reviewId).Scan(&res).Error
+	if err != nil {
+		return res, err
+	}
 
 	return res, nil
 }
