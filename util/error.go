@@ -73,4 +73,6 @@ var (
 	ErrSellerNotFound            = &CustomError{Message: "Seller not found", Code: NotFound}
 	ErrOrderDetailNotFound       = &CustomError{Message: "We could not find the order you are looking for", Code: NotFound}
 	ErrSamePassword              = &CustomError{Message: "New Password cannot be the same with previous password", Code: BadRequest}
+	ErrNoImage                   = &CustomError{Message: "You should choose at least one product image", Code: BadRequest}
+	ErrIncorrectPassword         = &CustomError{Message: "Invalid Password", Code: Unauthorized}
 )
