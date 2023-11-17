@@ -2,7 +2,12 @@ package util
 
 import (
 	"context"
+	"fmt"
 	"mime/multipart"
+	"os"
+	"path"
+	"strings"
+	"time"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/config"
 	"github.com/cloudinary/cloudinary-go"
@@ -38,4 +43,26 @@ func UploadToCloudinary(file multipart.File, filePath string) (string, error) {
 
 	imageUrl := result.SecureURL
 	return imageUrl, nil
+}
+
+func GetVariantImageURL(imageId string) (string, error) {
+	file, err := os.Open(fmt.Sprintf("./imageuploads/%v.png", imageId))
+	if err != nil {
+		return "", err
+	}
+
+	defer file.Close()
+
+	currentTime := time.Now().UnixNano()
+	fileExtension := path.Ext(file.Name())
+	originalFilename := file.Name()[:len(file.Name())-len(fileExtension)]
+	newFilename := fmt.Sprintf("%s_%d", originalFilename, currentTime)
+	fileName := strings.Split(newFilename, "./imageuploads/")
+
+	imageURL, err := UploadToCloudinary(file, fileName[1])
+	if err != nil {
+		return "", err
+	}
+
+	return imageURL, nil
 }

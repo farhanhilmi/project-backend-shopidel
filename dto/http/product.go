@@ -43,22 +43,19 @@ type UpdateCartRequest struct {
 }
 
 type AddNewProductRequest struct {
-	ProductName       string                            `json:"product_name" binding:"required"`
-	Description       string                            `json:"description"`
-	CategoryID        int                               `json:"category_id" binding:"required"`
-	HazardousMaterial *bool                             `json:"hazardous_material" binding:"required"`
-	IsNew             *bool                             `json:"is_new" binding:"required"`
-	InternalSKU       string                            `json:"internal_sku" binding:"required"`
-	Weight            decimal.Decimal                   `json:"weight" binding:"required"`
-	Size              decimal.Decimal                   `json:"size" binding:"required"`
-	IsActive          *bool                             `json:"is_active" binding:"required"`
-	Variants          []dtousecase.AddNewProductVariant `json:"variants"`
+	ProductName       string                            `form:"product_name" binding:"required"`
+	Description       string                            `form:"description"`
+	CategoryID        int                               `form:"category_id" binding:"required"`
+	HazardousMaterial *bool                             `form:"hazardous_material" binding:"required"`
+	IsNew             *bool                             `form:"is_new" binding:"required"`
+	InternalSKU       string                            `form:"internal_sku" binding:"required"`
+	Weight            decimal.Decimal                   `form:"weight" binding:"required"`
+	Size              decimal.Decimal                   `form:"size" binding:"required"`
+	IsActive          *bool                             `form:"is_active" binding:"required"`
+	Variants          []dtousecase.AddNewProductVariant `form:"variants[]" binding:"required"`
+	VideoURL          string                            `form:"video_url"`
 }
 
-// type AddNewProductVariant struct {
-// 	VariantName  string          `json:"variant_name" binding:"required"`
-// 	VariantValue string          `json:"variant_value" binding:"required"`
-// 	Stock        int             `json:"stock" binding:"required"`
-// 	Price        decimal.Decimal `json:"price" binding:"required"`
-// 	// Images       *multipart.FileHeader
-// }
+type UploadNewPhoto struct {
+	ImageID string `form:"image_id" binding:"required"`
+}

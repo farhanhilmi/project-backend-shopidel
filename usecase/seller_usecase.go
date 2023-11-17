@@ -2,8 +2,12 @@ package usecase
 
 import (
 	"context"
-	"log"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/repository"
@@ -16,14 +20,17 @@ type SellerUsecase interface {
 	GetShowcases(ctx context.Context, req dtousecase.GetSellerShowcasesRequest) (dtousecase.GetSellerShowcasesResponse, error)
 	GetShowcaseProducts(ctx context.Context, req dtousecase.GetSellerShowcaseProductRequest) (dtousecase.GetSellerShowcaseProductResponse, error)
 	AddNewProduct(ctx context.Context, req dtousecase.AddNewProductRequest) (dtousecase.AddNewProductResponse, error)
+	UploadPhoto(ctx context.Context, req dtousecase.UploadNewPhoto) (dtousecase.UploadNewPhoto, error)
 }
 
 type sellerUsecase struct {
 	accountRepository repository.AccountRepository
+	productRepository repository.ProductRepository
 }
 
 type SellerUsecaseConfig struct {
 	AccountRepository repository.AccountRepository
+	ProductRepository repository.ProductRepository
 }
 
 func NewSellerUsecase(config SellerUsecaseConfig) SellerUsecase {
@@ -31,6 +38,9 @@ func NewSellerUsecase(config SellerUsecaseConfig) SellerUsecase {
 
 	if config.AccountRepository != nil {
 		au.accountRepository = config.AccountRepository
+	}
+	if config.ProductRepository != nil {
+		au.productRepository = config.ProductRepository
 	}
 
 	return au
@@ -150,16 +160,101 @@ func (u *sellerUsecase) GetShowcaseProducts(ctx context.Context, req dtousecase.
 func (u *sellerUsecase) AddNewProduct(ctx context.Context, req dtousecase.AddNewProductRequest) (dtousecase.AddNewProductResponse, error) {
 	res := dtousecase.AddNewProductResponse{}
 
-	log.Println("REQ", req)
+	productVariants := []dtousecase.ProductVariants{}
 
-	for i, header := range req.Images {
-		_, err := req.Images[i].Open()
-		if err != nil {
-			log.Println("ERR", err)
-			return res, err
+	if len(req.Variants) == 1 {
+		switch {
+		case req.Variants[0].Variant1.Name == "":
+			productVariants = []dtousecase.ProductVariants{
+				{
+					Name: constant.DefaultReservedKeyword,
+				},
+			}
+			req.Variants[0].Variant1.Name = constant.DefaultReservedKeyword
+			req.Variants[0].Variant1.Value = constant.DefaultReservedKeyword
+		case req.Variants[0].Variant2.Name == "":
+			productVariants = []dtousecase.ProductVariants{
+				{
+					Name: req.Variants[0].Variant1.Name,
+				},
+			}
+			// e, a := getVariantImageURL(req.Variants)
+		default:
+			productVariants = []dtousecase.ProductVariants{
+				{
+					Name: req.Variants[0].Variant1.Name,
+				},
+				{
+					Name: req.Variants[0].Variant2.Name,
+				},
+			}
 		}
-		log.Println("FILENAME", header.Filename)
 	}
 
+	if len(req.Variants) > 1 {
+		if req.Variants[0].Variant2.Name == "" {
+			productVariants = []dtousecase.ProductVariants{
+				{
+					Name: req.Variants[0].Variant1.Name,
+				},
+			}
+		} else {
+			productVariants = []dtousecase.ProductVariants{
+				{
+					Name: req.Variants[0].Variant1.Name,
+				},
+				{
+					Name: req.Variants[0].Variant2.Name,
+				},
+			}
+		}
+	}
+
+	product, err := u.productRepository.AddNewProduct(ctx, dtorepository.AddNewProductRequest{
+		SellerID:          req.SellerID,
+		ProductName:       req.ProductName,
+		Description:       req.Description,
+		CategoryID:        req.CategoryID,
+		HazardousMaterial: req.HazardousMaterial,
+		IsNew:             req.IsNew,
+		InternalSKU:       req.InternalSKU,
+		Weight:            req.Weight,
+		IsActive:          req.IsActive,
+		Size:              req.Size,
+		Variants:          req.Variants,
+		ProductVariants:   productVariants,
+		Images:            req.Images,
+		VideoURL:          req.VideoURL,
+	})
+	if err != nil {
+		return res, err
+	}
+
+	res.ProductName = product.Name
+
+	return res, nil
+}
+
+func (u *sellerUsecase) UploadPhoto(ctx context.Context, req dtousecase.UploadNewPhoto) (dtousecase.UploadNewPhoto, error) {
+	res := dtousecase.UploadNewPhoto{}
+
+	err := os.MkdirAll("./imageuploads", os.ModePerm)
+	if err != nil {
+		return res, err
+	}
+
+	dst, err := os.Create(fmt.Sprintf("./imageuploads/%s%s", req.ImageID, filepath.Ext(req.ImageHeader.Filename)))
+	if err != nil {
+		return res, err
+	}
+
+	defer dst.Close()
+
+	_, err = io.Copy(dst, req.Image)
+	if err != nil {
+		return res, err
+	}
+
+	res.ImageID = req.ImageID
 	return res, nil
 }
