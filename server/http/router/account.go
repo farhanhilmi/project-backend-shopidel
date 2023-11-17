@@ -25,6 +25,7 @@ func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 		{
 			profile.GET("", h.GetProfile)
 			profile.PUT("", h.EditProfile)
+			profile.POST("/change-password", h.ChangePassword)
 		}
 
 		wallet := account.Group("wallets")
@@ -52,6 +53,11 @@ func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 		address.GET("/provinces", h.GetProvinces)
 		address.GET("/districts", h.GetDistricts)
 		address.GET("/provinces/:provinceId/districts", h.GetProvinceDistricts)
+	}
+
+	categories := gin.Group("/categories")
+	{
+		categories.GET("", h.GetCategories)
 	}
 
 	return gin

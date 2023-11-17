@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtohttp "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/http"
@@ -54,29 +55,44 @@ func (h *SellerHandler) GetBestSelling(c *gin.Context) {
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes.SellerProducts})
 }
 
-func (h *SellerHandler) GetCategories(c *gin.Context) {
+func (h *SellerHandler) GetShowcases(c *gin.Context) {
 	shopName := c.Param("shopName")
 
-	uRes, err := h.sellerUsecase.GetCategories(c.Request.Context(), dtousecase.GetSellerCategoriesRequest{ShopName: shopName})
+	uRes, err := h.sellerUsecase.GetShowcases(c.Request.Context(), dtousecase.GetSellerShowcasesRequest{ShopName: shopName})
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes.Categories})
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes.Showcases})
 }
 
-func (h *SellerHandler) GetCategoryProducts(c *gin.Context) {
+func (h *SellerHandler) GetShowcaseProducts(c *gin.Context) {
 	shopName := c.Param("shopName")
-	categoryId := c.Param("categoryId")
+	showcaseId := c.Param("showcaseId")
+	page := c.Query("page")
+	var err error
+	p := 0
 
-	uRes, err := h.sellerUsecase.GetCategoryProducts(c.Request.Context(), dtousecase.GetSellerCategoryProductRequest{ShopName: shopName, CategoryId: categoryId})
+	if page != "" {
+		if p, err = strconv.Atoi(page); err != nil {
+			c.Error(err)
+			return
+		}
+	}
+
+	if p == 0 {
+		p = 1
+	}
+	limit := 20
+
+	uRes, err := h.sellerUsecase.GetShowcaseProducts(c.Request.Context(), dtousecase.GetSellerShowcaseProductRequest{ShopName: shopName, ShowcaseId: showcaseId, Page: p, Limit: limit})
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes.SellerProducts})
+	c.JSON(http.StatusOK, dtogeneral.JSONPagination{Data: uRes.SellerProducts, Pagination: dtogeneral.PaginationData{CurrentPage: p, Limit: limit}})
 }
 
 func (h *SellerHandler) UploadPhoto(c *gin.Context) {

@@ -341,12 +341,36 @@ func (u *productUsecase) convertVariantOptions(ctx context.Context, req dtorepos
 }
 
 func (u *productUsecase) GetProductReviews(ctx context.Context, req dtousecase.GetProductReviewsRequest) (dtousecase.GetProductReviewsResponse, error) {
-	req.Limit = 6
-
-	res, err := u.productRepository.FindProductReviews(ctx, req)
+	res := dtousecase.GetProductReviewsResponse{}
+	rRes, err := u.productRepository.FindProductReviews(ctx, req)
 	if err != nil {
 		return res, err
 	}
+
+	for _, data := range rRes.Reviews {
+		review := dtousecase.ProductReview{
+			Id:                 data.Id,
+			CustomerName:       data.CustomerName,
+			CustomerPictureUrl: data.CustomerPictureUrl,
+			Stars:              data.Stars,
+			Comment:            data.Comment,
+			Variant:            data.Variant,
+			CreatedAt:          data.CreatedAt,
+		}
+		pictures, err := u.productRepository.FindProductReviewPictures(ctx, data.Id)
+		if err != nil {
+			return res, err
+		}
+
+		review.Pictures = pictures
+
+		res.Reviews = append(res.Reviews, review)
+	}
+
+	res.Limit = req.Limit
+	res.CurrentPage = req.Page
+	res.TotalItem = rRes.TotalItem
+	res.TotalPage = rRes.TotalPage
 
 	return res, nil
 }

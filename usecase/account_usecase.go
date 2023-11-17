@@ -44,6 +44,8 @@ type AccountUsecase interface {
 	UpdateAccountAddress(ctx context.Context, req dtousecase.UpdateAddressRequest) (dtousecase.UpdateAddressResponse, error)
 	RequestForgetPassword(ctx context.Context, req dtousecase.ForgetPasswordRequest) (*dtousecase.ForgetPasswordRequest, error)
 	RequestForgetChangePassword(ctx context.Context, req dtousecase.ForgetChangePasswordRequest) (*dtousecase.ForgetPasswordRequest, error)
+	ChangePassword(ctx context.Context, req dtousecase.ChangePasswordRequest) error
+	GetCategories(ctx context.Context) (dtousecase.GetCategoriesResponse, error)
 }
 
 type accountUsecase struct {
@@ -103,6 +105,46 @@ func (u *accountUsecase) RegisterSeller(ctx context.Context, req dtousecase.Regi
 	res.ShopName = registeredSeller.ShopName
 
 	return &res, nil
+}
+
+func (u *accountUsecase) ChangePassword(ctx context.Context, req dtousecase.ChangePasswordRequest) error {
+	account, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{
+		UserId: req.AccountID,
+	})
+	if err != nil {
+		return err
+	}
+	
+	if !util.CheckPasswordHash(req.OldPassword, account.Password) {
+		return util.ErrInvalidPassword
+	}
+
+	if !util.ValidatePassword(req.NewPassword) {
+		return util.ErrWeakPassword
+	}
+
+	if len(req.NewPassword) < 8 {
+		return util.ErrWeakPassword
+	}
+
+	if util.CheckPasswordHash(account.Password, req.NewPassword) {
+		return util.ErrSamePassword
+	}
+
+	password, err := util.HashPassword(req.NewPassword)
+	if err != nil {
+		return err
+	}
+	rReq := dtorepository.ChangePasswordRequest{
+		AccountID:   req.AccountID,
+		NewPassword: password,
+	}
+	err = u.accountRepository.UpdatePassord(ctx, rReq)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (u *accountUsecase) GetAddresses(ctx context.Context, req dtousecase.AddressRequest) (*[]dtousecase.AddressResponse, error) {
@@ -919,6 +961,62 @@ func (u *accountUsecase) UpdateAccountAddress(ctx context.Context, req dtousecas
 	res.ZipCode = rRes.ZipCode
 	res.IsBuyerDefault = rReq.IsBuyerDefault
 	res.IsSellerDefault = rReq.IsSellerDefault
+
+	return res, nil
+}
+
+func (u *accountUsecase) GetCategories(ctx context.Context) (dtousecase.GetCategoriesResponse, error) {
+	res := dtousecase.GetCategoriesResponse{}
+
+	categories, err := u.accountRepository.FindCategories(ctx)
+	if err != nil {
+		return res, err
+	}
+
+	lastLevel1 := 0
+	lastLevel2 := 0
+	c := dtousecase.Category{}
+	c2 := dtousecase.Category{}
+	for i, category := range categories {
+		if category.CategoryLevel1Id != lastLevel1 {
+			if c.Id != 0 {
+				c.Children = append(c.Children, c2)
+				res.Categories = append(res.Categories, c)
+			}
+
+			c.Id = category.CategoryLevel1Id
+			c.Name = category.CategoryLevel1Name
+			c.Children = []dtousecase.Category{}
+			lastLevel1 = category.CategoryLevel1Id
+
+			c2.Id = category.CategoryLevel2Id
+			c2.Name = category.CategoryLevel2Name
+			c2.Children = []dtousecase.Category{}
+			lastLevel2 = category.CategoryLevel2Id
+		}
+
+		if category.CategoryLevel2Id != lastLevel2 {
+			if c2.Id != 0 {
+				c.Children = append(c.Children, c2)
+			}
+
+			c2.Id = category.CategoryLevel2Id
+			c2.Name = category.CategoryLevel2Name
+			c2.Children = []dtousecase.Category{}
+			lastLevel2 = category.CategoryLevel2Id
+		}
+
+		if category.CategoryLevel3Id != 0 {
+			c2.Children = append(c2.Children, dtousecase.Category{
+				Id:   category.CategoryLevel3Id,
+				Name: category.CategoryLevel3Name,
+			})
+		}
+
+		if i == len(categories)-1 {
+			c.Children = append(c.Children, c2)
+		}
+	}
 
 	return res, nil
 }

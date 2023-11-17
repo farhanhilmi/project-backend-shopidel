@@ -162,6 +162,7 @@ type SellerDataResponse struct {
 	StartOperatingHours string
 	EndOperatingHours   string
 	TimeZone            string
+	ShopNameSlug        string
 }
 
 type FindSellerBestSellingRequest struct {
@@ -173,26 +174,45 @@ type FindSellerBestSellingResponse struct {
 }
 
 type SellerProduct struct {
-	Name       string
-	Price      decimal.Decimal
-	PictureUrl string
-	Stars      decimal.Decimal
-	TotalSold  int
-	CreatedAt  string
-	Category   string
-	ShopName   string
+	Name            string
+	Price           decimal.Decimal
+	PictureUrl      string
+	Stars           decimal.Decimal
+	TotalSold       int
+	CreatedAt       string
+	Category        string
+	ShopName        string
+	ProductNameSlug string
+	ShopNameSlug    string
 }
 
-type FindSellerCategoriesRequest struct {
+type FindSellerShowcasesRequest struct {
 	SellerId int
 }
 
-type FindSellerCategoriesResponse struct {
-	CategoryId   int
-	CategoryName string
+type FindSellerShowcasesResponse struct {
+	ShowcaseId   int
+	ShowcaseName string
 }
 
-type FindSellerCategoryProductRequest struct {
+type FindSellerShowcaseProductRequest struct {
 	ShopName   string
-	CategoryId string
+	ShowcaseId string
+	Page       int
+	Limit      int
+}
+
+type Category struct {
+	CategoryLevel1Id   int
+	CategoryLevel1Name string
+	CategoryLevel2Id   int
+	CategoryLevel2Name string
+	CategoryLevel3Id   int
+	CategoryLevel3Name string
+}
+
+type ChangePasswordRequest struct {
+	AccountID   int
+	OldPassword string
+	NewPassword string
 }

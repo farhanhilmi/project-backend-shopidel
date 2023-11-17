@@ -282,3 +282,19 @@ type District struct {
 type DeleteAddressRequest struct {
 	AddressId int
 }
+
+type ChangePasswordRequest struct {
+	AccountID   int
+	OldPassword string
+	NewPassword string
+}
+
+type GetCategoriesResponse struct {
+	Categories []Category `json:"categories"`
+}
+
+type Category struct {
+	Id       int        `json:"id"`
+	Name     string     `json:"name"`
+	Children []Category `json:"children,omitempty"`
+}

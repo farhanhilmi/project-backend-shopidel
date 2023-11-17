@@ -34,7 +34,6 @@ type UsedEmail struct {
 	Email     string    `gorm:"type:varchar;not null"`
 	CreatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	UpdatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
-	DeletedAt time.Time `gorm:"type:timestamp;default:null"`
 }
 
 type MyWalletTransactionHistories struct {
@@ -47,7 +46,6 @@ type MyWalletTransactionHistories struct {
 	ProductOrderID int             `gorm:"foreignKey:AccountID;type:bigint;default:null" json:"-"`
 	CreatedAt      time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp" json:"created_at"`
 	UpdatedAt      time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp" json:"-"`
-	DeletedAt      time.Time       `gorm:"type:timestamp;default:null" json:"-"`
 }
 
 type SaleWalletTransactionHistories struct {
@@ -60,7 +58,6 @@ type SaleWalletTransactionHistories struct {
 	ProductOrderID int             `gorm:"foreignKey:AccountID;type:bigint;default:null"`
 	CreatedAt      time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	UpdatedAt      time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
-	DeletedAt      time.Time       `gorm:"type:timestamp;default:null"`
 }
 
 type AccountCarts struct {
@@ -70,7 +67,6 @@ type AccountCarts struct {
 	Quantity                             int       `gorm:"type:int;not null"`
 	CreatedAt                            time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	UpdatedAt                            time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
-	DeletedAt                            time.Time `gorm:"type:timestamp;default:null"`
 }
 
 type SellerCouriers struct {
@@ -79,5 +75,4 @@ type SellerCouriers struct {
 	CourierID int       `gorm:"foreignKey:CourierID;type:bigint;not null"`
 	CreatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	UpdatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
-	DeletedAt time.Time `gorm:"type:timestamp;default:null"`
 }

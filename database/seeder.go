@@ -19,6 +19,9 @@ func RunSeeder() {
 func dropTable() {
 	sql := `
 		drop table if exists 
+			seller_showcase_products,
+			seller_showcases,
+			product_Order_review_images,
 			seller_page_selected_categories,
 			districts,
 			provinces,
@@ -41,8 +44,7 @@ func dropTable() {
 			product_images,
 			my_wallet_transaction_histories,
 			categories,
-			accounts,
-			product_Order_review_images
+			accounts
 		;
 	`
 
@@ -79,6 +81,8 @@ func createTable() {
 		&model.District{},
 		&model.SellerPageSelectedCategory{},
 		&model.ProductOrderReviewImages{},
+		&model.SellerShowcase{},
+		&model.SellerShowcaseProduct{},
 	)
 
 	if err != nil {
@@ -116,6 +120,9 @@ func seeding() {
 		seeder.Provinces,
 		seeder.Districts,
 		seeder.SellerPageSelectedCategory,
+		seeder.SellerShowcases,
+		seeder.SellerShowcaseProducts,
+		seeder.ProductOrderReviewImages,
 	}
 
 	for _, seed := range seeders {

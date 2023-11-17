@@ -92,95 +92,95 @@ func (h *ProductHandler) ListProduct(c *gin.Context) {
 
 func (h *ProductHandler) GetTopCategories(c *gin.Context) {
 
-	topCategories := []dtorepository.TopCategoriesResponse {
+	topCategories := []dtorepository.TopCategoriesResponse{
 		{
 			CategoryID: 504,
-			Name: "Fashion Anak & Bayi",
-			PictureURL: "https://down-id.img.susercontent.com/file/9251edd6d6dd98855ff5a99497835d9c_tn&quot",
+			Name:       "Fashion Anak & Bayi",
+			PictureURL: "https://down-id.img.susercontent.com/file/9251edd6d6dd98855ff5a99497835d9c_tn",
 		},
 		{
 			CategoryID: 1,
-			Name: "Audio, Kamera & Elektronik Lainnya",
-			PictureURL: "https://down-id.img.susercontent.com/file/dcd61dcb7c1448a132f49f938b0cb553_tn&quot",
+			Name:       "Audio, Kamera & Elektronik Lainnya",
+			PictureURL: "https://down-id.img.susercontent.com/file/dcd61dcb7c1448a132f49f938b0cb553_tn",
 		},
 		{
 			CategoryID: 694,
-			Name: "Fashion Pria",
-			PictureURL: "https://down-id.img.susercontent.com/file/04dba508f1ad19629518defb94999ef9_tn&quot",
+			Name:       "Fashion Pria",
+			PictureURL: "https://down-id.img.susercontent.com/file/04dba508f1ad19629518defb94999ef9_tn",
 		},
 		{
 			CategoryID: 1659,
-			Name: "Makanan & Minuman",
-			PictureURL: "https://down-id.img.susercontent.com/file/7873b8c3824367239efb02d18eeab4f5_tn&quot",
+			Name:       "Makanan & Minuman",
+			PictureURL: "https://down-id.img.susercontent.com/file/7873b8c3824367239efb02d18eeab4f5_tn",
 		},
 		{
 			CategoryID: 222,
-			Name: "Komputer & Internet",
+			Name:       "Komputer & Internet",
 			PictureURL: "https://down-id.img.susercontent.com/file/id-50009109-0bd6a9ebd0f2ae9b7e8b9ce7d89897d6_tn",
 		},
 		{
 			CategoryID: 1228,
-			Name: "Kecantikan",
+			Name:       "Kecantikan",
 			PictureURL: "https://down-id.img.susercontent.com/file/2715b985ae706a4c39a486f83da93c4b_tn",
 		},
 		{
 			CategoryID: 2153,
-			Name: "Sepatu Lari Pria",
+			Name:       "Sepatu Lari Pria",
 			PictureURL: "https://down-id.img.susercontent.com/file/3c8ff51aab1692a80c5883972a679168_tn",
 		},
 		{
 			CategoryID: 1561,
-			Name: "Mainan & Hobi",
+			Name:       "Mainan & Hobi",
 			PictureURL: "https://down-id.img.susercontent.com/file/42394b78fac1169d67c6291973a3b132_tn",
 		},
 		{
 			CategoryID: 1335,
-			Name: "Kesehatan",
+			Name:       "Kesehatan",
 			PictureURL: "https://down-id.img.susercontent.com/file/eb7d583e4b72085e71cd21a70ce47d7a_tn",
 		},
 		{
 			CategoryID: 733,
-			Name: "Jam Tangan Pria",
+			Name:       "Jam Tangan Pria",
 			PictureURL: "https://down-id.img.susercontent.com/file/2bdf8cf99543342d4ebd8e1bdb576f80_tn",
 		},
 		{
 			CategoryID: 696,
-			Name: "Aksesoris Kacamata Pria",
+			Name:       "Aksesoris Kacamata Pria",
 			PictureURL: "https://down-id.img.susercontent.com/file/1f18bdfe73df39c66e7326b0a3e08e87_tn",
 		},
 		{
 			CategoryID: 782,
-			Name: "Tas Pria",
+			Name:       "Tas Pria",
 			PictureURL: "https://down-id.img.susercontent.com/file/47ed832eed0feb62fd28f08c9229440e_tn",
 		},
 		{
 			CategoryID: 1085,
-			Name: "Handphone & Tablet",
+			Name:       "Handphone & Tablet",
 			PictureURL: "https://down-id.img.susercontent.com/file/5230277eefafad8611aaf703d3e99568_tn",
 		},
 		{
 			CategoryID: 328,
-			Name: "Alat Masak Khusus",
+			Name:       "Alat Masak Khusus",
 			PictureURL: "https://down-id.img.susercontent.com/file/c1494110e0383780cdea73ed890e0299_tn",
 		},
 		{
 			CategoryID: 3087,
-			Name: "Gaun & Pakaian Wanita",
+			Name:       "Gaun & Pakaian Wanita",
 			PictureURL: "https://down-id.img.susercontent.com/file/6d63cca7351ba54a2e21c6be1721fa3a_tn",
 		},
 		{
 			CategoryID: 629,
-			Name: "Fashion Muslim",
+			Name:       "Fashion Muslim",
 			PictureURL: "https://down-id.img.susercontent.com/file/b98756cdb31eabe3d7664599e24ccc29_tn",
 		},
 		{
 			CategoryID: 1158,
-			Name: "Ibu & Bayi",
+			Name:       "Ibu & Bayi",
 			PictureURL: "https://down-id.img.susercontent.com/file/4d1673a14c26c8361a76258d78446324_tn",
 		},
 		{
 			CategoryID: 917,
-			Name: "Sepatu Wanita",
+			Name:       "Sepatu Wanita",
 			PictureURL: "https://down-id.img.susercontent.com/file/id-50009109-a947822064b7a8077b15596c85bd9303_tn",
 		},
 	}
@@ -189,7 +189,7 @@ func (h *ProductHandler) GetTopCategories(c *gin.Context) {
 }
 
 func (h *ProductHandler) GetBanners(c *gin.Context) {
-	banners := []string {
+	banners := []string{
 		"https://images.tokopedia.net/img/cache/1208/NsjrJu/2023/11/14/55e4422c-a3a7-4248-9c63-aade2a214ba6.jpg.webp?ect=4g",
 		"https://images.tokopedia.net/img/cache/1208/NsjrJu/2023/11/14/329a7a18-cd48-45b7-b70b-49a1413bedbc.jpg.webp?ect=4g",
 		"https://images.tokopedia.net/img/cache/1208/NsjrJu/2023/11/14/26c62498-33d4-4db6-bad2-bac7710d2746.jpg.webp?ect=4g",
@@ -270,7 +270,15 @@ func (h *ProductHandler) GetProductReviews(c *gin.Context) {
 
 	uReq := dtousecase.GetProductReviewsRequest{
 		ProductId: productId,
+		Limit:     6,
 	}
+
+	page, err := strconv.Atoi(c.Query("page"))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	uReq.Page = page
 
 	err = h.handleProductReviewsQueryParams(c, &uReq)
 	if err != nil {

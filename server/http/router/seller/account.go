@@ -10,8 +10,8 @@ func NewSellerProfileRouter(h *handler.SellerHandler, gin *gin.Engine) *gin.Engi
 	{
 		seller.GET("/:shopName/profile", h.GetProfile)
 		seller.GET("/:shopName/best-selling", h.GetBestSelling)
-		seller.GET("/:shopName/categories", h.GetCategories)
-		seller.GET("/:shopName/categories/:categoryId/products", h.GetCategoryProducts)
+		seller.GET("/:shopName/showcases", h.GetShowcases)
+		seller.GET("/:shopName/showcases/:showcaseId/products", h.GetShowcaseProducts)
 	}
 
 	return gin
