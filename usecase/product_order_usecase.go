@@ -595,6 +595,30 @@ func (u *productOrderUsecase) GetOrderHistories(ctx context.Context, req dtousec
 func (u *productOrderUsecase) GetSellerOrderHistories(ctx context.Context, req dtousecase.ProductSellerOrderHistoryRequest) ([]dtousecase.SellerOrdersResponse, dtogeneral.PaginationData, error) {
 	var err error
 
+	if req.Status == "" || strings.EqualFold(req.Status, constant.StatusOrderAll) {
+		orders, totalItems, err := u.productOrderRepository.FindAllOrderHistoriesBySeller(ctx, dtorepository.ProductSellerOrderHistoryRequest{
+			AccountID: req.AccountID,
+			SortBy:    req.SortBy,
+			Sort:      req.Sort,
+			Limit:     req.Limit,
+			Page:      req.Page,
+			StartDate: req.StartDate,
+			EndDate:   req.EndDate,
+		})
+		if err != nil {
+			return nil, dtogeneral.PaginationData{}, err
+		}
+
+		pagination := dtogeneral.PaginationData{
+			TotalItem:   int(totalItems),
+			TotalPage:   (int(totalItems) + req.Limit - 1) / req.Limit,
+			CurrentPage: req.Page,
+			Limit:       req.Limit,
+		}
+
+		return u.convertSellerOrderHistoriesReponse(ctx, pagination, orders)
+	}
+
 	orders, totalItems, err := u.productOrderRepository.FindAllOrderHistoriesBySellerAndStatus(ctx, dtorepository.ProductSellerOrderHistoryRequest{
 		AccountID: req.AccountID,
 		Status:    req.Status,

@@ -10,9 +10,9 @@ func NewProductOrderRouter(h *handler.ProductOrderHandler, gin *gin.Engine) *gin
 	group := gin.Group("sellers/orders")
 	group.Use(middleware.AuthenticateJWT())
 	group.Use(middleware.IsRoleSeller())
+	group.GET("", h.GetSellerOrderHistories)
 	group.PUT("/:orderId/cancel", h.CanceledOrderBySeller)
 	group.PUT("/:orderId/processed", h.ProcessedOrderBySeller)
-	group.GET("", h.GetSellerOrderHistories)
 
 	return gin
 }
