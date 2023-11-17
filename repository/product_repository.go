@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"strings"
 
@@ -33,6 +34,7 @@ type ProductRepository interface {
 	FindSellerAnotherProducts(ctx context.Context, sellerId int) ([]dtousecase.AnotherProduct, error)
 	FindProductReviews(ctx context.Context, req dtousecase.GetProductReviewsRequest) (dtorepository.GetProductReviewsResponse, error)
 	FindByID(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error)
+	AddNewProduct(ctx context.Context, req dtorepository.AddNewProductRequest) (dtorepository.AddNewProductResponse, error)
 	FindProductReviewPictures(ctx context.Context, reviewId int) ([]dtousecase.ReviewImage, error)
 }
 
@@ -656,6 +658,137 @@ func (r *productRepository) FindProductReviews(ctx context.Context, req dtouseca
 	res.CurrentPage = req.Page
 
 	return res, nil
+}
+
+func removeDuplicateValues(arr []dtorepository.ProductVariantType) []dtorepository.ProductVariantType {
+	length := len(arr) - 1
+	for i := 0; i < length; i++ {
+		for j := i + 1; j <= length; j++ {
+			if arr[i].VariantValue == arr[j].VariantValue {
+				arr[j] = arr[length]
+				arr = arr[0:length]
+				length--
+				j--
+			}
+		}
+	}
+
+	return arr
+}
+
+func (r *productRepository) AddNewProduct(ctx context.Context, req dtorepository.AddNewProductRequest) (dtorepository.AddNewProductResponse, error) {
+	res := dtorepository.AddNewProductResponse{}
+
+	product := model.Products{
+		Name:              req.ProductName,
+		Description:       req.Description,
+		CategoryID:        req.CategoryID,
+		SellerID:          req.SellerID,
+		HazardousMaterial: *req.HazardousMaterial,
+		Weight:            req.Weight,
+		Size:              req.Size,
+		IsNew:             *req.IsNew,
+		IsActive:          *req.IsActive,
+		InternalSKU:       req.InternalSKU,
+	}
+
+	tx := r.db.Begin()
+
+	err := tx.WithContext(ctx).Model(&model.Products{}).Create(&product).Scan(&res).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	productVariants := []model.ProductVariants{}
+
+	for _, v := range req.ProductVariants {
+		variant := model.ProductVariants{
+			ProductID: res.ID,
+			Name:      v.Name,
+		}
+		productVariants = append(productVariants, variant)
+	}
+
+	log.Println(productVariants)
+
+	err = tx.WithContext(ctx).Create(&productVariants).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	variantSelections := []dtorepository.ProductVariantType{}
+
+	for _, v := range req.Variants {
+		selections := []dtorepository.ProductVariantType{
+			{
+				VariantName:  v.Variant1.Name,
+				VariantValue: v.Variant1.Value,
+			},
+			{
+				VariantName:  v.Variant2.Name,
+				VariantValue: v.Variant2.Value,
+			},
+		}
+
+		variantSelections = append(variantSelections, selections...)
+	}
+
+	selections := removeDuplicateValues(variantSelections)
+
+	productVariantSelections := []model.ProductVariantSelections{}
+
+	for _, selection := range selections {
+		for _, v := range productVariants {
+			if v.Name == selection.VariantName {
+				variant := model.ProductVariantSelections{
+					ProductVariantID: v.ID,
+					Name:             selection.VariantValue,
+				}
+				productVariantSelections = append(productVariantSelections, variant)
+			}
+		}
+	}
+
+	err = tx.WithContext(ctx).Create(&productVariantSelections).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	for _, v := range req.Variants {
+		imageUrl, err := util.GetVariantImageURL(v.ImageID)
+		if err != nil {
+			tx.Rollback()
+			return res, err
+		}
+		variantCombination := model.ProductVariantSelectionCombinations{
+			ProductID:  res.ID,
+			Price:      v.Price,
+			PictureURL: imageUrl,
+			Stock:      v.Stock,
+		}
+		for _, selection := range productVariantSelections {
+			if v.Variant1.Value == selection.Name {
+				variantCombination.ProductVariantSelectionID1 = selection.ID
+			}
+		}
+		for _, selection := range productVariantSelections {
+			if v.Variant2.Value == selection.Name {
+				variantCombination.ProductVariantSelectionID2 = selection.ID
+			}
+		}
+		err = tx.WithContext(ctx).Create(&variantCombination).Error
+		if err != nil {
+			tx.Rollback()
+			return res, err
+		}
+	}
+
+	tx.Commit()
+
+	return res, err
 }
 
 func (r *productRepository) FindProductReviewPictures(ctx context.Context, reviewId int) ([]dtousecase.ReviewImage, error) {

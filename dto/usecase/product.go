@@ -211,14 +211,6 @@ type OrderProduct struct {
 	Review               ProductOrderReview `json:"review,omitempty"`
 	IsReviewed           bool               `json:"is_reviewed"`
 }
-type OrdersResponse struct {
-	OrderID      int             `json:"order_id"`
-	ShopName     string          `json:"shop_name"`
-	Status       string          `json:"status"`
-	Products     []OrderProduct  `json:"products"`
-	TotalPayment decimal.Decimal `json:"total_payment"`
-	CreateAt     string          `json:"created_at"`
-}
 
 type GetProductReviewsRequest struct {
 	ProductId int
@@ -279,6 +271,7 @@ type AddNewProductVariant struct {
 	Stock    int                      `form:"stock"`
 	Price    decimal.Decimal          `form:"price"`
 	ImageID  string                   `form:"image_id"`
+	ImageURL string
 }
 
 type AddNewProductRequest struct {
@@ -305,4 +298,10 @@ type UploadNewPhoto struct {
 	ImageID     string                `form:"image_id" binding:"required" json:"image_id"`
 	Image       multipart.File        `json:"-"`
 	ImageHeader *multipart.FileHeader `json:"-"`
+}
+
+type ProductVariants struct {
+	ID        int
+	ProductID int
+	Name      string
 }
