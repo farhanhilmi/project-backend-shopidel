@@ -178,6 +178,7 @@ func (u *sellerUsecase) AddNewProduct(ctx context.Context, req dtousecase.AddNew
 					Name: req.Variants[0].Variant1.Name,
 				},
 			}
+			// e, a := getVariantImageURL(req.Variants)
 		default:
 			productVariants = []dtousecase.ProductVariants{
 				{
@@ -228,31 +229,6 @@ func (u *sellerUsecase) AddNewProduct(ctx context.Context, req dtousecase.AddNew
 	if err != nil {
 		return res, err
 	}
-
-	//
-
-	// for _, v := range req.Variants {
-	// 	file, err := os.Open(fmt.Sprintf("./imageuploads/%v.png", v.ImageID))
-	// 	if err != nil {
-	// 		fmt.Println("Error opening file:", err)
-	// 		return res, err
-	// 	}
-
-	// 	defer file.Close()
-
-	// 	currentTime := time.Now().UnixNano()
-	// 	fileExtension := path.Ext(file.Name())
-	// 	originalFilename := file.Name()[:len(file.Name())-len(fileExtension)]
-	// 	newFilename := fmt.Sprintf("%s_%d", originalFilename, currentTime)
-	// 	fileName := strings.Split(newFilename, "./imageuploads/")
-
-	// 	imageUrl, err := util.UploadToCloudinary(file, fileName[0])
-	// 	if err != nil {
-	// 		return res, err
-	// 	}
-
-	// 	v.ImageURL = imageUrl
-	// }
 
 	res.ProductName = product.Name
 

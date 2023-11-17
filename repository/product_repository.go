@@ -758,10 +758,15 @@ func (r *productRepository) AddNewProduct(ctx context.Context, req dtorepository
 	}
 
 	for _, v := range req.Variants {
+		imageUrl, err := util.GetVariantImageURL(v.ImageID)
+		if err != nil {
+			tx.Rollback()
+			return res, err
+		}
 		variantCombination := model.ProductVariantSelectionCombinations{
 			ProductID:  res.ID,
 			Price:      v.Price,
-			PictureURL: v.ImageURL,
+			PictureURL: imageUrl,
 			Stock:      v.Stock,
 		}
 		for _, selection := range productVariantSelections {
@@ -774,7 +779,7 @@ func (r *productRepository) AddNewProduct(ctx context.Context, req dtorepository
 				variantCombination.ProductVariantSelectionID2 = selection.ID
 			}
 		}
-		err := tx.WithContext(ctx).Create(&variantCombination).Error
+		err = tx.WithContext(ctx).Create(&variantCombination).Error
 		if err != nil {
 			tx.Rollback()
 			return res, err

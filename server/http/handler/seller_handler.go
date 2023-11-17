@@ -106,7 +106,7 @@ func (h *SellerHandler) UploadPhoto(c *gin.Context) {
 
 	file, header, err := c.Request.FormFile("image")
 	if err != nil {
-		c.Error(util.ErrInvalidInput)
+		c.Error(util.ErrNoImage)
 		return
 	}
 

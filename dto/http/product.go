@@ -52,7 +52,7 @@ type AddNewProductRequest struct {
 	Weight            decimal.Decimal                   `form:"weight" binding:"required"`
 	Size              decimal.Decimal                   `form:"size" binding:"required"`
 	IsActive          *bool                             `form:"is_active" binding:"required"`
-	Variants          []dtousecase.AddNewProductVariant `form:"variants[]"`
+	Variants          []dtousecase.AddNewProductVariant `form:"variants[]" binding:"required"`
 	VideoURL          string                            `form:"video_url"`
 }
 
