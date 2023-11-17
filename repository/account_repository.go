@@ -53,6 +53,7 @@ type AccountRepository interface {
 	FindByToken(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
 	SaveForgetPasswordToken(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
 	UpdatePassword(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
+	UpdatePassord(ctx context.Context, req dtorepository.ChangePasswordRequest) error
 	FindCategories(ctx context.Context) ([]dtorepository.Category, error)
 }
 
@@ -194,6 +195,15 @@ func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.
 	res.ShopName = req.ShopName
 
 	return &res, nil
+}
+
+func (r *accountRepository) UpdatePassord(ctx context.Context, req dtorepository.ChangePasswordRequest) error {
+	err := r.db.WithContext(ctx).Model(&model.Accounts{}).Where("id = ?", req.AccountID).Update("password", req.NewPassword).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *accountRepository) GetAddresses(ctx context.Context, req dtorepository.AddressRequest) (*[]dtorepository.AddressResponse, error) {

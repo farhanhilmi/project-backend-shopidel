@@ -28,6 +28,28 @@ func NewAccountHandler(accountUsecase usecase.AccountUsecase, myWalletTransactio
 	}
 }
 
+func (h *AccountHandler) ChangePassword(c *gin.Context) {
+	var req dtohttp.ChangePasswordRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.ChangePasswordRequest {
+		AccountID:  c.GetInt("userId"),
+		OldPassword: req.OldPassword,
+		NewPassword: req.NewPassword,
+	}
+	err = h.accountUsecase.ChangePassword(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Pasword Successfully Changed"})
+}
+
 func (h *AccountHandler) RequestForgetPassword(c *gin.Context) {
 	var req dtohttp.ForgetPasswordRequest
 	err := c.ShouldBindJSON(&req)

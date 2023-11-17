@@ -210,3 +210,9 @@ type Category struct {
 	CategoryLevel3Id   int
 	CategoryLevel3Name string
 }
+
+type ChangePasswordRequest struct {
+	AccountID   int
+	OldPassword string
+	NewPassword string
+}

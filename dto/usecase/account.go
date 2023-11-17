@@ -283,6 +283,12 @@ type DeleteAddressRequest struct {
 	AddressId int
 }
 
+type ChangePasswordRequest struct {
+	AccountID   int
+	OldPassword string
+	NewPassword string
+}
+
 type GetCategoriesResponse struct {
 	Categories []Category
 }
