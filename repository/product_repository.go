@@ -525,7 +525,25 @@ func (r *productRepository) FindSellerAnotherProducts(ctx context.Context, selle
 			p.name as "ProductName",
 			product_image.url as "ProductPictureUrl",
 			product_price.lowest_price as "ProductPrice",
-			seller.shop_name as "SellerName"
+			seller.shop_name as "SellerName",
+			TRIM(BOTH '-' FROM 
+				REGEXP_REPLACE(
+					REGEXP_REPLACE(
+						LOWER(p.name), 
+						'[^a-z0-9]+', '-', 'g'
+					), 
+					'-+', '-', 'g'
+				)
+			) as "ProductNameSlug",
+			TRIM(BOTH '-' FROM 
+				REGEXP_REPLACE(
+					REGEXP_REPLACE(
+						LOWER(seller.shop_name), 
+						'[^a-z0-9]+', '-', 'g'
+					), 
+					'-+', '-', 'g'
+				)
+			) as "ShopNameSlug"
 		from products p
 		left join lateral (
 			select

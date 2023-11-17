@@ -44,6 +44,7 @@ type AccountUsecase interface {
 	UpdateAccountAddress(ctx context.Context, req dtousecase.UpdateAddressRequest) (dtousecase.UpdateAddressResponse, error)
 	RequestForgetPassword(ctx context.Context, req dtousecase.ForgetPasswordRequest) (*dtousecase.ForgetPasswordRequest, error)
 	RequestForgetChangePassword(ctx context.Context, req dtousecase.ForgetChangePasswordRequest) (*dtousecase.ForgetPasswordRequest, error)
+	GetCategories(ctx context.Context) (dtousecase.GetCategoriesResponse, error)
 }
 
 type accountUsecase struct {
@@ -913,6 +914,62 @@ func (u *accountUsecase) UpdateAccountAddress(ctx context.Context, req dtousecas
 	res.ZipCode = rRes.ZipCode
 	res.IsBuyerDefault = rReq.IsBuyerDefault
 	res.IsSellerDefault = rReq.IsSellerDefault
+
+	return res, nil
+}
+
+func (u *accountUsecase) GetCategories(ctx context.Context) (dtousecase.GetCategoriesResponse, error) {
+	res := dtousecase.GetCategoriesResponse{}
+
+	categories, err := u.accountRepository.FindCategories(ctx)
+	if err != nil {
+		return res, err
+	}
+
+	lastLevel1 := 0
+	lastLevel2 := 0
+	c := dtousecase.Category{}
+	c2 := dtousecase.Category{}
+	for i, category := range categories {
+		if category.CategoryLevel1Id != lastLevel1 {
+			if c.Id != 0 {
+				c.Children = append(c.Children, c2)
+				res.Categories = append(res.Categories, c)
+			}
+
+			c.Id = category.CategoryLevel1Id
+			c.Name = category.CategoryLevel1Name
+			c.Children = []dtousecase.Category{}
+			lastLevel1 = category.CategoryLevel1Id
+
+			c2.Id = category.CategoryLevel2Id
+			c2.Name = category.CategoryLevel2Name
+			c2.Children = []dtousecase.Category{}
+			lastLevel2 = category.CategoryLevel2Id
+		}
+
+		if category.CategoryLevel2Id != lastLevel2 {
+			if c2.Id != 0 {
+				c.Children = append(c.Children, c2)
+			}
+
+			c2.Id = category.CategoryLevel2Id
+			c2.Name = category.CategoryLevel2Name
+			c2.Children = []dtousecase.Category{}
+			lastLevel2 = category.CategoryLevel2Id
+		}
+
+		if category.CategoryLevel3Id != 0 {
+			c2.Children = append(c2.Children, dtousecase.Category{
+				Id:   category.CategoryLevel3Id,
+				Name: category.CategoryLevel3Name,
+			})
+		}
+
+		if i == len(categories)-1 {
+			c.Children = append(c.Children, c2)
+		}
+	}
 
 	return res, nil
 }
