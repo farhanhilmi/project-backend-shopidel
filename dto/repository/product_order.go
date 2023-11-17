@@ -155,3 +155,31 @@ type ProductReviewResponse struct {
 	ProductID int
 	OrderID   int
 }
+
+type ProductSellerOrderHistoriesResponse struct {
+	ID                   int
+	ProductOrderID       int
+	Status               string
+	BuyerName            string
+	ProductID            int
+	ProductName          string
+	VariantName          string
+	ProductOrderDetailID int
+	DeliveryFee          int
+	Quantity             int
+	IndividualPrice      decimal.Decimal
+	CreatedAt            time.Time
+	UpdatedAt            time.Time
+	DeletedAt            time.Time
+}
+
+type ProductSellerOrderHistoryRequest struct {
+	AccountID int
+	Status    string
+	SortBy    string
+	Sort      string
+	Limit     int
+	Page      int
+	StartDate string
+	EndDate   string
+}
