@@ -638,18 +638,16 @@ func (r *productRepository) FindProductReviews(ctx context.Context, req dtouseca
 	if req.Comment {
 		wq += ` and por.feedback is not null `
 	}
-	fmt.Println("here")
+
 	err := r.db.WithContext(ctx).Raw(q+wq+oq+lq+ofq, req.ProductId).Scan(&pr).Error
 	if err != nil {
 		return res, err
 	}
-	fmt.Println("her2")
 
 	err = r.db.WithContext(ctx).Raw(pq+wq, req.ProductId).Scan(&pg).Error
 	if err != nil {
 		return res, err
 	}
-	fmt.Println("here3")
 
 	res.Reviews = pr
 	res.TotalItem = pg.TotalItem
