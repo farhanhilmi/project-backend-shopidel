@@ -175,3 +175,26 @@ func (h *SellerHandler) AddNewProduct(c *gin.Context) {
 	res := fmt.Sprintf("Successfully create new product %v", newProduct.ProductName)
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: res})
 }
+
+func (h *SellerHandler) DeleteProduct(c *gin.Context) {
+
+	id := c.Param("productId")
+	productId, err := strconv.Atoi(id)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	productReq := dtousecase.RemoveProduct{
+		ID:       productId,
+		SellerID: c.GetInt("userId"),
+	}
+
+	product, err := h.sellerUsecase.DeleteProduct(c.Request.Context(), productReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res := fmt.Sprintf("Successfully deleted product %v", product.Name)
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: res})
+}

@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -21,6 +22,7 @@ type SellerUsecase interface {
 	GetShowcaseProducts(ctx context.Context, req dtousecase.GetSellerShowcaseProductRequest) (dtousecase.GetSellerShowcaseProductResponse, error)
 	AddNewProduct(ctx context.Context, req dtousecase.AddNewProductRequest) (dtousecase.AddNewProductResponse, error)
 	UploadPhoto(ctx context.Context, req dtousecase.UploadNewPhoto) (dtousecase.UploadNewPhoto, error)
+	DeleteProduct(ctx context.Context, req dtousecase.RemoveProduct) (dtousecase.RemoveProduct, error)
 }
 
 type sellerUsecase struct {
@@ -260,5 +262,26 @@ func (u *sellerUsecase) UploadPhoto(ctx context.Context, req dtousecase.UploadNe
 	}
 
 	res.ImageID = req.ImageID
+	return res, nil
+}
+
+func (u *sellerUsecase) DeleteProduct(ctx context.Context, req dtousecase.RemoveProduct) (dtousecase.RemoveProduct, error) {
+	res := dtousecase.RemoveProduct{}
+
+	product, err := u.productRepository.FindByIDAndSeller(ctx, dtorepository.ProductRequest{ProductID: req.ID, AccountId: req.SellerID})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return res, util.ErrProductNotFound
+	}
+	if err != nil {
+		return res, err
+	}
+
+	_, err = u.productRepository.RemoveProductByID(ctx, dtorepository.RemoveProduct{ID: req.ID, SellerID: req.SellerID})
+	if err != nil {
+		return res, err
+	}
+
+	res.Name = product.Name
+
 	return res, nil
 }

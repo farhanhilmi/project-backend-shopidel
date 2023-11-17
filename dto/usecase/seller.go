@@ -1,6 +1,10 @@
 package dtousecase
 
-import "github.com/shopspring/decimal"
+import (
+	"time"
+
+	"github.com/shopspring/decimal"
+)
 
 type GetSellerProfileRequest struct {
 	ShopName string
@@ -36,6 +40,15 @@ type GetSellerShowcaseProductRequest struct {
 	ShowcaseId string
 	Page       int
 	Limit      int
+}
+
+type RemoveProduct struct {
+	ID        int
+	SellerID  int
+	Name      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt time.Time
 }
 
 type GetSellerShowcaseProductResponse struct {
