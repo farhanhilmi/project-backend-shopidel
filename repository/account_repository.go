@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
@@ -49,7 +50,7 @@ type AccountRepository interface {
 	FirstSeller(ctx context.Context, req dtorepository.SellerDataRequest) (dtorepository.SellerDataResponse, error)
 	FindSellerBestSelling(ctx context.Context, req dtorepository.FindSellerBestSellingRequest) (dtorepository.FindSellerBestSellingResponse, error)
 	FindSellerShowcases(ctx context.Context, req dtorepository.FindSellerShowcasesRequest) ([]dtorepository.FindSellerShowcasesResponse, error)
-	FindSellerShowcaseProduct(ctx context.Context, req dtorepository.FindSellerShowcaseProductRequest) ([]dtousecase.SellerProduct, error)
+	FindSellerShowcaseProduct(ctx context.Context, req dtorepository.FindSellerShowcaseProductRequest) (dtousecase.GetSellerShowcaseProductResponse, error)
 	FindByToken(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
 	SaveForgetPasswordToken(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
 	UpdatePassword(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
@@ -1230,8 +1231,14 @@ func (r *accountRepository) FindSellerShowcases(ctx context.Context, req dtorepo
 	return res, nil
 }
 
-func (r *accountRepository) FindSellerShowcaseProduct(ctx context.Context, req dtorepository.FindSellerShowcaseProductRequest) ([]dtousecase.SellerProduct, error) {
-	res := []dtousecase.SellerProduct{}
+func (r *accountRepository) FindSellerShowcaseProduct(ctx context.Context, req dtorepository.FindSellerShowcaseProductRequest) (dtousecase.GetSellerShowcaseProductResponse, error) {
+	res := dtousecase.GetSellerShowcaseProductResponse{}
+	sp := []dtousecase.SellerProduct{}
+	type count struct {
+		TotalItem int
+	}
+	c := count{}
+	countVar := 1
 
 	q := `
 		select
@@ -1285,10 +1292,9 @@ func (r *accountRepository) FindSellerShowcaseProduct(ctx context.Context, req d
 			) product_image on product_image.product_id = p.id 
 			left join accounts seller
 				on seller.id = p.seller_id
-			?
 	`
 
-	wquery := `
+	q += fmt.Sprint(`
 		where TRIM(BOTH '-' FROM 
 				REGEXP_REPLACE(
 					REGEXP_REPLACE(
@@ -1297,19 +1303,41 @@ func (r *accountRepository) FindSellerShowcaseProduct(ctx context.Context, req d
 					), 
 					'-+', '-', 'g'
 				)
-			) = $1
-	`
-	wq := r.db.Raw(wquery, req.ShopName)
+			) = $`, countVar)
+	countVar++
+
+	wq := r.db.WithContext(ctx).Raw(q, req.ShopName)
 
 	if req.ShowcaseId != "0" {
-		wquery += " and ssp.seller_showcase_id = $2"
-		wq = wq.Raw(wquery, req.ShowcaseId)
+		q += fmt.Sprint(" and ssp.seller_showcase_id = $", countVar)
+		countVar++
+		wq = wq.Raw(q, req.ShowcaseId)
 	}
 
-	if err := r.db.WithContext(ctx).Raw(q, wq).
-		Scan(&res).Error; err != nil {
+	if err := r.db.
+		WithContext(ctx).
+		Raw(`select count(*) as "TotalItem" from (?) t`, wq).
+		Scan(&c).Error; err != nil {
 		return res, err
 	}
+
+	q += fmt.Sprint(` limit $`, countVar)
+	countVar++
+	wq = wq.Raw(q, req.Limit)
+
+	q += fmt.Sprint(` offset $`, countVar)
+	countVar++
+	wq = wq.Raw(q, (req.Page-1)*req.Limit)
+
+	if err := wq.Scan(&sp).Error; err != nil {
+		return res, err
+	}
+
+	res.SellerProducts = sp
+	res.CurrentPage = req.Page
+	res.Limit = req.Limit
+	res.TotalPage = int(math.Ceil(float64(c.TotalItem) / float64(req.Limit)))
+	res.TotalItem = c.TotalItem
 
 	return res, nil
 }

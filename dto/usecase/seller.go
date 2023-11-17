@@ -40,11 +40,19 @@ type GetSellerShowcaseProductRequest struct {
 
 type GetSellerShowcaseProductResponse struct {
 	SellerProducts []SellerProduct `json:"seller_products"`
+	Limit          int
+	CurrentPage    int
+	TotalItem      int
+	TotalPage      int
 }
 
 type SellerOperatingHour struct {
 	Start string `json:"start"`
 	End   string `json:"end"`
+}
+
+type GetSellerShowcaseProducts struct {
+	SellerProducts []SellerProduct
 }
 
 type SellerProduct struct {
