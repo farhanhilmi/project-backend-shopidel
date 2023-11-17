@@ -55,6 +55,8 @@ func (u *sellerUsecase) GetProfile(ctx context.Context, req dtousecase.GetSeller
 		End:   seller.EndOperatingHours,
 	}
 	res.SellerPictureUrl = seller.ProfilePicture
+	res.ShopNameSlug = seller.ShopNameSlug
+	res.SellerStars = "4.8"
 
 	return res, nil
 }
@@ -134,7 +136,8 @@ func (u *sellerUsecase) GetShowcaseProducts(ctx context.Context, req dtousecase.
 		return res, util.ErrSellerNotFound
 	}
 
-	products, err := u.accountRepository.FindSellerShowcaseProduct(ctx, dtorepository.FindSellerShowcaseProductRequest{ShopName: req.ShopName, ShowcaseId: req.ShowcaseId})
+	products, err := u.accountRepository.FindSellerShowcaseProduct(ctx, dtorepository.FindSellerShowcaseProductRequest{ShopName: req.ShopName, ShowcaseId: req.ShowcaseId, Page: req.Page, Limit: req.Limit})
+
 	if err != nil {
 		return res, err
 	}

@@ -18975,4 +18975,16 @@ var Categories = []*model.Category{
 		Level:  2,
 		Parent: 3069,
 	},
+	{
+		ID:     3168,
+		Name:   "Logam Mulia",
+		Level:  2,
+		Parent: 1560,
+	},
+	{
+		ID:     3169,
+		Name:   "Produk Lainnya",
+		Level:  2,
+		Parent: 2845,
+	},
 }

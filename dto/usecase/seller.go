@@ -11,6 +11,8 @@ type GetSellerProfileResponse struct {
 	SellerPictureUrl    string              `json:"seller_picture_url"`
 	SellerDistrict      string              `json:"seller_district"`
 	SellerOperatingHour SellerOperatingHour `json:"seller_operating_hour"`
+	ShopNameSlug        string              `json:"shop_name_slug"`
+	SellerStars         string              `json:"seller_stars"`
 }
 
 type GetSellerProductsRequest struct {
@@ -32,6 +34,8 @@ type GetSellerShowcasesResponse struct {
 type GetSellerShowcaseProductRequest struct {
 	ShopName   string
 	ShowcaseId string
+	Page       int
+	Limit      int
 }
 
 type GetSellerShowcaseProductResponse struct {
