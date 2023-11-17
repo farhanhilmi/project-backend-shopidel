@@ -1221,7 +1221,25 @@ func (r *accountRepository) FindSellerShowcaseProduct(ctx context.Context, req d
 			product_image.url as "PictureUrl",
 			4.8 as stars,
 			p.created_at as "CreatedAt",
-			seller.shop_name as "ShopName"
+			seller.shop_name as "ShopName",
+			TRIM(BOTH '-' FROM 
+				REGEXP_REPLACE(
+					REGEXP_REPLACE(
+						LOWER(p."name"), 
+						'[^a-z0-9]+', '-', 'g'
+					), 
+					'-+', '-', 'g'
+				)
+			) AS "ProductNameSlug",
+			TRIM(BOTH '-' FROM 
+				REGEXP_REPLACE(
+					REGEXP_REPLACE(
+						LOWER(seller.shop_name), 
+						'[^a-z0-9]+', '-', 'g'
+					), 
+					'-+', '-', 'g'
+				)
+			) AS "ShopNameSlug"
 		from seller_showcase_products ssp
 			inner join products p
 				on p.id = ssp.product_id
