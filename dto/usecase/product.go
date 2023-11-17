@@ -66,7 +66,7 @@ type ProductReview struct {
 	Comment            string          `json:"comment"`
 	Variant            string          `json:"variant,omitempty"`
 	CreatedAt          string          `json:"created_at"`
-	Pictures           []ReviewImage   `json:"pictures"`
+	Pictures           []string        `json:"pictures"`
 }
 
 type VariantOption struct {

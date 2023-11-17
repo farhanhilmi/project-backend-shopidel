@@ -84,7 +84,7 @@ func (h *SellerHandler) GetShowcaseProducts(c *gin.Context) {
 	if p == 0 {
 		p = 1
 	}
-	limit := 20
+	limit := 2
 
 	uRes, err := h.sellerUsecase.GetShowcaseProducts(c.Request.Context(), dtousecase.GetSellerShowcaseProductRequest{ShopName: shopName, ShowcaseId: showcaseId, Page: p, Limit: limit})
 	if err != nil {
@@ -92,7 +92,16 @@ func (h *SellerHandler) GetShowcaseProducts(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONPagination{Data: uRes.SellerProducts, Pagination: dtogeneral.PaginationData{CurrentPage: p, Limit: limit}})
+	res := dtogeneral.JSONPagination{
+		Data: uRes.SellerProducts,
+		Pagination: dtogeneral.PaginationData{
+			CurrentPage: uRes.CurrentPage,
+			Limit:       uRes.Limit,
+			TotalPage:   uRes.TotalPage,
+			TotalItem:   uRes.TotalItem,
+		},
+	}
+	c.JSON(http.StatusOK, res)
 }
 
 func (h *SellerHandler) UploadPhoto(c *gin.Context) {

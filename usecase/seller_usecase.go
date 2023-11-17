@@ -148,13 +148,17 @@ func (u *sellerUsecase) GetShowcaseProducts(ctx context.Context, req dtousecase.
 		return res, util.ErrSellerNotFound
 	}
 
-	products, err := u.accountRepository.FindSellerShowcaseProduct(ctx, dtorepository.FindSellerShowcaseProductRequest{ShopName: req.ShopName, ShowcaseId: req.ShowcaseId, Page: req.Page, Limit: req.Limit})
+	rRes, err := u.accountRepository.FindSellerShowcaseProduct(ctx, dtorepository.FindSellerShowcaseProductRequest{ShopName: req.ShopName, ShowcaseId: req.ShowcaseId, Page: req.Page, Limit: req.Limit})
 
 	if err != nil {
 		return res, err
 	}
 
-	res.SellerProducts = products
+	res.SellerProducts = rRes.SellerProducts
+	res.Limit = rRes.Limit
+	res.CurrentPage = rRes.CurrentPage
+	res.TotalItem = rRes.TotalItem
+	res.TotalPage = rRes.TotalPage
 
 	return res, nil
 }

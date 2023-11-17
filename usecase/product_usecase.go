@@ -357,12 +357,15 @@ func (u *productUsecase) GetProductReviews(ctx context.Context, req dtousecase.G
 			Variant:            data.Variant,
 			CreatedAt:          data.CreatedAt,
 		}
+
 		pictures, err := u.productRepository.FindProductReviewPictures(ctx, data.Id)
 		if err != nil {
 			return res, err
 		}
 
-		review.Pictures = pictures
+		for _, picture := range pictures {
+			review.Pictures = append(review.Pictures, picture.Url)
+		}
 
 		res.Reviews = append(res.Reviews, review)
 	}
