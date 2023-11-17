@@ -7,6 +7,7 @@ import (
 	"log"
 	"math"
 	"strings"
+	"time"
 
 	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
@@ -14,6 +15,7 @@ import (
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type productRepository struct {
@@ -36,6 +38,8 @@ type ProductRepository interface {
 	FindByID(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error)
 	AddNewProduct(ctx context.Context, req dtorepository.AddNewProductRequest) (dtorepository.AddNewProductResponse, error)
 	FindProductReviewPictures(ctx context.Context, reviewId int) ([]dtousecase.ReviewImage, error)
+	RemoveProductByID(ctx context.Context, req dtorepository.RemoveProduct) (dtorepository.RemoveProduct, error)
+	FindByIDAndSeller(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error)
 }
 
 func NewProductRepository(db *gorm.DB) ProductRepository {
@@ -290,6 +294,21 @@ func (r *productRepository) FindByID(ctx context.Context, req dtorepository.Prod
 	res := dtorepository.ProductResponse{}
 
 	err := r.db.WithContext(ctx).Model(&model.Products{}).Where("id = ?", req.ProductID).First(&model.Products{}).Scan(&res).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (r *productRepository) FindByIDAndSeller(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error) {
+	res := dtorepository.ProductResponse{}
+
+	err := r.db.WithContext(ctx).Model(&model.Products{}).Where("id = ?", req.ProductID).Where("seller_id", req.AccountId).First(&model.Products{}).Scan(&res).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound
@@ -807,4 +826,93 @@ func (r *productRepository) FindProductReviewPictures(ctx context.Context, revie
 	}
 
 	return res, nil
+}
+
+func (r *productRepository) RemoveProductByID(ctx context.Context, req dtorepository.RemoveProduct) (dtorepository.RemoveProduct, error) {
+	res := dtorepository.RemoveProduct{}
+
+	tx := r.db.Begin()
+
+	err := tx.WithContext(ctx).Model(&model.Products{}).Where("id = ?", req.ID).Where("seller_id = ?", req.SellerID).Update("deleted_at", time.Now()).Scan(&res).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	err = tx.WithContext(ctx).Where("product_id = ?", req.ID).Delete(&model.ProductImages{}).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	err = tx.WithContext(ctx).Where("product_id = ?", req.ID).Delete(&model.ProductVideos{}).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	err = tx.WithContext(ctx).Where("product_id = ?", req.ID).Delete(&model.FavoriteProducts{}).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	showcaseProduct := model.SellerShowcaseProduct{}
+	err = tx.WithContext(ctx).Where("product_id = ?", req.ID).Delete(&showcaseProduct).Scan(&showcaseProduct).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	err = tx.WithContext(ctx).Where("id = ?", showcaseProduct.ID).Delete(&model.SellerShowcase{}).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	productVariant := model.ProductVariants{}
+	err = tx.WithContext(ctx).Clauses(clause.Returning{}).Where("product_id = ?", req.ID).Delete(&productVariant).Scan(&productVariant).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	productVariantSelection := []model.ProductVariantSelections{}
+	err = tx.WithContext(ctx).Clauses(clause.Returning{}).Where("product_variant_id = ?", productVariant.ID).Delete(&productVariantSelection).Scan(&productVariantSelection).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	variantSelectionIds := []int{}
+	for _, s := range productVariantSelection {
+		variantSelectionIds = append(variantSelectionIds, s.ID)
+	}
+
+	productVariantCombinations := []model.ProductVariantSelectionCombinations{}
+	err = tx.WithContext(ctx).
+		Clauses(clause.Returning{}).
+		Where("product_variant_selection_id1 IN ?", variantSelectionIds).
+		Or("product_variant_selection_id2 IN ?", variantSelectionIds).
+		Delete(&productVariantCombinations).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	variantSelectionCombinationIds := []int{}
+	for _, s := range productVariantSelection {
+		variantSelectionCombinationIds = append(variantSelectionCombinationIds, s.ID)
+	}
+
+	err = tx.WithContext(ctx).Where("product_variant_selection_combination_id IN ?", variantSelectionCombinationIds).
+		Delete(&model.AccountCarts{}).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	tx.Commit()
+
+	return res, err
 }

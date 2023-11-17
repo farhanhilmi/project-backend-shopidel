@@ -12,6 +12,7 @@ func NewSellerProductRouter(h *handler.SellerHandler, gin *gin.Engine) *gin.Engi
 	group.Use(middleware.IsRoleSeller())
 	group.POST("", h.AddNewProduct)
 	group.POST("/upload", h.UploadPhoto)
+	group.DELETE("/:productId", h.DeleteProduct)
 
 	return gin
 }

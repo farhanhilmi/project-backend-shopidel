@@ -258,3 +258,12 @@ type ProductReview struct {
 	Variant            string
 	CreatedAt          string
 }
+
+type RemoveProduct struct {
+	ID        int
+	SellerID  int
+	Name      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt time.Time
+}
