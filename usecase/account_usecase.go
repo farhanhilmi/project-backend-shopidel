@@ -678,6 +678,12 @@ func (u *accountUsecase) CheckPasswordCorrect(ctx context.Context, accountReq dt
 		return nil, err
 	}
 
+	isCorrect := util.CheckPasswordHash(accountReq.Password, userAccount.Password)
+
+	if !isCorrect {
+		return nil, util.ErrIncorrectPassword
+	}
+
 	return &dtousecase.CheckPasswordResponse{
 		IsCorrect: util.CheckPasswordHash(accountReq.Password, userAccount.Password),
 	}, nil
