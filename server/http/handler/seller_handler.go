@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 
 	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
@@ -79,26 +79,50 @@ func (h *SellerHandler) GetCategoryProducts(c *gin.Context) {
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes.SellerProducts})
 }
 
+func (h *SellerHandler) UploadPhoto(c *gin.Context) {
+	var req dtohttp.UploadNewPhoto
+
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	file, header, err := c.Request.FormFile("image")
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	uReq := dtousecase.UploadNewPhoto{
+		ImageID:     req.ImageID,
+		Image:       file,
+		ImageHeader: header,
+	}
+
+	response, err := h.sellerUsecase.UploadPhoto(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
+}
+
 func (h *SellerHandler) AddNewProduct(c *gin.Context) {
 	var req dtohttp.AddNewProductRequest
 
-	err := c.ShouldBindJSON(&req)
+	err := c.ShouldBind(&req)
 	if err != nil {
-		log.Println("ERROR", err)
 		c.Error(util.ErrInvalidInput)
 		return
 	}
 
 	form, err := c.MultipartForm()
 	files := form.File["images[]"]
-	// for i, header := range files {
-	// 	file, err := files[i].Open()
-	// 	log.Println(header.Filename)
-	// }
 
 	if err != nil {
-		log.Println("ERR", err)
-		c.Error(err)
+		c.Error(util.ErrNoImage)
 		return
 	}
 
@@ -107,21 +131,22 @@ func (h *SellerHandler) AddNewProduct(c *gin.Context) {
 		ProductName:       req.ProductName,
 		Description:       req.Description,
 		CategoryID:        req.CategoryID,
-		HazardousMaterial: *req.HazardousMaterial,
-		IsNew:             *req.IsNew,
+		HazardousMaterial: req.HazardousMaterial,
+		IsNew:             req.IsNew,
 		InternalSKU:       req.InternalSKU,
 		Weight:            req.Weight,
 		Size:              req.Size,
-		IsActive:          *req.IsActive,
+		IsActive:          req.IsActive,
 		Variants:          req.Variants,
 		Images:            files,
 	}
 
-	response, err := h.sellerUsecase.AddNewProduct(c.Request.Context(), productReq)
+	newProduct, err := h.sellerUsecase.AddNewProduct(c.Request.Context(), productReq)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
+	res := fmt.Sprintf("Successfully create new product %v", newProduct.ProductName)
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: res})
 }

@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"fmt"
 	"mime/multipart"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/config"
@@ -36,6 +37,7 @@ func UploadToCloudinary(file multipart.File, filePath string) (string, error) {
 		return "", err
 	}
 
+	fmt.Println("Upload successful. Public ID:", result.PublicID)
 	imageUrl := result.SecureURL
 	return imageUrl, nil
 }

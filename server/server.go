@@ -60,6 +60,7 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 
 	suc := usecase.SellerUsecaseConfig{
 		AccountRepository: accountRepo,
+		ProductRepository: productRepo,
 	}
 
 	productUsecase := usecase.NewProductUsecase(puc)

@@ -1,8 +1,10 @@
 package dtorepository
 
 import (
+	"mime/multipart"
 	"time"
 
+	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"github.com/shopspring/decimal"
 )
 
@@ -199,4 +201,40 @@ type TopCategoriesResponse struct {
 	CategoryID int    `json:"category_id"`
 	Name       string `json:"name"`
 	PictureURL string `json:"picture_url"`
+}
+
+type AddNewProductRequest struct {
+	SellerID          int
+	ProductName       string
+	Description       string
+	CategoryID        int
+	HazardousMaterial *bool
+	IsNew             *bool
+	InternalSKU       string
+	Weight            decimal.Decimal
+	Size              decimal.Decimal
+	IsActive          *bool
+	Variants          []dtousecase.AddNewProductVariant
+	Images            []*multipart.FileHeader
+	VideoURL          string
+	ProductVariants   []dtousecase.ProductVariants
+}
+
+type AddNewProductResponse struct {
+	ID                int
+	Name              string
+	Description       string
+	CategoryID        int
+	HazardousMaterial *bool
+	IsNew             *bool
+	InternalSKU       string
+	Weight            decimal.Decimal
+	Size              decimal.Decimal
+	IsActive          *bool
+	VideoURL          string
+}
+
+type ProductVariantType struct {
+	VariantName  string
+	VariantValue string
 }

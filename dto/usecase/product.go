@@ -271,6 +271,7 @@ type AddNewProductVariant struct {
 	Stock    int                      `form:"stock"`
 	Price    decimal.Decimal          `form:"price"`
 	ImageID  string                   `form:"image_id"`
+	ImageURL string
 }
 
 type AddNewProductRequest struct {
@@ -297,4 +298,10 @@ type UploadNewPhoto struct {
 	ImageID     string                `form:"image_id" binding:"required" json:"image_id"`
 	Image       multipart.File        `json:"-"`
 	ImageHeader *multipart.FileHeader `json:"-"`
+}
+
+type ProductVariants struct {
+	ID        int
+	ProductID int
+	Name      string
 }

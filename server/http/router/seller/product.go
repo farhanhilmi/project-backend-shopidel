@@ -11,6 +11,7 @@ func NewSellerProductRouter(h *handler.SellerHandler, gin *gin.Engine) *gin.Engi
 	group.Use(middleware.AuthenticateJWT())
 	group.Use(middleware.IsRoleSeller())
 	group.POST("", h.AddNewProduct)
+	group.POST("/upload", h.UploadPhoto)
 
 	return gin
 }
