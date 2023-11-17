@@ -59,12 +59,14 @@ type GetProductDetailResponse struct {
 }
 
 type ProductReview struct {
+	Id                 int             `json:"id"`
 	CustomerName       string          `json:"customer_name"`
 	CustomerPictureUrl string          `json:"customer_picture_url"`
 	Stars              decimal.Decimal `json:"stars"`
 	Comment            string          `json:"comment"`
 	Variant            string          `json:"variant,omitempty"`
 	CreatedAt          string          `json:"created_at"`
+	Pictures           []ReviewImage   `json:"pictures"`
 }
 
 type VariantOption struct {
@@ -234,6 +236,10 @@ type GetProductReviewsResponse struct {
 	TotalItem   int
 	CurrentPage int
 	Limit       int
+}
+
+type ReviewImage struct {
+	Url string `json:"url"`
 }
 
 type GetProductPicturesRequest struct {

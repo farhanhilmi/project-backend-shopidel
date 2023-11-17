@@ -202,3 +202,21 @@ type TopCategoriesResponse struct {
 	Name       string `json:"name"`
 	PictureURL string `json:"picture_url"`
 }
+
+type GetProductReviewsResponse struct {
+	Reviews     []ProductReview
+	TotalPage   int
+	TotalItem   int
+	CurrentPage int
+	Limit       int
+}
+
+type ProductReview struct {
+	Id                 int
+	CustomerName       string
+	CustomerPictureUrl string
+	Stars              decimal.Decimal
+	Comment            string
+	Variant            string
+	CreatedAt          string
+}
