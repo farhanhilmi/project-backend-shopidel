@@ -53,6 +53,8 @@ type AccountRepository interface {
 	FindByToken(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
 	SaveForgetPasswordToken(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
 	UpdatePassword(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
+	UpdatePassord(ctx context.Context, req dtorepository.ChangePasswordRequest) error
+	FindCategories(ctx context.Context) ([]dtorepository.Category, error)
 }
 
 type accountRepository struct {
@@ -193,6 +195,15 @@ func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.
 	res.ShopName = req.ShopName
 
 	return &res, nil
+}
+
+func (r *accountRepository) UpdatePassord(ctx context.Context, req dtorepository.ChangePasswordRequest) error {
+	err := r.db.WithContext(ctx).Model(&model.Accounts{}).Where("id = ?", req.AccountID).Update("password", req.NewPassword).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *accountRepository) GetAddresses(ctx context.Context, req dtorepository.AddressRequest) (*[]dtorepository.AddressResponse, error) {
@@ -1044,11 +1055,28 @@ func (r *accountRepository) FirstSeller(ctx context.Context, req dtorepository.S
 			aa.district as "District",
 			'08:00' as "StartOperatingHours",
 			'20:00' as "EndOperatingHours",
-			'asia/jakarta' as "TimeZone"
+			'asia/jakarta' as "TimeZone",
+			TRIM(BOTH '-' FROM 
+					REGEXP_REPLACE(
+						REGEXP_REPLACE(
+							LOWER(a.shop_name), 
+							'[^a-z0-9]+', '-', 'g'
+						), 
+						'-+', '-', 'g'
+					)
+				) as "ShopNameSlug"
 		from accounts a
 		left join account_addresses aa 
 			on aa.account_id  = a.id 
-		where a.shop_name = ?
+		where TRIM(BOTH '-' FROM 
+					REGEXP_REPLACE(
+						REGEXP_REPLACE(
+							LOWER(a.shop_name), 
+							'[^a-z0-9]+', '-', 'g'
+						), 
+						'-+', '-', 'g'
+					)
+				) ilike ?
 	`
 
 	if err := r.db.WithContext(ctx).Raw(q, req.ShopName).Scan(&res).Error; err != nil {
@@ -1219,12 +1247,58 @@ func (r *accountRepository) FindSellerShowcaseProduct(ctx context.Context, req d
 			) product_image on product_image.product_id = p.id 
 			left join accounts seller
 				on seller.id = p.seller_id
-			where seller.shop_name = $1
-				and ssp.seller_showcase_id = $2
+			?
 	`
 
-	err := r.db.WithContext(ctx).Raw(q, req.ShopName, req.ShowcaseId).Scan(&res).Error
-	if err != nil {
+	wquery := `
+		where TRIM(BOTH '-' FROM 
+				REGEXP_REPLACE(
+					REGEXP_REPLACE(
+						LOWER(seller.shop_name), 
+						'[^a-z0-9]+', '-', 'g'
+					), 
+					'-+', '-', 'g'
+				)
+			) = $1
+	`
+	wq := r.db.Raw(wquery, req.ShopName)
+
+	if req.ShowcaseId != "0" {
+		wquery += " and ssp.seller_showcase_id = $2"
+		wq = wq.Raw(wquery, req.ShowcaseId)
+	}
+
+	if err := r.db.WithContext(ctx).Raw(q, wq).
+		Scan(&res).Error; err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (r *accountRepository) FindCategories(ctx context.Context) ([]dtorepository.Category, error) {
+	res := []dtorepository.Category{}
+
+	q := `
+		select 
+			c.id as "CategoryLevel1Id",
+			c."name" as "CategoryLevel1Name",
+			c2.id as "CategoryLevel2Id",
+			c2."name" as "CategoryLevel2Name",
+			c3.id as "CategoryLevel3Id",
+			c3."name" as "CategoryLevel3Name"
+		from categories c
+		left join categories c2 
+			on c2.parent = c.id 
+			and c2."level" = 2
+		left join categories c3 
+			on c3.parent = c2.id 
+			and c3."level" = 3
+		where c."level" = 1
+		order by c.id asc, c2.id asc, c3.id asc
+	`
+
+	if err := r.db.WithContext(ctx).Raw(q).Scan(&res).Error; err != nil {
 		return res, err
 	}
 

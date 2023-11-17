@@ -162,6 +162,7 @@ type SellerDataResponse struct {
 	StartOperatingHours string
 	EndOperatingHours   string
 	TimeZone            string
+	ShopNameSlug        string
 }
 
 type FindSellerBestSellingRequest struct {
@@ -197,4 +198,21 @@ type FindSellerShowcasesResponse struct {
 type FindSellerShowcaseProductRequest struct {
 	ShopName   string
 	ShowcaseId string
+	Page       int
+	Limit      int
+}
+
+type Category struct {
+	CategoryLevel1Id   int
+	CategoryLevel1Name string
+	CategoryLevel2Id   int
+	CategoryLevel2Name string
+	CategoryLevel3Id   int
+	CategoryLevel3Name string
+}
+
+type ChangePasswordRequest struct {
+	AccountID   int
+	OldPassword string
+	NewPassword string
 }
