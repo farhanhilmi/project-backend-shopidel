@@ -258,6 +258,8 @@ type AnotherProduct struct {
 	ProductPictureUrl string          `json:"product_picture_url"`
 	ProductPrice      decimal.Decimal `json:"product_price"`
 	SellerName        string          `json:"seller_name"`
+	ProductNameSlug   string          `json:"product_name_slug"`
+	ShopNameSlug      string          `json:"shop_name_slug"`
 }
 
 type AddNewProductVariantType struct {

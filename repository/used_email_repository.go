@@ -38,7 +38,6 @@ func (r *usedEmailRepository) FindByEmail(ctx context.Context, req dtorepository
 	res.Email = usedEmail.Email
 	res.ID = usedEmail.ID
 	res.CreatedAt = usedEmail.CreatedAt
-	res.DeletedAt = usedEmail.DeletedAt
 	res.UpdatedAt = usedEmail.UpdatedAt
 	res.AccountID = usedEmail.AccountID
 
@@ -47,10 +46,10 @@ func (r *usedEmailRepository) FindByEmail(ctx context.Context, req dtorepository
 
 func (r *usedEmailRepository) CreateEmail(ctx context.Context, tx *gorm.DB, req dtorepository.UsedEmailRequest) (dtorepository.UsedEmailResponse, error) {
 	res := dtorepository.UsedEmailResponse{}
-	
+
 	usedEmail := model.UsedEmail{
 		AccountID: req.AccountID,
-		Email: req.Email,
+		Email:     req.Email,
 	}
 
 	err := tx.WithContext(ctx).Model(&usedEmail).Create(&usedEmail).Error

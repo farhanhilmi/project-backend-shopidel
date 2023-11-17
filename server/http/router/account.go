@@ -55,5 +55,10 @@ func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 		address.GET("/provinces/:provinceId/districts", h.GetProvinceDistricts)
 	}
 
+	categories := gin.Group("/categories")
+	{
+		categories.GET("", h.GetCategories)
+	}
+
 	return gin
 }

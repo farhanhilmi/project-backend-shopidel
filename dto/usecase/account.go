@@ -288,3 +288,13 @@ type ChangePasswordRequest struct {
 	OldPassword string
 	NewPassword string
 }
+
+type GetCategoriesResponse struct {
+	Categories []Category
+}
+
+type Category struct {
+	Id       int        `json:"id"`
+	Name     string     `json:"name"`
+	Children []Category `json:"children,omitempty"`
+}

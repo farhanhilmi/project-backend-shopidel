@@ -762,3 +762,13 @@ func (h *AccountHandler) GetProvinceDistricts(c *gin.Context) {
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
 }
+
+func (h *AccountHandler) GetCategories(c *gin.Context) {
+	response, err := h.accountUsecase.GetCategories(c.Request.Context())
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
+}
