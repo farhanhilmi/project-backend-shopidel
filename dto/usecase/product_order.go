@@ -98,3 +98,32 @@ type AddProductReviewResponse struct {
 	Rating    int       `json:"rating"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type ProductSellerOrderHistoryRequest struct {
+	AccountID int
+	Status    string
+	SortBy    string
+	Sort      string
+	Limit     int
+	Page      int
+	StartDate string
+	EndDate   string
+}
+
+type OrdersResponse struct {
+	OrderID      int             `json:"order_id"`
+	ShopName     string          `json:"shop_name"`
+	Status       string          `json:"status"`
+	Products     []OrderProduct  `json:"products"`
+	TotalPayment decimal.Decimal `json:"total_payment"`
+	CreateAt     string          `json:"created_at"`
+}
+
+type SellerOrdersResponse struct {
+	OrderID      int             `json:"order_id"`
+	BuyerName    string          `json:"buter_name"`
+	Status       string          `json:"status"`
+	Products     []OrderProduct  `json:"products"`
+	TotalPayment decimal.Decimal `json:"total_payment"`
+	CreateAt     string          `json:"created_at"`
+}
