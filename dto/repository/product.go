@@ -1,7 +1,6 @@
 package dtorepository
 
 import (
-	"mime/multipart"
 	"time"
 
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
@@ -217,7 +216,7 @@ type AddNewProductRequest struct {
 	Size              decimal.Decimal
 	IsActive          *bool
 	Variants          []dtousecase.AddNewProductVariant
-	Images            []*multipart.FileHeader
+	Images            []string
 	VideoURL          string
 	ProductVariants   []dtousecase.ProductVariants
 }

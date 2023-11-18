@@ -1,8 +1,13 @@
 package util
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"image"
+	"image/jpeg"
+	_ "image/png"
+	"io"
 	"mime/multipart"
 	"os"
 	"path"
@@ -46,7 +51,7 @@ func UploadToCloudinary(file multipart.File, filePath string) (string, error) {
 }
 
 func GetVariantImageURL(imageId string) (string, error) {
-	file, err := os.Open(fmt.Sprintf("./imageuploads/%v.png", imageId))
+	file, err := os.Open(fmt.Sprintf("./imageuploads/%v.jpeg", imageId))
 	if err != nil {
 		return "", err
 	}
@@ -65,4 +70,22 @@ func GetVariantImageURL(imageId string) (string, error) {
 	}
 
 	return imageURL, nil
+}
+
+func ConvertToJPEG(file multipart.File) (io.Reader, error) {
+	img, _, err := image.Decode(file)
+	if err != nil {
+		return nil, err
+	}
+
+	var convertedImageBuffer bytes.Buffer
+
+	options := &jpeg.Options{Quality: 50}
+	if err := jpeg.Encode(&convertedImageBuffer, img, options); err != nil {
+		return nil, err
+	}
+
+	convertedImageReader := bytes.NewReader(convertedImageBuffer.Bytes())
+
+	return convertedImageReader, nil
 }
