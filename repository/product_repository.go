@@ -167,41 +167,45 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 				where c."level" = 3
 			) as category_level_3 on category_level_3.level_3_id = p.category_id
 			left join (
-				(
-					select
-						level_3.id 
-					from categories level_3
-					left join categories level_2
-						on level_2.id = level_3.parent 
-						and level_2."level" = 2
-					left join categories level_1
-						on level_1.id = level_2.parent 
-						and level_1."level" = 1
-					where level_3."level" = 3
-						and (
-							level_3.id in ($1)
-							or level_2.id in ($1)
-							or level_1.id in ($1)
-						)
-				) union all (
-					select
-						level_2.id 
-					from categories level_2
-					left join categories level_1
-						on level_1.id = level_2.parent
-						and level_1."level" = 1
-					where level_2."level" = 2
-						and (
-							level_2.id in ($1)
-							or level_1.id in ($1)
-						) 
-				) union all (
-					select
-						level_1.id 
-					from categories level_1
-					where level_1."level" = 1
-						and level_1.id in ($1)
-				)
+				select 
+					distinct(a.id) as id
+				from (
+					(
+						select
+							level_3.id 
+						from categories level_3
+						left join categories level_2
+							on level_2.id = level_3.parent 
+							and level_2."level" = 2
+						left join categories level_1
+							on level_1.id = level_2.parent 
+							and level_1."level" = 1
+						where level_3."level" = 3
+							and (
+								level_3.id in ($1)
+								or level_2.id in ($1)
+								or level_1.id in ($1)
+							)
+					) union all (
+						select
+							level_2.id 
+						from categories level_2
+						left join categories level_1
+							on level_1.id = level_2.parent
+							and level_1."level" = 1
+						where level_2."level" = 2
+							and (
+								level_2.id in ($1)
+								or level_1.id in ($1)
+							) 
+					) union all (
+						select
+							level_1.id 
+						from categories level_1
+						where level_1."level" = 1
+							and level_1.id in ($1)
+					)
+				) a
 			) as child on child.id = p.category_id 
 			where 
 				(
