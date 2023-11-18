@@ -801,11 +801,15 @@ func (r *productRepository) AddNewProduct(ctx context.Context, req dtorepository
 	}
 
 	for _, v := range req.Variants {
-		imageUrl, err := util.GetVariantImageURL(v.ImageID)
-		if err != nil {
-			tx.Rollback()
-			return res, err
+		var imageUrl string
+		if v.ImageID != "" && v.Variant1.Name != "" {
+			imageUrl, err = util.GetVariantImageURL(v.ImageID)
+			if err != nil {
+				tx.Rollback()
+				return res, err
+			}
 		}
+
 		variantCombination := model.ProductVariantSelectionCombinations{
 			ProductID:  res.ID,
 			Price:      v.Price,
