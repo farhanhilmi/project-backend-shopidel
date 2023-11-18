@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
+	"path"
+	"time"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
@@ -180,7 +181,6 @@ func (u *sellerUsecase) AddNewProduct(ctx context.Context, req dtousecase.AddNew
 					Name: req.Variants[0].Variant1.Name,
 				},
 			}
-			// e, a := getVariantImageURL(req.Variants)
 		default:
 			productVariants = []dtousecase.ProductVariants{
 				{
@@ -212,6 +212,27 @@ func (u *sellerUsecase) AddNewProduct(ctx context.Context, req dtousecase.AddNew
 		}
 	}
 
+	imageLinks := []string{}
+
+	for _, img := range req.Images {
+		currentTime := time.Now().UnixNano()
+		fileExtension := path.Ext(img.Filename)
+		originalFilename := img.Filename[:len(img.Filename)-len(fileExtension)]
+		newFilename := fmt.Sprintf("%s_%d", originalFilename, currentTime)
+
+		file, err := img.Open()
+		if err != nil {
+			return res, err
+		}
+
+		imageUrl, err := util.UploadToCloudinary(file, newFilename)
+		if err != nil {
+			return res, err
+		}
+
+		imageLinks = append(imageLinks, imageUrl)
+	}
+
 	product, err := u.productRepository.AddNewProduct(ctx, dtorepository.AddNewProductRequest{
 		SellerID:          req.SellerID,
 		ProductName:       req.ProductName,
@@ -225,7 +246,7 @@ func (u *sellerUsecase) AddNewProduct(ctx context.Context, req dtousecase.AddNew
 		Size:              req.Size,
 		Variants:          req.Variants,
 		ProductVariants:   productVariants,
-		Images:            req.Images,
+		Images:            imageLinks,
 		VideoURL:          req.VideoURL,
 	})
 	if err != nil {
@@ -245,14 +266,19 @@ func (u *sellerUsecase) UploadPhoto(ctx context.Context, req dtousecase.UploadNe
 		return res, err
 	}
 
-	dst, err := os.Create(fmt.Sprintf("./imageuploads/%s%s", req.ImageID, filepath.Ext(req.ImageHeader.Filename)))
+	dst, err := os.Create(fmt.Sprintf("./imageuploads/%s.jpeg", req.ImageID))
 	if err != nil {
 		return res, err
 	}
 
 	defer dst.Close()
 
-	_, err = io.Copy(dst, req.Image)
+	fileImg, err := util.ConvertToJPEG(req.Image)
+	if err != nil {
+		return res, err
+	}
+
+	_, err = io.Copy(dst, fileImg)
 	if err != nil {
 		return res, err
 	}

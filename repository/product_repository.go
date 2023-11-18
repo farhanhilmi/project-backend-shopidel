@@ -719,6 +719,30 @@ func (r *productRepository) AddNewProduct(ctx context.Context, req dtorepository
 		return res, err
 	}
 
+	if req.VideoURL != "" {
+		err = tx.WithContext(ctx).Create(&model.ProductVideos{ProductID: res.ID, URL: req.VideoURL}).Error
+		if err != nil {
+			tx.Rollback()
+			return res, err
+		}
+	}
+
+	productImages := []model.ProductImages{}
+
+	for _, url := range req.Images {
+		image := model.ProductImages{
+			ProductID: res.ID,
+			URL:       url,
+		}
+		productImages = append(productImages, image)
+	}
+
+	err = tx.WithContext(ctx).Create(&productImages).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
 	productVariants := []model.ProductVariants{}
 
 	for _, v := range req.ProductVariants {

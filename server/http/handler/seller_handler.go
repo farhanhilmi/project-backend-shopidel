@@ -154,6 +154,7 @@ func (h *SellerHandler) AddNewProduct(c *gin.Context) {
 		Size:              req.Size,
 		IsActive:          req.IsActive,
 		Variants:          req.Variants,
+		VideoURL:          req.VideoURL,
 		Images:            files,
 	}
 
