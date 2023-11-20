@@ -58,7 +58,7 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 			p.id,
 			p.name,
 			p.description,
-			aa.district,
+			seller_address.district,
 			0 as total_sold, 
 			product_price.lowest_price as "price", 
 			round( CAST(float8 (random() * 5) as numeric), 1) as rating,
@@ -128,10 +128,17 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 					from product_variant_selection_combinations pvsc2
 					where pvsc2.product_id = p.id
 					group by pvsc2.product_id 
+					limit 1
 				) product_price on product_price.product_id = p.id
-			left join account_addresses aa 
-				on aa.account_id = p.seller_id
-				and aa.is_seller_default is true
+			left join lateral (
+				select 
+					aa.account_id,
+					aa.district
+				from account_addresses aa 
+				where aa.is_seller_default is true
+					and aa.account_id = p.seller_id
+				limit 1
+			) seller_address on seller_address.account_id = p.seller_id
 			left join accounts as seller
 				on seller.id = p.seller_id
 			left join (
