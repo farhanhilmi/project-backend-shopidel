@@ -11,6 +11,7 @@ import (
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/exp/slices"
 )
 
 type SellerHandler struct {
@@ -198,4 +199,70 @@ func (h *SellerHandler) DeleteProduct(c *gin.Context) {
 
 	res := fmt.Sprintf("Successfully deleted product %v", product.Name)
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: res})
+}
+
+func (h *SellerHandler) ListProduct(c *gin.Context) {
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "30"))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	sortBy := c.DefaultQuery("sortBy", "date")
+	sort := c.DefaultQuery("sort", "desc")
+	startDate := c.DefaultQuery("startDate", "")
+	endDate := c.DefaultQuery("endDate", "")
+	categoryId := c.DefaultQuery("categoryId", "")
+	s := c.DefaultQuery("s", "")
+	minRating := c.DefaultQuery("minRating", "")
+	minPrice := c.DefaultQuery("minPrice", "")
+	maxPrice := c.DefaultQuery("maxPrice", "")
+	district := c.DefaultQuery("district", "")
+
+	if valid := util.IsDateValid(startDate); !valid && startDate != "" {
+		c.Error(util.ErrInvalidDateFormat)
+		return
+	}
+	if valid := util.IsDateValid(endDate); !valid && endDate != "" {
+		c.Error(util.ErrInvalidDateFormat)
+		return
+	}
+
+	if !slices.Contains([]string{"date", "price"}, sortBy) {
+		c.Error(util.ErrProductFavoriteSortBy)
+		return
+	}
+
+	switch sortBy {
+	case "date":
+		sortBy = "created_at"
+	}
+
+	uReq := dtousecase.ProductListParam{
+		CategoryId: categoryId,
+		SortBy:     sortBy,
+		Sort:       sort,
+		MinRating:  util.StrToInt(minRating),
+		MinPrice:   util.StrToInt(minPrice),
+		MaxPrice:   util.StrToInt(maxPrice),
+		District:   district,
+		Limit:      limit,
+		Page:       page,
+		StartDate:  startDate,
+		EndDate:    endDate,
+		SellerID:   c.GetInt("userId"),
+		Search:     s,
+	}
+
+	uRes, pagination, err := h.sellerUsecase.GetProducts(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONPagination{Data: uRes, Pagination: *pagination})
 }
