@@ -802,7 +802,6 @@ func (r *accountRepository) AddProductToCart(ctx context.Context, req dtoreposit
 			ProductVariantSelectionCombinationId: req.ProductVariantCombinationId,
 			Quantity:                             req.Quantity,
 		}
-		fmt.Println(c1)
 
 		err = r.db.WithContext(ctx).Create(&c1).Error
 		if err != nil {

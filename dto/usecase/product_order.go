@@ -125,5 +125,8 @@ type SellerOrdersResponse struct {
 	Status       string               `json:"status"`
 	Products     []SellerOrderProduct `json:"products"`
 	TotalPayment decimal.Decimal      `json:"total_payment"`
+	Shipping     AddressOrder         `json:"shipping"`
+	Promotion    OrderPromotions      `json:"promotion"`
+	DeliveryFee  string               `json:"delivery_fee"`
 	CreateAt     string               `json:"created_at"`
 }
