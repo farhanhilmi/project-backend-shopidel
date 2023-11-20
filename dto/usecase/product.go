@@ -176,7 +176,7 @@ type AddressOrder struct {
 	ZipCode     string `json:"zip_code"`
 	SubDistrict string `json:"sub_district"`
 	Kelurahan   string `json:"kelurahan"`
-	Detail      string `json:"detaill"`
+	Detail      string `json:"detail"`
 }
 type OrderDetailResponse struct {
 	OrderID      int             `json:"order_id"`

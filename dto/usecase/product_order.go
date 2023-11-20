@@ -128,5 +128,7 @@ type SellerOrdersResponse struct {
 	Shipping     AddressOrder         `json:"shipping"`
 	Promotion    OrderPromotions      `json:"promotion"`
 	DeliveryFee  string               `json:"delivery_fee"`
+	CourierName  string               `json:"courier_name"`
+	IsWithdrawn  bool                 `json:"is_withdrawn"`
 	CreateAt     string               `json:"created_at"`
 }
