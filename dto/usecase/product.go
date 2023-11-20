@@ -213,6 +213,15 @@ type OrderProduct struct {
 	IsReviewed           bool               `json:"is_reviewed"`
 }
 
+type SellerOrderProduct struct {
+	ProductID            int                `json:"product_id"`
+	ProductOrderDetailID int                `json:"product_order_detail_id"`
+	ProductName          string             `json:"product_name"`
+	VariantName          string             `json:"variant_name"`
+	Quantity             int                `json:"quantity"`
+	IndividualPrice      decimal.Decimal    `json:"individual_price"`
+}
+
 type GetProductReviewsRequest struct {
 	ProductId int
 	Page      int
