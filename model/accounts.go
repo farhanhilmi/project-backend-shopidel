@@ -56,6 +56,7 @@ type SaleWalletTransactionHistories struct {
 	To             string          `gorm:"type:varchar;default:null"`
 	Amount         decimal.Decimal `gorm:"type:decimal"`
 	ProductOrderID int             `gorm:"foreignKey:AccountID;type:bigint;default:null"`
+	IsWithdrawn    bool            `gorm:"type:boolean;default:false"`
 	CreatedAt      time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	UpdatedAt      time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 }
