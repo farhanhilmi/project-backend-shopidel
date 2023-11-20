@@ -48,7 +48,7 @@ type AddNewProductRequest struct {
 	CategoryID        int                               `form:"category_id" binding:"required"`
 	HazardousMaterial *bool                             `form:"hazardous_material" binding:"required"`
 	IsNew             *bool                             `form:"is_new" binding:"required"`
-	InternalSKU       string                            `form:"internal_sku" binding:"required"`
+	InternalSKU       string                            `form:"internal_sku"`
 	Weight            decimal.Decimal                   `form:"weight" binding:"required"`
 	Size              decimal.Decimal                   `form:"size" binding:"required"`
 	IsActive          *bool                             `form:"is_active" binding:"required"`
