@@ -137,6 +137,7 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 				from account_addresses aa 
 				where aa.is_seller_default is true
 					and aa.account_id = p.seller_id
+				limit 1
 			) seller_address on seller_address.account_id = p.seller_id
 			left join accounts as seller
 				on seller.id = p.seller_id
