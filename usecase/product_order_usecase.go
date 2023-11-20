@@ -491,12 +491,12 @@ func (u *productOrderUsecase) convertOrderHistoriesReponse(ctx context.Context, 
 }
 
 func (u *productOrderUsecase) convertSellerOrderHistoriesReponse(ctx context.Context, pagination dtogeneral.PaginationData, orders []dtorepository.ProductSellerOrderHistoriesResponse) ([]dtousecase.SellerOrdersResponse, dtogeneral.PaginationData, error) {
-	orderHistories := make(map[string][]dtousecase.OrderProduct)
+	orderHistories := make(map[string][]dtousecase.SellerOrderProduct)
 	productOrders := []dtousecase.SellerOrdersResponse{}
 	orderKeys := []string{}
 
 	for _, o := range orders {
-		product := dtousecase.OrderProduct{
+		product := dtousecase.SellerOrderProduct{
 			ProductName:          o.ProductName,
 			Quantity:             o.Quantity,
 			IndividualPrice:      o.IndividualPrice,

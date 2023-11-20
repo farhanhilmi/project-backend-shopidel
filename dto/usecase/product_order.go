@@ -120,10 +120,10 @@ type OrdersResponse struct {
 }
 
 type SellerOrdersResponse struct {
-	OrderID      int             `json:"order_id"`
-	BuyerName    string          `json:"buyer_name"`
-	Status       string          `json:"status"`
-	Products     []OrderProduct  `json:"products"`
-	TotalPayment decimal.Decimal `json:"total_payment"`
-	CreateAt     string          `json:"created_at"`
+	OrderID      int                  `json:"order_id"`
+	BuyerName    string               `json:"buyer_name"`
+	Status       string               `json:"status"`
+	Products     []SellerOrderProduct `json:"products"`
+	TotalPayment decimal.Decimal      `json:"total_payment"`
+	CreateAt     string               `json:"created_at"`
 }
