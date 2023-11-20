@@ -33,6 +33,7 @@ type ProductOrdersRepository interface {
 	AddProductReview(ctx context.Context, req dtorepository.AddProductReviewRequest) (dtorepository.AddProductReviewResponse, error)
 	FindReviewByID(ctx context.Context, req dtorepository.ProductReviewRequest) (dtorepository.ProductReviewResponse, error)
 	FindOrderByIDAndAccount(ctx context.Context, req dtorepository.OrderDetailRequest) ([]model.ProductOrderDetail, error)
+	FindOrderByIDAndSellerID(ctx context.Context, req dtorepository.ProductOrderRequest) ([]model.ProductOrderSeller, error)
 }
 
 func NewProductOrdersRepository(db *gorm.DB) ProductOrdersRepository {
@@ -234,7 +235,7 @@ func (r *productOrdersRepository) FindOrderByIDAndAccount(ctx context.Context, r
 
 	q := `
 	select po.*, a.shop_name, pod.quantity, pod.individual_price, p.name as product_name, pod.product_id, 
-		por.feedback, por.rating, por.created_at as review_created_at, por.id as review_id
+		por.feedback, por.rating, por.created_at as review_created_at, por.id as review_id, po.account_id as buyer_id
 		from product_orders po
 		left join product_order_details pod 
 			on pod.product_order_id = po.id
@@ -461,6 +462,30 @@ func (r *productOrdersRepository) FindByIDAndSellerID(ctx context.Context, req d
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return order, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return order, err
+	}
+
+	return order, err
+}
+
+func (r *productOrdersRepository) FindOrderByIDAndSellerID(ctx context.Context, req dtorepository.ProductOrderRequest) ([]model.ProductOrderSeller, error) {
+	order := []model.ProductOrderSeller{}
+
+	err := r.db.WithContext(ctx).Raw(`
+	select po.id, po.account_id, p.id as product_id, p.seller_id, pod.individual_price, pod.quantity, po.status
+		from product_order_details pod
+		left join products p on p.id = pod.product_id 
+		left join product_orders po on po.id = pod.product_order_id 
+	where pod.product_order_id = ? and p.seller_id = ?;
+	`, req.ID, req.SellerID).Scan(&order).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return order, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return order, err
 	}
 
 	return order, err

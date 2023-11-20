@@ -98,6 +98,7 @@ type ProductOrderDetail struct {
 	SubDistrict     string
 	Kelurahan       string
 	Detail          string
+	BuyerID         int
 	DeliveryFee     decimal.Decimal
 	ReviewCreatedAt time.Time
 	CreatedAt       time.Time

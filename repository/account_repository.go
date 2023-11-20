@@ -7,6 +7,7 @@ import (
 	"math"
 	"time"
 
+	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
@@ -565,12 +566,23 @@ func (r *accountRepository) TopUpWalletBalanceByID(ctx context.Context, req dtor
 		AccountID: req.UserID,
 		Amount:    req.Amount,
 		Type:      req.Type,
-		From:      "5550000012345",
+		From:      req.From,
 	})
 
 	if err != nil {
 		tx.Rollback()
 		return dtorepository.WalletResponse{}, err
+	}
+
+	if req.Type == constant.Withdraw {
+		err := tx.WithContext(ctx).Model(&model.SaleWalletTransactionHistories{}).
+			Where("product_order_id = ?", req.OrderID).
+			Update("is_withdrawn", true).Error
+
+		if err != nil {
+			tx.Rollback()
+			return dtorepository.WalletResponse{}, err
+		}
 	}
 
 	tx.Commit()
@@ -590,6 +602,10 @@ func (r *accountRepository) FindById(ctx context.Context, req dtorepository.GetA
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound
+	}
+
+	if err != nil {
+		return res, err
 	}
 
 	res.FullName = account.FullName
@@ -1369,3 +1385,39 @@ func (r *accountRepository) FindCategories(ctx context.Context) ([]dtorepository
 
 	return res, nil
 }
+
+// func (r *accountRepository) IncreaseBalanceSaller(ctx context.Context, req dtorepository.MyWalletRequest) (dtorepository.WalletResponse, error) {
+// 	account := model.Accounts{}
+
+// 	tx := r.db.Begin()
+
+// 	err := tx.WithContext(ctx).Clauses(clause.Locking{
+// 		Strength: "UPDATE",
+// 		Table: clause.Table{
+// 			Name: clause.CurrentTable,
+// 		}}).Model(&account).Where("id = ?", req.UserID).Update("seller_balance", gorm.Expr("seller_balance + ?", req.Balance)).Error
+
+// 	if err != nil {
+// 		tx.Rollback()
+// 		return dtorepository.WalletResponse{}, err
+// 	}
+
+// 	_, err = r.saleTransactionHistories.CreateWithTx(ctx, tx, model.SaleWalletTransactionHistories{
+// 		AccountID:      req.UserID,
+// 		Amount:         req.Balance,
+// 		Type:           req.TransactionType,
+// 		ProductOrderID: req.ProductOrderID,
+// 		From:           req.WalletNumber,
+// 	})
+
+// 	if err != nil {
+// 		tx.Rollback()
+// 		return dtorepository.WalletResponse{}, err
+// 	}
+
+// 	return dtorepository.WalletResponse{
+// 		UserID:       account.ID,
+// 		WalletNumber: account.WalletNumber,
+// 		Balance:      account.Balance,
+// 	}, nil
+// }
