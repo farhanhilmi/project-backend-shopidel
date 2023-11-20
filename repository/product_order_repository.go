@@ -358,6 +358,7 @@ func (r *productOrdersRepository) FindAllOrderHistoriesBySeller(ctx context.Cont
 		po.sub_district,
 		po.kelurahan,
 		po.address_detail as detail,
+		po.courier_name,
 		po.created_at,
 		po.updated_at,
 		po.deleted_at
