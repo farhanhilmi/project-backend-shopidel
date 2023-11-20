@@ -51,6 +51,12 @@ type RemoveProduct struct {
 	DeletedAt time.Time
 }
 
+type WithdrawBalance struct {
+	OrderID  int             `json:"order_id"`
+	SellerID int             `json:"-"`
+	Balance  decimal.Decimal `json:"balance"`
+}
+
 type GetSellerShowcaseProductResponse struct {
 	SellerProducts []SellerProduct `json:"seller_products"`
 	Limit          int
