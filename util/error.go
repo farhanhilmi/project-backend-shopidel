@@ -75,4 +75,5 @@ var (
 	ErrSamePassword              = &CustomError{Message: "New Password cannot be the same with previous password", Code: BadRequest}
 	ErrNoImage                   = &CustomError{Message: "You should choose at least one product image", Code: BadRequest}
 	ErrIncorrectPassword         = &CustomError{Message: "Invalid Password", Code: Unauthorized}
+	ErrOrderNotInDelivered       = &CustomError{Message: "The order you selected is not or has not been delivered", Code: BadRequest}
 )
