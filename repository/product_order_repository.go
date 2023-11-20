@@ -63,6 +63,8 @@ func (r *productOrdersRepository) FindAllOrderHistoriesBySellerAndStatus(ctx con
 		po.sub_district,
 		po.kelurahan,
 		po.address_detail as detail,
+		po.courier_name,
+		swth.is_withdrawn,
 		po.created_at,
 		po.updated_at,
 		po.deleted_at
@@ -73,6 +75,8 @@ func (r *productOrdersRepository) FindAllOrderHistoriesBySellerAndStatus(ctx con
 				on p.id = pod.product_id 
 			left join accounts a 
 				on a.id = po.account_id 
+			left join sale_wallet_transaction_histories swth 
+				on swth.product_order_id = po.id
 		where p.seller_id = ? and po.status ilike ?
 	`
 	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q, req.AccountID, req.Status))
@@ -359,6 +363,7 @@ func (r *productOrdersRepository) FindAllOrderHistoriesBySeller(ctx context.Cont
 		po.kelurahan,
 		po.address_detail as detail,
 		po.courier_name,
+		swth.is_withdrawn,
 		po.created_at,
 		po.updated_at,
 		po.deleted_at
@@ -369,6 +374,8 @@ func (r *productOrdersRepository) FindAllOrderHistoriesBySeller(ctx context.Cont
 				on p.id = pod.product_id 
 			left join accounts a 
 				on a.id = po.account_id 
+			left join sale_wallet_transaction_histories swth 
+				on swth.product_order_id = po.id
 		where p.seller_id = ?
 	`
 

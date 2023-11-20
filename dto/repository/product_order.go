@@ -175,6 +175,7 @@ type ProductSellerOrderHistoriesResponse struct {
 	Kelurahan            string
 	Detail               string
 	CourierName          string
+	IsWithdrawn          bool
 	CreatedAt            time.Time
 	UpdatedAt            time.Time
 	DeletedAt            time.Time

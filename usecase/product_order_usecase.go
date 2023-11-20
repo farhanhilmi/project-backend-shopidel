@@ -507,7 +507,7 @@ func (u *productOrderUsecase) convertSellerOrderHistoriesReponse(ctx context.Con
 		}
 
 		orderKey := fmt.Sprintf(
-			"%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v",
+			"%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v",
 			o.ID,
 			o.BuyerName,
 			o.Status,
@@ -520,6 +520,7 @@ func (u *productOrderUsecase) convertSellerOrderHistoriesReponse(ctx context.Con
 			o.Detail,
 			o.DeliveryFee,
 			o.CourierName,
+			o.IsWithdrawn,
 		)
 		if _, exists := orderHistories[orderKey]; !exists {
 			orderKeys = append(orderKeys, orderKey)
@@ -554,7 +555,7 @@ func (u *productOrderUsecase) convertSellerOrderHistoriesReponse(ctx context.Con
 		}
 
 		promotions := dtousecase.OrderPromotions{}
-
+		isWithdrawn, _ := strconv.ParseBool(orderKey[12])
 		order := dtousecase.SellerOrdersResponse{
 			OrderID:      orderId,
 			Products:     products,
@@ -565,6 +566,7 @@ func (u *productOrderUsecase) convertSellerOrderHistoriesReponse(ctx context.Con
 			Promotion:    promotions,
 			DeliveryFee:  orderKey[10],
 			CourierName:  orderKey[11],
+			IsWithdrawn:  isWithdrawn,
 			CreateAt:     orderKey[3],
 		}
 
