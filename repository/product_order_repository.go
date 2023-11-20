@@ -737,6 +737,8 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 	orderDetailReq := []model.ProductOrderDetails{}
 	productVariants := []model.ProductCombinationVariant{}
 
+	productVariantCombinationIds := []int{}
+
 	for _, o := range req.ProductVariants {
 		variant := model.ProductCombinationVariant{
 			ID:    o.ProductVariantSelectionCombinationID,
@@ -749,6 +751,7 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 			VariantName:     o.VariantName,
 			ProductID:       o.ProductID,
 		}
+		productVariantCombinationIds = append(productVariantCombinationIds, o.ProductVariantSelectionCombinationID)
 		productVariants = append(productVariants, variant)
 		orderDetailReq = append(orderDetailReq, product)
 	}
@@ -783,6 +786,15 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 	}
 
 	_, err = r.productVariantCombinationRepository.DecreaseStockWithTx(ctx, tx, productVariants)
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	err = tx.WithContext(ctx).
+		Where("product_variant_selection_combination_id IN ?", productVariantCombinationIds).
+		Where("account_id", req.AccountID).
+		Delete(&model.AccountCarts{}).Error
 	if err != nil {
 		tx.Rollback()
 		return res, err
