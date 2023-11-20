@@ -252,7 +252,7 @@ func (h *ProductHandler) GetProductPictures(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-
+	uRes.PicturesUrl = append([]string{"https://www.youtube.com/watch?v=lOi4qgF_4MM"}, uRes.PicturesUrl...)
 	res := dtogeneral.JSONResponse{
 		Data: uRes.PicturesUrl,
 	}
