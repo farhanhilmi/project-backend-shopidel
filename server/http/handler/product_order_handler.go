@@ -87,6 +87,32 @@ func (h *ProductOrderHandler) ProcessedOrderBySeller(c *gin.Context) {
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Successfully processed order", Data: res})
 }
 
+func (h *ProductOrderHandler) CompleteOrderByBuyer(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("orderId"))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	uReq := dtousecase.ProductOrderRequest{
+		ID:        id,
+		AccountID: c.GetInt("userId"),
+	}
+
+	uRes, err := h.productOrderUsecase.CompleteOrderByBuyer(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res := dtohttp.ProductOrderReceiveResponse{
+		ID:     id,
+		Status: uRes.Status,
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
+}
+
 func (h *ProductOrderHandler) CheckoutOrder(c *gin.Context) {
 	var req dtohttp.CheckoutOrderRequest
 

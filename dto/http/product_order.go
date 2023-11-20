@@ -13,6 +13,10 @@ type CanceledOrderRequest struct {
 	Notes     string `json:"notes" binding:"required"`
 }
 
+type CompletedOrderBuyerRequest struct {
+	OrderID int `json:"order_id" binding:"required"`
+}
+
 type ProductOrderResponse struct {
 	ID            int             `json:"id,omitempty"`
 	CourierID     int             `json:"courier_id,omitempty"`

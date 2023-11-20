@@ -14,6 +14,7 @@ func NewProductOrderRouter(h *handler.ProductOrderHandler, gin *gin.Engine) *gin
 	order.GET("/couriers/:sellerId", h.GetCouriers)
 	order.GET("/histories", h.GetOrderHistories)
 	order.GET("/:orderId", h.GetOrderDetail)
+	order.PUT("/:orderId/complete-order", h.CompleteOrderByBuyer)
 	order.POST("/:productOrderDetailID/add-review", h.AddProductReview)
 
 	return gin

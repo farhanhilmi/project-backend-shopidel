@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/constant"
+	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/repository"
@@ -24,6 +25,7 @@ type SellerUsecase interface {
 	AddNewProduct(ctx context.Context, req dtousecase.AddNewProductRequest) (dtousecase.AddNewProductResponse, error)
 	UploadPhoto(ctx context.Context, req dtousecase.UploadNewPhoto) (dtousecase.UploadNewPhoto, error)
 	DeleteProduct(ctx context.Context, req dtousecase.RemoveProduct) (dtousecase.RemoveProduct, error)
+	GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error)
 }
 
 type sellerUsecase struct {
@@ -310,4 +312,36 @@ func (u *sellerUsecase) DeleteProduct(ctx context.Context, req dtousecase.Remove
 	res.Name = product.Name
 
 	return res, nil
+}
+
+func (u *sellerUsecase) GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error) {
+	uReq := dtorepository.ProductListParam{
+		CategoryId: req.CategoryId,
+		SellerID:   req.SellerID,
+		SortBy:     req.SortBy,
+		Search:     req.Search,
+		Sort:       req.Sort,
+		MinRating:  req.MinRating,
+		MinPrice:   req.MinPrice,
+		MaxPrice:   req.MaxPrice,
+		District:   req.District,
+		Limit:      req.Limit,
+		Page:       req.Page,
+		StartDate:  req.StartDate,
+		EndDate:    req.EndDate,
+	}
+
+	listProduct, totalItems, err := u.productRepository.FindSellerProducts(ctx, uReq)
+	if err != nil {
+		return &listProduct, nil, err
+	}
+
+	pagination := dtogeneral.PaginationData{
+		TotalItem:   int(totalItems),
+		TotalPage:   (int(totalItems) + req.Limit - 1) / req.Limit,
+		CurrentPage: req.Page,
+		Limit:       req.Limit,
+	}
+
+	return &listProduct, &pagination, nil
 }

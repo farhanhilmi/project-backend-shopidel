@@ -13,6 +13,7 @@ func NewSellerProductRouter(h *handler.SellerHandler, gin *gin.Engine) *gin.Engi
 	group.POST("", h.AddNewProduct)
 	group.POST("/upload", h.UploadPhoto)
 	group.DELETE("/:productId", h.DeleteProduct)
+	group.GET("", h.ListProduct)
 
 	return gin
 }
