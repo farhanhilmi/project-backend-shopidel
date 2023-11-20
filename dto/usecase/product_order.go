@@ -121,7 +121,7 @@ type OrdersResponse struct {
 
 type SellerOrdersResponse struct {
 	OrderID      int             `json:"order_id"`
-	BuyerName    string          `json:"buter_name"`
+	BuyerName    string          `json:"buyer_name"`
 	Status       string          `json:"status"`
 	Products     []OrderProduct  `json:"products"`
 	TotalPayment decimal.Decimal `json:"total_payment"`
