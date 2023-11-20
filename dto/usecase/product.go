@@ -141,6 +141,7 @@ type ProductListResponse struct {
 type ProductListParam struct {
 	AccountID  int
 	CategoryId string
+	SellerID   int
 	SortBy     string
 	Search     string
 	Sort       string

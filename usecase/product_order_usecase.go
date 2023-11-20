@@ -29,6 +29,7 @@ type ProductOrderUsecase interface {
 	GetSellerOrderHistories(ctx context.Context, req dtousecase.ProductSellerOrderHistoryRequest) ([]dtousecase.SellerOrdersResponse, dtogeneral.PaginationData, error)
 	AddProductReview(ctx context.Context, req dtousecase.AddProductReview) (*dtousecase.AddProductReviewResponse, error)
 	GetOrderDetail(ctx context.Context, req dtousecase.OrderDetailRequest) (*dtousecase.OrderDetailResponse, error)
+	CompleteOrderByBuyer(ctx context.Context, req dtousecase.ProductOrderRequest) (*dtousecase.ProductOrderResponse, error)
 }
 
 type productOrderUsecase struct {
@@ -741,4 +742,35 @@ func (u *productOrderUsecase) GetOrderDetail(ctx context.Context, req dtousecase
 	}
 
 	return &orderDetail, nil
+}
+
+func (u *productOrderUsecase) CompleteOrderByBuyer(ctx context.Context, req dtousecase.ProductOrderRequest) (*dtousecase.ProductOrderResponse, error) {
+	order, err := u.productOrderRepository.FindByIDAndAccountID(ctx, dtorepository.ProductOrderRequest{
+		ID:        req.ID,
+		AccountID: req.AccountID,
+	})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if order.Status != constant.StatusOrderDelivered {
+		return nil, util.ErrOrderNotInDelivered
+	}
+
+	data, err := u.productOrderRepository.ProcessedOrder(ctx, dtorepository.ProductOrderRequest{
+		ID:     req.ID,
+		Status: constant.StatusOrderCompleted,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &dtousecase.ProductOrderResponse{
+		ID:     data.ID,
+		Status: data.Status,
+	}, nil
 }
