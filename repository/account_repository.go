@@ -56,6 +56,7 @@ type AccountRepository interface {
 	UpdatePassword(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
 	UpdatePassord(ctx context.Context, req dtorepository.ChangePasswordRequest) error
 	FindCategories(ctx context.Context) ([]dtorepository.Category, error)
+	FindCategoryByID(ctx context.Context, categoryID int) (dtorepository.Category, error)
 }
 
 type accountRepository struct {
@@ -1365,6 +1366,35 @@ func (r *accountRepository) FindCategories(ctx context.Context) ([]dtorepository
 	`
 
 	if err := r.db.WithContext(ctx).Raw(q).Scan(&res).Error; err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (r *accountRepository) FindCategoryByID(ctx context.Context, categoryID int) (dtorepository.Category, error) {
+	res := dtorepository.Category{}
+
+	q := `
+	select 
+		c.id as "CategoryLevel1Id",
+		c."name" as "CategoryLevel1Name",
+		c2.id as "CategoryLevel2Id",
+		c2."name" as "CategoryLevel2Name",
+		c3.id as "CategoryLevel3Id",
+		c3."name" as "CategoryLevel3Name"
+	from categories c
+	left join categories c2 
+		on c2.parent = c.id 
+		and c2."level" = 2
+	left join categories c3 
+		on c3.parent = c2.id 
+		and c3."level" = 3
+	where c2.id = $1 or c3.id = $1
+	order by c.id asc, c2.id asc, c3.id asc
+	`
+
+	if err := r.db.WithContext(ctx).Raw(q, categoryID).Scan(&res).Error; err != nil {
 		return res, err
 	}
 

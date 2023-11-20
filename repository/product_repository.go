@@ -41,6 +41,7 @@ type ProductRepository interface {
 	RemoveProductByID(ctx context.Context, req dtorepository.RemoveProduct) (dtorepository.RemoveProduct, error)
 	FindByIDAndSeller(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error)
 	FindSellerProducts(ctx context.Context, req dtorepository.ProductListParam) ([]dtorepository.ProductListResponse, int64, error)
+	FindProductImages(ctx context.Context, req dtorepository.ProductRequest) ([]dtorepository.ProductImages, error)
 }
 
 func NewProductRepository(db *gorm.DB) ProductRepository {
@@ -547,6 +548,18 @@ func (r *productRepository) FindByIDAndSeller(ctx context.Context, req dtoreposi
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound
 	}
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (r *productRepository) FindProductImages(ctx context.Context, req dtorepository.ProductRequest) ([]dtorepository.ProductImages, error) {
+	res := []dtorepository.ProductImages{}
+
+	err := r.db.WithContext(ctx).Model(&model.ProductImages{}).Where("product_id = ?", req.ProductID).Scan(&res).Error
+
 	if err != nil {
 		return res, err
 	}

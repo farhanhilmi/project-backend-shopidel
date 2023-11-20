@@ -266,3 +266,25 @@ func (h *SellerHandler) ListProduct(c *gin.Context) {
 
 	c.JSON(http.StatusOK, dtogeneral.JSONPagination{Data: uRes, Pagination: *pagination})
 }
+
+func (h *SellerHandler) GetProductByID(c *gin.Context) {
+	id := c.Param("productId")
+	productId, err := strconv.Atoi(id)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	uReq := dtousecase.GetProductDetailRequest{
+		ProductId: productId,
+		AccountId: c.GetInt("userId"),
+	}
+
+	uRes, err := h.sellerUsecase.GetProductByID(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes})
+}

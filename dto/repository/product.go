@@ -19,11 +19,23 @@ type ProductRequestV2 struct {
 }
 
 type ProductResponse struct {
-	ID          int
-	Name        string
-	Description string
-	IsFavorite  bool
-	SellerId    int
+	ID                int
+	Name              string
+	Description       string
+	IsFavorite        bool
+	SellerId          int
+	CategoryID        int
+	HazardousMaterial *bool
+	IsNew             *bool
+	InternalSKU       string
+	Weight            decimal.Decimal
+	Size              decimal.Decimal
+	IsActive          *bool
+	VideoURL          string
+}
+
+type ProductImages struct {
+	URL string
 }
 
 type ProductLowestHighestPriceRequest struct {

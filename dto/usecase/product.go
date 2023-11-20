@@ -58,6 +58,40 @@ type GetProductDetailResponse struct {
 	ProductReviews []ProductReview  `json:"product_review"`
 }
 
+type GetProductSellerResponse struct {
+	Id                int              `json:"id"`
+	ProductName       string           `json:"product_name" binding:"required"`
+	Description       string           `json:"description"`
+	HazardousMaterial *bool            `json:"hazardous_material" binding:"required"`
+	IsNew             *bool            `json:"is_new" binding:"required"`
+	InternalSKU       string           `json:"internal_sku"`
+	Weight            decimal.Decimal  `json:"weight" binding:"required"`
+	Size              decimal.Decimal  `json:"size" binding:"required"`
+	IsActive          *bool            `json:"is_active" binding:"required"`
+	VideoURL          string           `json:"video_url"`
+	Category          ProductCategory  `json:"category"`
+	Images            []string         `json:"images"`
+	VariantOptions    []VariantOption  `json:"variant_options,omitempty"`
+	Variants          []ProductVariant `json:"variants"`
+}
+
+type ProductCategory struct {
+	Id       int                      `json:"id"`
+	Name     string                   `json:"name"`
+	Children ProductCategoryChildren2 `json:"children,omitempty"`
+}
+
+type ProductCategoryChildren2 struct {
+	Id       int                      `json:"id"`
+	Name     string                   `json:"name"`
+	Children ProductCategoryChildren3 `json:"children,omitempty"`
+}
+
+type ProductCategoryChildren3 struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
+}
+
 type ProductReview struct {
 	Id                 int             `json:"id"`
 	CustomerName       string          `json:"customer_name"`
