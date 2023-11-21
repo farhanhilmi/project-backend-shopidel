@@ -358,3 +358,16 @@ type ProductVariants struct {
 	ProductID int
 	Name      string
 }
+
+type GetFavoriteProductListResponse struct {
+	ID              int             `json:"id"`
+	ProductID       int             `json:"product_id"`
+	Name            string          `json:"name"`
+	District        string          `json:"district"`
+	TotalSold       int             `json:"total_sold"`
+	Price           decimal.Decimal `json:"price"`
+	PictureURL      string          `json:"picture_url"`
+	CreatedAt       time.Time       `json:"created_at"`
+	ProductNameSlug string          `json:"product_name_slug"`
+	ShopNameSlug    string          `json:"shop_name_slug"`
+}
