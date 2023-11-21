@@ -1,7 +1,7 @@
 package util
 
 import (
-	"crypto/rand"
+	"math/rand"
 	"encoding/base64"
 	"fmt"
 
@@ -84,4 +84,16 @@ func GenerateRandomToken() (string, error) {
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(bytes), nil
+}
+
+func GenerateRandomOTP() (string, error) {
+	baseOTP := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789"
+	OTPLength := 6
+	OTP := make([]byte, OTPLength)
+
+	for index := range OTP {
+		OTP[index] = baseOTP[rand.Intn(len(baseOTP))]
+	}
+	
+	return string(OTP), nil
 }

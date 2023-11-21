@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -46,6 +47,7 @@ type AccountUsecase interface {
 	RequestForgetChangePassword(ctx context.Context, req dtousecase.ForgetChangePasswordRequest) (*dtousecase.ForgetPasswordRequest, error)
 	ChangePassword(ctx context.Context, req dtousecase.ChangePasswordRequest) error
 	GetCategories(ctx context.Context) (dtousecase.GetCategoriesResponse, error)
+	RequestOTP(ctx context.Context, req dtousecase.ChangePasswordRequest) (*model.Accounts, error)
 }
 
 type accountUsecase struct {
@@ -107,6 +109,51 @@ func (u *accountUsecase) RegisterSeller(ctx context.Context, req dtousecase.Regi
 	return &res, nil
 }
 
+func (u *accountUsecase) RequestOTP(ctx context.Context, req dtousecase.ChangePasswordRequest) (*model.Accounts, error) {
+	res := model.Accounts{}
+
+	token, err := util.GenerateRandomOTP()
+	if err != nil {
+		return nil, err
+	}
+
+	expirationTime := time.Now().Add(5 * time.Minute)
+
+	account, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{UserId: req.AccountID})
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return nil, util.EmailNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	data := dtousecase.SendEmailPayload{
+		RecipientName:  account.FullName,
+		RecipientEmail: account.Email,
+		Token:          token,
+		ExpiresAt:      expirationTime,
+	}
+	fmt.Println(data, "DATA")
+
+	err = util.SendMailOTP(data)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = u.accountRepository.SaveChangePasswordToken(ctx, dtorepository.RequestChangePasswordRequest{
+		UserId:                  account.ID,
+		Email:                   account.Email,
+		ChangePasswordToken:     token,
+		ChangePasswordExpiredAt: expirationTime,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res.Email = account.Email
+
+	return &res, nil
+}
+
 func (u *accountUsecase) ChangePassword(ctx context.Context, req dtousecase.ChangePasswordRequest) error {
 	account, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{
 		UserId: req.AccountID,
@@ -139,7 +186,7 @@ func (u *accountUsecase) ChangePassword(ctx context.Context, req dtousecase.Chan
 		AccountID:   req.AccountID,
 		NewPassword: password,
 	}
-	err = u.accountRepository.UpdatePassord(ctx, rReq)
+	_, err = u.accountRepository.ChangePasswordUpdate(ctx, rReq)
 	if err != nil {
 		return err
 	}
