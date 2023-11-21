@@ -25,7 +25,7 @@ type SellerUsecase interface {
 	AddNewProduct(ctx context.Context, req dtousecase.AddNewProductRequest) (dtousecase.AddNewProductResponse, error)
 	UploadPhoto(ctx context.Context, req dtousecase.UploadNewPhoto) (dtousecase.UploadNewPhoto, error)
 	DeleteProduct(ctx context.Context, req dtousecase.RemoveProduct) (dtousecase.RemoveProduct, error)
-	GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error)
+	GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListSellerResponse, *dtogeneral.PaginationData, error)
 	GetProductByID(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductSellerResponse, error)
 }
 
@@ -315,7 +315,7 @@ func (u *sellerUsecase) DeleteProduct(ctx context.Context, req dtousecase.Remove
 	return res, nil
 }
 
-func (u *sellerUsecase) GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error) {
+func (u *sellerUsecase) GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListSellerResponse, *dtogeneral.PaginationData, error) {
 	uReq := dtorepository.ProductListParam{
 		CategoryId: req.CategoryId,
 		SellerID:   req.SellerID,
@@ -427,22 +427,23 @@ func (u *sellerUsecase) GetProductByID(ctx context.Context, req dtousecase.GetPr
 	return res, nil
 }
 
-func (u *sellerUsecase) convertProductVariants(ctx context.Context, productName string, req dtorepository.FindProductVariantResponse) ([]dtousecase.ProductVariant, error) {
-	res := []dtousecase.ProductVariant{}
+func (u *sellerUsecase) convertProductVariants(ctx context.Context, productName string, req dtorepository.FindProductVariantResponse) ([]dtousecase.ProductVariantSeller, error) {
+	res := []dtousecase.ProductVariantSeller{}
 
 	for _, data := range req.Variants {
-		pv := dtousecase.ProductVariant{}
+		pv := dtousecase.ProductVariantSeller{}
 		pv.VariantId = data.VariantId
 		pv.Price = data.Price
 		pv.Stock = data.Stock
+		pv.ImageURL = data.ImageURL
 
 		if data.SelectionName1 == "default_reserved_keyword" {
-			pv.VariantName = productName
+			// pv.VariantName = productName
 		} else {
-			pv.VariantName = productName + " - " + data.SelectionName1
+			// pv.VariantName = productName + " - " + data.SelectionName1
 
 			if data.SelectionId2 != 0 {
-				pv.VariantName = pv.VariantName + ", " + data.SelectionName2
+				// pv.VariantName = pv.VariantName + ", " + data.SelectionName2
 			}
 
 			pv.Selections = append(pv.Selections, dtousecase.ProductSelection{SelectionName: data.SelectionName1, SelectionVariantName: data.VariantName1})

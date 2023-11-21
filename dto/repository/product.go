@@ -92,6 +92,7 @@ type ProductVariant struct {
 	SelectionName2 string
 	VariantName1   string
 	VariantName2   string
+	ImageURL       string
 	Price          decimal.Decimal
 	Stock          int
 }
@@ -174,6 +175,15 @@ type ProductListResponse struct {
 	CreatedAt       time.Time       `json:"created_at"`
 	UpdatedAt       time.Time       `json:"updated_at"`
 	DeletedAt       time.Time       `json:"deleted_at"`
+}
+
+type ProductListSellerResponse struct {
+	ID         int       `json:"id"`
+	Name       string    `json:"name"`
+	CategoryId int       `json:"category_id"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+	DeletedAt  time.Time `json:"deleted_at"`
 }
 
 type ProductListParam struct {
