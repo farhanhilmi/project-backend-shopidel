@@ -106,6 +106,7 @@ type ProductReview struct {
 type VariantOption struct {
 	VariantOptionName string   `json:"variant_option_name"`
 	Childs            []string `json:"childs"`
+	Pictures          []string `json:"pictures,omitempty"`
 }
 
 type ProductVariant struct {
@@ -256,12 +257,12 @@ type OrderProduct struct {
 }
 
 type SellerOrderProduct struct {
-	ProductID            int                `json:"product_id"`
-	ProductOrderDetailID int                `json:"product_order_detail_id"`
-	ProductName          string             `json:"product_name"`
-	VariantName          string             `json:"variant_name"`
-	Quantity             int                `json:"quantity"`
-	IndividualPrice      decimal.Decimal    `json:"individual_price"`
+	ProductID            int             `json:"product_id"`
+	ProductOrderDetailID int             `json:"product_order_detail_id"`
+	ProductName          string          `json:"product_name"`
+	VariantName          string          `json:"variant_name"`
+	Quantity             int             `json:"quantity"`
+	IndividualPrice      decimal.Decimal `json:"individual_price"`
 }
 
 type GetProductReviewsRequest struct {

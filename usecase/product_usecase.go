@@ -297,6 +297,8 @@ func (u *productUsecase) convertProductVariants(ctx context.Context, productName
 func (u *productUsecase) convertVariantOptions(ctx context.Context, req dtorepository.FindProductVariantResponse) ([]dtousecase.VariantOption, error) {
 	res := []dtousecase.VariantOption{}
 	m := map[string]map[string]string{}
+	m2 := map[string]map[string]string{}
+	p := map[string]string{}
 
 	for _, data := range req.Variants {
 		if data.SelectionName1 != "default_reserved_keyword" {
@@ -311,12 +313,12 @@ func (u *productUsecase) convertVariantOptions(ctx context.Context, req dtorepos
 			}
 
 			if data.SelectionId2 != 0 {
-				if m[data.VariantName2] != nil {
-					if m[data.VariantName2][data.SelectionName2] == "" {
-						m[data.VariantName2][data.SelectionName2] = data.SelectionName2
+				if m2[data.VariantName2] != nil {
+					if m2[data.VariantName2][data.SelectionName2] == "" {
+						m2[data.VariantName2][data.SelectionName2] = data.SelectionName2
 					}
 				} else {
-					m[data.VariantName2] = map[string]string{
+					m2[data.VariantName2] = map[string]string{
 						data.SelectionName2: data.SelectionName2,
 					}
 				}
@@ -324,7 +326,31 @@ func (u *productUsecase) convertVariantOptions(ctx context.Context, req dtorepos
 		}
 	}
 
+	for _, data := range req.Variants {
+		if p[data.SelectionName1] == "" {
+			p[data.SelectionName1] = data.ImageURL
+		}
+	}
+
 	for key, value := range m {
+		vos := []string{}
+		variantsPicture := []string{}
+
+		for key2 := range value {
+			vos = append(vos, key2)
+			if p[key2] != "" {
+				variantsPicture = append(variantsPicture, p[key2])
+			}
+		}
+
+		res = append(res, dtousecase.VariantOption{
+			VariantOptionName: key,
+			Childs:            vos,
+			Pictures:          variantsPicture,
+		})
+	}
+
+	for key, value := range m2 {
 		vos := []string{}
 
 		for key2 := range value {
