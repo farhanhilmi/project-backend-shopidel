@@ -688,6 +688,7 @@ func (r *productRepository) FindProductVariant(ctx context.Context, req dtorepos
 			pvsc.product_variant_selection_id1 as "SelectionId1",
 			pvs."name" as "SelectionName1",
 			pv."name" as "VariantName1",
+			pvsc.picture_url as "PictureUrl",
 			pvsc.product_variant_selection_id2 as "SelectionId2",
 			pvs2."name" as "SelectionName2",
 			pv2."name" as "VariantName2",
