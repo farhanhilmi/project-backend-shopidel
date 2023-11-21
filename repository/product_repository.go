@@ -40,7 +40,8 @@ type ProductRepository interface {
 	FindProductReviewPictures(ctx context.Context, reviewId int) ([]dtousecase.ReviewImage, error)
 	RemoveProductByID(ctx context.Context, req dtorepository.RemoveProduct) (dtorepository.RemoveProduct, error)
 	FindByIDAndSeller(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error)
-	FindSellerProducts(ctx context.Context, req dtorepository.ProductListParam) ([]dtorepository.ProductListResponse, int64, error)
+	FindSellerProducts(ctx context.Context, req dtorepository.ProductListParam) ([]dtorepository.ProductListSellerResponse, int64, error)
+	FindProductImages(ctx context.Context, req dtorepository.ProductRequest) ([]dtorepository.ProductImages, error)
 }
 
 func NewProductRepository(db *gorm.DB) ProductRepository {
@@ -293,8 +294,8 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 	return res, totalItems, nil
 }
 
-func (r *productRepository) FindSellerProducts(ctx context.Context, req dtorepository.ProductListParam) ([]dtorepository.ProductListResponse, int64, error) {
-	res := []dtorepository.ProductListResponse{}
+func (r *productRepository) FindSellerProducts(ctx context.Context, req dtorepository.ProductListParam) ([]dtorepository.ProductListSellerResponse, int64, error) {
+	res := []dtorepository.ProductListSellerResponse{}
 	var totalItems int64
 
 	q := `
@@ -303,172 +304,15 @@ func (r *productRepository) FindSellerProducts(ctx context.Context, req dtorepos
 			p.name,
 			p.seller_id,
 			p.description,
-			aa.district,
-			0 as total_sold, 
-			product_price.lowest_price as "price", 
-			round( CAST(float8 (random() * 5) as numeric), 1) as rating,
-			product_image.picture_url, 
-			case
-				when 0 in ($1) then
-					case 
-						when category_level_2.level_2_id is not null then category_level_2.level_2_id
-						when category_level_3.level_2_id is not null then category_level_3.level_2_id
-					end
-				else 
-					case 
-						when category_level_1.level_1_id is not null then category_level_1.level_1_id
-						when category_level_2.level_2_id is not null then category_level_2.level_2_id
-						when category_level_3.level_3_id is not null then category_level_3.level_3_id
-					end
-			end as "category_id",
-			case
-				when 0 in ($1) then
-					case
-						when category_level_2.level_2_name is not null then category_level_2.level_2_name
-						when category_level_3.level_2_name is not null then category_level_3.level_2_name
-					end
-				else
-					case
-						when category_level_1.level_1_name is not null then category_level_1.level_1_name
-						when category_level_2.level_2_name is not null then category_level_2.level_2_name
-						when category_level_3.level_3_name is not null then category_level_3.level_3_name
-					end
-			end as "category_name",
+			p.category_id,
 			p.created_at,
 			p.updated_at,
-			p.deleted_at,
-			seller.shop_name,
-			TRIM(BOTH '-' FROM 
-				REGEXP_REPLACE(
-					REGEXP_REPLACE(
-						LOWER(p."name"), 
-						'[^a-z0-9]+', '-', 'g'
-					), 
-					'-+', '-', 'g'
-				)
-			) AS "ProductNameSlug",
-			TRIM(BOTH '-' FROM 
-				REGEXP_REPLACE(
-					REGEXP_REPLACE(
-						LOWER(seller.shop_name), 
-						'[^a-z0-9]+', '-', 'g'
-					), 
-					'-+', '-', 'g'
-				)
-			) AS "ShopNameSlug"
+			p.deleted_at
 		from products p
-			inner join lateral (
-					select	
-						pi2.product_id,
-						pi2.url as picture_url
-					from product_images pi2 
-					where pi2.product_id = p.id 
-					order by pi2.id asc
-					limit 1
-				) product_image on product_image.product_id = p.id 
-			inner join lateral (
-					select
-						pvsc2.product_id,
-						min(pvsc2.price) as lowest_price
-					from product_variant_selection_combinations pvsc2
-					where pvsc2.product_id = p.id
-					group by pvsc2.product_id 
-				) product_price on product_price.product_id = p.id
-			left join account_addresses aa 
-				on aa.account_id = p.seller_id
-				and aa.is_seller_default is true
-			left join accounts as seller
-				on seller.id = p.seller_id
-			left join (
-				select
-					c.id as level_1_id,
-					c."name" as level_1_name
-				from categories c
-				where c."level" = 1
-			) as category_level_1 on category_level_1.level_1_id = p.category_id 
-			left join (
-				select
-					c.id as level_2_id,
-					c."name" level_2_name,
-					c2.id as level_1_id,
-					c2."name" as level_1_name
-				from categories c
-				inner join categories c2 
-					on c2.id = c.parent 
-				where c."level" = 2
-			) as category_level_2 on category_level_2.level_2_id = p.category_id 
-			left join (
-				select
-					c.id as level_3_id,
-					c."name" level_3_name,
-					c2.id as level_2_id,
-					c2."name" level_2_name,
-					c3.id as level_1_id,
-					c3."name" as level_1_name
-				from categories c
-				inner join categories c2 
-					on c2.id = c.parent 
-				inner join categories c3
-					on c3.id = c2.parent 
-				where c."level" = 3
-			) as category_level_3 on category_level_3.level_3_id = p.category_id
-			left join (
-				select 
-					distinct(a.id) as id
-				from (
-					(
-						select
-							level_3.id 
-						from categories level_3
-						left join categories level_2
-							on level_2.id = level_3.parent 
-							and level_2."level" = 2
-						left join categories level_1
-							on level_1.id = level_2.parent 
-							and level_1."level" = 1
-						where level_3."level" = 3
-							and (
-								level_3.id in ($1)
-								or level_2.id in ($1)
-								or level_1.id in ($1)
-							)
-					) union all (
-						select
-							level_2.id 
-						from categories level_2
-						left join categories level_1
-							on level_1.id = level_2.parent
-							and level_1."level" = 1
-						where level_2."level" = 2
-							and (
-								level_2.id in ($1)
-								or level_1.id in ($1)
-							) 
-					) union all (
-						select
-							level_1.id 
-						from categories level_1
-						where level_1."level" = 1
-							and level_1.id in ($1)
-					)
-				) a
-			) as child on child.id = p.category_id 
-			where 
-				(
-					0 in ($1)
-					or child.id is not null
-				)
-				and p.seller_id = $2
+			where p.seller_id = $1
 	`
 
-	categoriesId := []string{"0"}
-	if req.CategoryId != "" && !strings.Contains(req.CategoryId, "#") {
-		categoriesId = []string{req.CategoryId}
-	} else if req.CategoryId != "" && strings.Contains(req.CategoryId, "#") {
-		categoriesId = strings.Split(req.CategoryId, "#")
-	}
-
-	query := r.db.WithContext(ctx).Table("(?) as t", r.db.Raw(q, categoriesId, req.SellerID))
+	query := r.db.WithContext(ctx).Table("(?) as t", r.db.Raw(q, req.SellerID))
 	if req.StartDate != "" {
 		query = query.Where("created_at >= ?", req.StartDate)
 	}
@@ -477,26 +321,6 @@ func (r *productRepository) FindSellerProducts(ctx context.Context, req dtorepos
 		req.EndDate += " 23:59:59"
 		query = query.Where("created_at <= ?", req.EndDate)
 	}
-
-	if req.MinRating > 0 && req.MinRating <= 5 {
-		query = query.Where("rating >= ?", req.MinRating)
-	}
-
-	if req.MinPrice > 0 {
-		query = query.Where("price >= ?", req.MinPrice)
-	}
-
-	if req.MaxPrice > 0 {
-		query = query.Where("price <= ?", req.MaxPrice)
-	}
-
-	if req.District != "" && !strings.Contains(req.District, "#") {
-		query = query.Where("district ilike ?", req.District)
-	} else if req.District != "" && strings.Contains(req.District, "#") {
-		districts := strings.Split(req.District, "#")
-		query = query.Where("district IN ?", districts)
-	}
-
 	if req.Search != "" {
 		find := "%" + req.Search + "%"
 		query = query.
@@ -564,6 +388,18 @@ func (r *productRepository) FindByIDAndSeller(ctx context.Context, req dtoreposi
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound
 	}
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (r *productRepository) FindProductImages(ctx context.Context, req dtorepository.ProductRequest) ([]dtorepository.ProductImages, error) {
+	res := []dtorepository.ProductImages{}
+
+	err := r.db.WithContext(ctx).Model(&model.ProductImages{}).Where("product_id = ?", req.ProductID).Scan(&res).Error
+
 	if err != nil {
 		return res, err
 	}
@@ -688,12 +524,12 @@ func (r *productRepository) FindProductVariant(ctx context.Context, req dtorepos
 			pvsc.product_variant_selection_id1 as "SelectionId1",
 			pvs."name" as "SelectionName1",
 			pv."name" as "VariantName1",
-			pvsc.picture_url as "PictureUrl",
 			pvsc.product_variant_selection_id2 as "SelectionId2",
 			pvs2."name" as "SelectionName2",
 			pv2."name" as "VariantName2",
 			pvsc.price, 
-			pvsc.stock
+			pvsc.stock,
+			pvsc.picture_url as image_url
 		from product_variant_selection_combinations pvsc
 		left join product_variant_selections pvs
 			on pvs.id = pvsc.product_variant_selection_id1

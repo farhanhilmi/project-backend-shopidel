@@ -19,11 +19,23 @@ type ProductRequestV2 struct {
 }
 
 type ProductResponse struct {
-	ID          int
-	Name        string
-	Description string
-	IsFavorite  bool
-	SellerId    int
+	ID                int
+	Name              string
+	Description       string
+	IsFavorite        bool
+	SellerId          int
+	CategoryID        int
+	HazardousMaterial *bool
+	IsNew             *bool
+	InternalSKU       string
+	Weight            decimal.Decimal
+	Size              decimal.Decimal
+	IsActive          *bool
+	VideoURL          string
+}
+
+type ProductImages struct {
+	URL string
 }
 
 type ProductLowestHighestPriceRequest struct {
@@ -80,7 +92,7 @@ type ProductVariant struct {
 	SelectionName2 string
 	VariantName1   string
 	VariantName2   string
-	PictureUrl     string
+	ImageURL       string
 	Price          decimal.Decimal
 	Stock          int
 }
@@ -163,6 +175,15 @@ type ProductListResponse struct {
 	CreatedAt       time.Time       `json:"created_at"`
 	UpdatedAt       time.Time       `json:"updated_at"`
 	DeletedAt       time.Time       `json:"deleted_at"`
+}
+
+type ProductListSellerResponse struct {
+	ID         int       `json:"id"`
+	Name       string    `json:"name"`
+	CategoryId int       `json:"category_id"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+	DeletedAt  time.Time `json:"deleted_at"`
 }
 
 type ProductListParam struct {

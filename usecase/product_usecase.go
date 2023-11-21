@@ -328,7 +328,7 @@ func (u *productUsecase) convertVariantOptions(ctx context.Context, req dtorepos
 
 	for _, data := range req.Variants {
 		if p[data.SelectionName1] == "" {
-			p[data.SelectionName1] = data.PictureUrl
+			p[data.SelectionName1] = data.ImageURL
 		}
 	}
 
