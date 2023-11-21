@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path"
 	"time"
@@ -272,6 +273,104 @@ func (u *sellerUsecase) AddNewProduct(ctx context.Context, req dtousecase.AddNew
 	return res, nil
 }
 
+func (u *sellerUsecase) UpdateProduct(ctx context.Context, req dtousecase.AddNewProductRequest) (dtousecase.AddNewProductResponse, error) {
+	res := dtousecase.AddNewProductResponse{}
+
+	productVariants := []dtousecase.ProductVariants{}
+
+	if len(req.Variants) == 1 {
+		switch {
+		case req.Variants[0].Variant1.Name == "":
+			productVariants = []dtousecase.ProductVariants{
+				{
+					Name: constant.DefaultReservedKeyword,
+				},
+			}
+			req.Variants[0].Variant1.Name = constant.DefaultReservedKeyword
+			req.Variants[0].Variant1.Value = constant.DefaultReservedKeyword
+		case req.Variants[0].Variant2.Name == "":
+			productVariants = []dtousecase.ProductVariants{
+				{
+					Name: req.Variants[0].Variant1.Name,
+				},
+			}
+		default:
+			productVariants = []dtousecase.ProductVariants{
+				{
+					Name: req.Variants[0].Variant1.Name,
+				},
+				{
+					Name: req.Variants[0].Variant2.Name,
+				},
+			}
+		}
+	}
+
+	if len(req.Variants) > 1 {
+		if req.Variants[0].Variant2.Name == "" {
+			productVariants = []dtousecase.ProductVariants{
+				{
+					Name: req.Variants[0].Variant1.Name,
+				},
+			}
+		} else {
+			productVariants = []dtousecase.ProductVariants{
+				{
+					Name: req.Variants[0].Variant1.Name,
+				},
+				{
+					Name: req.Variants[0].Variant2.Name,
+				},
+			}
+		}
+	}
+
+	imageLinks := []string{}
+
+	for _, img := range req.Images {
+		currentTime := time.Now().UnixNano()
+		fileExtension := path.Ext(img.Filename)
+		originalFilename := img.Filename[:len(img.Filename)-len(fileExtension)]
+		newFilename := fmt.Sprintf("%s_%d", originalFilename, currentTime)
+
+		file, err := img.Open()
+		if err != nil {
+			return res, err
+		}
+
+		imageUrl, err := util.UploadToCloudinary(file, newFilename)
+		if err != nil {
+			return res, err
+		}
+
+		imageLinks = append(imageLinks, imageUrl)
+	}
+
+	product, err := u.productRepository.AddNewProduct(ctx, dtorepository.AddNewProductRequest{
+		SellerID:          req.SellerID,
+		ProductName:       req.ProductName,
+		Description:       req.Description,
+		CategoryID:        req.CategoryID,
+		HazardousMaterial: req.HazardousMaterial,
+		IsNew:             req.IsNew,
+		InternalSKU:       req.InternalSKU,
+		Weight:            req.Weight,
+		IsActive:          req.IsActive,
+		Size:              req.Size,
+		Variants:          req.Variants,
+		ProductVariants:   productVariants,
+		Images:            imageLinks,
+		VideoURL:          req.VideoURL,
+	})
+	if err != nil {
+		return res, err
+	}
+
+	res.ProductName = product.Name
+
+	return res, nil
+}
+
 func (u *sellerUsecase) UploadPhoto(ctx context.Context, req dtousecase.UploadNewPhoto) (dtousecase.UploadNewPhoto, error) {
 	res := dtousecase.UploadNewPhoto{}
 
@@ -439,14 +538,24 @@ func (u *sellerUsecase) convertProductVariants(ctx context.Context, productName 
 
 	for _, data := range req.Variants {
 		pv := dtousecase.ProductVariantSeller{}
-		pv.VariantId = data.VariantId
 		pv.Price = data.Price
 		pv.Stock = data.Stock
 		pv.ImageURL = data.ImageURL
 
-		pv.Selections = append(pv.Selections, dtousecase.ProductSelection{SelectionName: data.SelectionName1, SelectionVariantName: data.VariantName1})
-		if data.SelectionId2 != 0 {
-			pv.Selections = append(pv.Selections, dtousecase.ProductSelection{SelectionName: data.SelectionName2, SelectionVariantName: data.VariantName2})
+		if data.SelectionName1 == constant.DefaultReservedKeyword {
+			pv.Variant1.Name = ""
+			pv.Variant1.Value = ""
+			log.Println("ADWDED")
+		} else {
+			pv.Variant1.Name = data.SelectionName1
+			pv.Variant1.Value = data.VariantName1
+
+			if data.SelectionName2 != "" {
+				variant2 := &dtousecase.ProductSelectionSeller{}
+				variant2.Name = data.SelectionName2
+				variant2.Value = data.VariantName2
+				pv.Variant2 = variant2
+			}
 		}
 
 		res = append(res, pv)
@@ -455,8 +564,8 @@ func (u *sellerUsecase) convertProductVariants(ctx context.Context, productName 
 	return res, nil
 }
 
-func (u *sellerUsecase) convertVariantOptions(ctx context.Context, req dtorepository.FindProductVariantResponse) ([]dtousecase.VariantOption, error) {
-	res := []dtousecase.VariantOption{}
+func (u *sellerUsecase) convertVariantOptions(ctx context.Context, req dtorepository.FindProductVariantResponse) ([]dtousecase.SellerVariantOption, error) {
+	res := []dtousecase.SellerVariantOption{}
 	m := map[string]map[string]string{}
 
 	for _, data := range req.Variants {
@@ -492,9 +601,9 @@ func (u *sellerUsecase) convertVariantOptions(ctx context.Context, req dtoreposi
 			vos = append(vos, key2)
 		}
 
-		res = append(res, dtousecase.VariantOption{
-			VariantOptionName: key,
-			Childs:            vos,
+		res = append(res, dtousecase.SellerVariantOption{
+			Name: key,
+			Type: vos,
 		})
 	}
 

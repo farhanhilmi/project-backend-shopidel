@@ -71,7 +71,7 @@ type GetProductSellerResponse struct {
 	VideoURL          string                 `json:"video_url"`
 	Category          ProductCategory        `json:"category"`
 	Images            []string               `json:"images"`
-	VariantOptions    []VariantOption        `json:"variant_options"`
+	VariantOptions    []SellerVariantOption  `json:"variant_options"`
 	Variants          []ProductVariantSeller `json:"variants"`
 }
 
@@ -123,11 +123,21 @@ type ProductSelection struct {
 }
 
 type ProductVariantSeller struct {
-	VariantId  int                `json:"variant_id"`
-	ImageURL   string             `json:"image_url"`
-	Selections []ProductSelection `json:"selections,omitempty"`
-	Stock      int                `json:"stock"`
-	Price      decimal.Decimal    `json:"price"`
+	ImageURL string                  `json:"image_url"`
+	Variant1 ProductSelectionSeller  `json:"variant1"`
+	Variant2 *ProductSelectionSeller `json:"variant2,omitempty"`
+	Stock    int                     `json:"stock"`
+	Price    decimal.Decimal         `json:"price"`
+}
+
+type ProductSelectionSeller struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+type SellerVariantOption struct {
+	Name string   `json:"name"`
+	Type []string `json:"type"`
 }
 
 type UpdateCartRequest struct {
