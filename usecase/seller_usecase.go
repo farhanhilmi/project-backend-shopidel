@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path"
 	"time"
@@ -27,7 +26,8 @@ type SellerUsecase interface {
 	AddNewProduct(ctx context.Context, req dtousecase.AddNewProductRequest) (dtousecase.AddNewProductResponse, error)
 	UploadPhoto(ctx context.Context, req dtousecase.UploadNewPhoto) (dtousecase.UploadNewPhoto, error)
 	DeleteProduct(ctx context.Context, req dtousecase.RemoveProduct) (dtousecase.RemoveProduct, error)
-	GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error)
+	GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListSellerResponse, *dtogeneral.PaginationData, error)
+	GetProductByID(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductSellerResponse, error)
 	WithdrawSalesBalance(ctx context.Context, req dtousecase.WithdrawBalance) (dtousecase.WithdrawBalance, error)
 }
 
@@ -322,7 +322,7 @@ func (u *sellerUsecase) DeleteProduct(ctx context.Context, req dtousecase.Remove
 	return res, nil
 }
 
-func (u *sellerUsecase) GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error) {
+func (u *sellerUsecase) GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListSellerResponse, *dtogeneral.PaginationData, error) {
 	uReq := dtorepository.ProductListParam{
 		CategoryId: req.CategoryId,
 		SellerID:   req.SellerID,
@@ -354,10 +354,156 @@ func (u *sellerUsecase) GetProducts(ctx context.Context, req dtousecase.ProductL
 	return &listProduct, &pagination, nil
 }
 
+func (u *sellerUsecase) GetProductByID(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductSellerResponse, error) {
+	res := &dtousecase.GetProductSellerResponse{}
+
+	rReq := dtorepository.ProductRequest{
+		ProductID: req.ProductId,
+		AccountId: req.AccountId,
+	}
+	product, err := u.productRepository.FindByIDAndSeller(ctx, rReq)
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return res, util.ErrProductNotFound
+	}
+	if err != nil {
+		return res, err
+	}
+
+	rReq2 := dtorepository.FindProductVariantRequest{
+		ProductId: product.ID,
+	}
+	rRes2, err := u.productRepository.FindProductVariant(ctx, rReq2)
+	if err != nil {
+		return res, err
+	}
+
+	variants, err := u.convertProductVariants(ctx, product.Name, rRes2)
+	if err != nil {
+		return res, err
+	}
+
+	options, err := u.convertVariantOptions(ctx, rRes2)
+	if err != nil {
+		return res, err
+	}
+
+	productImages, err := u.productRepository.FindProductImages(ctx, dtorepository.ProductRequest{ProductID: product.ID})
+	if err != nil {
+		return res, err
+	}
+
+	images := []string{}
+
+	for _, img := range productImages {
+		images = append(images, img.URL)
+	}
+
+	category, err := u.accountRepository.FindCategoryByID(ctx, product.CategoryID)
+	if err != nil {
+		return res, err
+	}
+
+	productCategory := dtousecase.ProductCategory{
+		Id:   category.CategoryLevel1Id,
+		Name: category.CategoryLevel1Name,
+		Children: dtousecase.ProductCategoryChildren2{
+			Id:   category.CategoryLevel2Id,
+			Name: category.CategoryLevel2Name,
+			Children: dtousecase.ProductCategoryChildren3{
+				Id:   category.CategoryLevel3Id,
+				Name: category.CategoryLevel3Name,
+			},
+		},
+	}
+
+	res.Id = product.ID
+	res.ProductName = product.Name
+	res.Description = product.Description
+	res.Variants = variants
+	res.VariantOptions = options
+	res.HazardousMaterial = product.HazardousMaterial
+	res.IsActive = product.IsActive
+	res.IsNew = product.IsNew
+	res.Size = product.Size
+	res.Weight = product.Weight
+	res.InternalSKU = product.InternalSKU
+	res.VideoURL = product.VideoURL
+	res.Images = images
+	res.Category = productCategory
+
+	return res, nil
+}
+
+func (u *sellerUsecase) convertProductVariants(ctx context.Context, productName string, req dtorepository.FindProductVariantResponse) ([]dtousecase.ProductVariantSeller, error) {
+	res := []dtousecase.ProductVariantSeller{}
+
+	for _, data := range req.Variants {
+		pv := dtousecase.ProductVariantSeller{}
+		pv.VariantId = data.VariantId
+		pv.Price = data.Price
+		pv.Stock = data.Stock
+		pv.ImageURL = data.ImageURL
+
+		pv.Selections = append(pv.Selections, dtousecase.ProductSelection{SelectionName: data.SelectionName1, SelectionVariantName: data.VariantName1})
+		if data.SelectionId2 != 0 {
+			pv.Selections = append(pv.Selections, dtousecase.ProductSelection{SelectionName: data.SelectionName2, SelectionVariantName: data.VariantName2})
+		}
+
+		res = append(res, pv)
+	}
+
+	return res, nil
+}
+
+func (u *sellerUsecase) convertVariantOptions(ctx context.Context, req dtorepository.FindProductVariantResponse) ([]dtousecase.VariantOption, error) {
+	res := []dtousecase.VariantOption{}
+	m := map[string]map[string]string{}
+
+	for _, data := range req.Variants {
+		if data.SelectionName1 != "default_reserved_keyword" {
+			if m[data.VariantName1] != nil {
+				if m[data.VariantName1][data.SelectionName1] == "" {
+					m[data.VariantName1][data.SelectionName1] = data.SelectionName1
+				}
+			} else {
+				m[data.VariantName1] = map[string]string{
+					data.SelectionName1: data.SelectionName1,
+				}
+			}
+
+			if data.SelectionId2 != 0 {
+				if m[data.VariantName2] != nil {
+					if m[data.VariantName2][data.SelectionName2] == "" {
+						m[data.VariantName2][data.SelectionName2] = data.SelectionName2
+					}
+				} else {
+					m[data.VariantName2] = map[string]string{
+						data.SelectionName2: data.SelectionName2,
+					}
+				}
+			}
+		}
+	}
+
+	for key, value := range m {
+		vos := []string{}
+
+		for key2 := range value {
+			vos = append(vos, key2)
+		}
+
+		res = append(res, dtousecase.VariantOption{
+			VariantOptionName: key,
+			Childs:            vos,
+		})
+	}
+
+	return res, nil
+}
+
 func (u *sellerUsecase) WithdrawSalesBalance(ctx context.Context, req dtousecase.WithdrawBalance) (dtousecase.WithdrawBalance, error) {
 	res := dtousecase.WithdrawBalance{}
 
-	log.Println("SellerID", req.SellerID)
 	orders, err := u.orderRepository.FindOrderByIDAndSellerID(ctx, dtorepository.ProductOrderRequest{ID: req.OrderID, SellerID: req.SellerID})
 	if err != nil {
 		return res, err

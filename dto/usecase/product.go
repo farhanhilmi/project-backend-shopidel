@@ -58,6 +58,40 @@ type GetProductDetailResponse struct {
 	ProductReviews []ProductReview  `json:"product_review"`
 }
 
+type GetProductSellerResponse struct {
+	Id                int                    `json:"id"`
+	ProductName       string                 `json:"product_name" binding:"required"`
+	Description       string                 `json:"description"`
+	HazardousMaterial *bool                  `json:"hazardous_material" binding:"required"`
+	IsNew             *bool                  `json:"is_new" binding:"required"`
+	InternalSKU       string                 `json:"internal_sku"`
+	Weight            decimal.Decimal        `json:"weight" binding:"required"`
+	Size              decimal.Decimal        `json:"size" binding:"required"`
+	IsActive          *bool                  `json:"is_active" binding:"required"`
+	VideoURL          string                 `json:"video_url"`
+	Category          ProductCategory        `json:"category"`
+	Images            []string               `json:"images"`
+	VariantOptions    []VariantOption        `json:"variant_options"`
+	Variants          []ProductVariantSeller `json:"variants"`
+}
+
+type ProductCategory struct {
+	Id       int                      `json:"id"`
+	Name     string                   `json:"name"`
+	Children ProductCategoryChildren2 `json:"children,omitempty"`
+}
+
+type ProductCategoryChildren2 struct {
+	Id       int                      `json:"id"`
+	Name     string                   `json:"name"`
+	Children ProductCategoryChildren3 `json:"children,omitempty"`
+}
+
+type ProductCategoryChildren3 struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
+}
+
 type ProductReview struct {
 	Id                 int             `json:"id"`
 	CustomerName       string          `json:"customer_name"`
@@ -85,6 +119,14 @@ type ProductVariant struct {
 type ProductSelection struct {
 	SelectionVariantName string `json:"selection_variant_name,omitempty"`
 	SelectionName        string `json:"selection_name,omitempty"`
+}
+
+type ProductVariantSeller struct {
+	VariantId  int                `json:"variant_id"`
+	ImageURL   string             `json:"image_url"`
+	Selections []ProductSelection `json:"selections,omitempty"`
+	Stock      int                `json:"stock"`
+	Price      decimal.Decimal    `json:"price"`
 }
 
 type UpdateCartRequest struct {
