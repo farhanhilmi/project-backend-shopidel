@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path"
 	"time"
@@ -505,7 +504,6 @@ func (u *sellerUsecase) convertVariantOptions(ctx context.Context, req dtoreposi
 func (u *sellerUsecase) WithdrawSalesBalance(ctx context.Context, req dtousecase.WithdrawBalance) (dtousecase.WithdrawBalance, error) {
 	res := dtousecase.WithdrawBalance{}
 
-	log.Println("SellerID", req.SellerID)
 	orders, err := u.orderRepository.FindOrderByIDAndSellerID(ctx, dtorepository.ProductOrderRequest{ID: req.OrderID, SellerID: req.SellerID})
 	if err != nil {
 		return res, err

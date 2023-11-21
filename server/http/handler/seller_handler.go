@@ -302,6 +302,10 @@ func (h *SellerHandler) WithdrawOrderSales(c *gin.Context) {
 	}
 
 	product, err := h.sellerUsecase.WithdrawSalesBalance(c.Request.Context(), productReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: product})
 }
