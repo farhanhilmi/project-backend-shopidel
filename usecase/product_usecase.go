@@ -7,7 +7,6 @@ import (
 	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
-	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
 )
@@ -16,7 +15,7 @@ type ProductUsecase interface {
 	GetProductDetail(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductDetailResponse, error)
 	GetProductDetailV2(ctx context.Context, req dtousecase.GetProductDetailRequestV2) (*dtousecase.GetProductDetailResponse, error)
 	AddToFavorite(ctx context.Context, req dtousecase.FavoriteProduct) (*dtousecase.FavoriteProduct, error)
-	GetProductFavorites(ctx context.Context, req dtousecase.ProductFavoritesParams) ([]model.FavoriteProductList, *dtogeneral.PaginationData, error)
+	GetProductFavorites(ctx context.Context, req dtousecase.ProductFavoritesParams) ([]dtousecase.GetFavoriteProductListResponse, *dtogeneral.PaginationData, error)
 	GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListResponse, *dtogeneral.PaginationData, error)
 	GetProductReviews(ctx context.Context, req dtousecase.GetProductReviewsRequest) (dtousecase.GetProductReviewsResponse, error)
 	GetProductPictures(ctx context.Context, req dtousecase.GetProductPicturesRequest) (*dtousecase.GetProductPicturesResponse, error)
@@ -117,8 +116,8 @@ func (u *productUsecase) AddToFavorite(ctx context.Context, req dtousecase.Favor
 	}, nil
 }
 
-func (u *productUsecase) GetProductFavorites(ctx context.Context, req dtousecase.ProductFavoritesParams) ([]model.FavoriteProductList, *dtogeneral.PaginationData, error) {
-	res := []model.FavoriteProductList{}
+func (u *productUsecase) GetProductFavorites(ctx context.Context, req dtousecase.ProductFavoritesParams) ([]dtousecase.GetFavoriteProductListResponse, *dtogeneral.PaginationData, error) {
+	res := []dtousecase.GetFavoriteProductListResponse{}
 
 	products, totalItems, err := u.productRepository.FindAllProductFavorites(ctx, dtorepository.ProductFavoritesParams{
 		AccountID: req.AccountID,
