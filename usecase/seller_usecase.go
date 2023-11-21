@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path"
 	"time"
@@ -15,6 +16,7 @@ import (
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/repository"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/util"
+	"github.com/shopspring/decimal"
 )
 
 type SellerUsecase interface {
@@ -27,16 +29,19 @@ type SellerUsecase interface {
 	DeleteProduct(ctx context.Context, req dtousecase.RemoveProduct) (dtousecase.RemoveProduct, error)
 	GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListSellerResponse, *dtogeneral.PaginationData, error)
 	GetProductByID(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductSellerResponse, error)
+	WithdrawSalesBalance(ctx context.Context, req dtousecase.WithdrawBalance) (dtousecase.WithdrawBalance, error)
 }
 
 type sellerUsecase struct {
 	accountRepository repository.AccountRepository
 	productRepository repository.ProductRepository
+	orderRepository   repository.ProductOrdersRepository
 }
 
 type SellerUsecaseConfig struct {
 	AccountRepository repository.AccountRepository
 	ProductRepository repository.ProductRepository
+	OrderRepository   repository.ProductOrdersRepository
 }
 
 func NewSellerUsecase(config SellerUsecaseConfig) SellerUsecase {
@@ -47,6 +52,9 @@ func NewSellerUsecase(config SellerUsecaseConfig) SellerUsecase {
 	}
 	if config.ProductRepository != nil {
 		au.productRepository = config.ProductRepository
+	}
+	if config.OrderRepository != nil {
+		au.orderRepository = config.OrderRepository
 	}
 
 	return au
@@ -437,19 +445,9 @@ func (u *sellerUsecase) convertProductVariants(ctx context.Context, productName 
 		pv.Stock = data.Stock
 		pv.ImageURL = data.ImageURL
 
-		if data.SelectionName1 == "default_reserved_keyword" {
-			// pv.VariantName = productName
-		} else {
-			// pv.VariantName = productName + " - " + data.SelectionName1
-
-			if data.SelectionId2 != 0 {
-				// pv.VariantName = pv.VariantName + ", " + data.SelectionName2
-			}
-
-			pv.Selections = append(pv.Selections, dtousecase.ProductSelection{SelectionName: data.SelectionName1, SelectionVariantName: data.VariantName1})
-			if data.SelectionId2 != 0 {
-				pv.Selections = append(pv.Selections, dtousecase.ProductSelection{SelectionName: data.SelectionName2, SelectionVariantName: data.VariantName2})
-			}
+		pv.Selections = append(pv.Selections, dtousecase.ProductSelection{SelectionName: data.SelectionName1, SelectionVariantName: data.VariantName1})
+		if data.SelectionId2 != 0 {
+			pv.Selections = append(pv.Selections, dtousecase.ProductSelection{SelectionName: data.SelectionName2, SelectionVariantName: data.VariantName2})
 		}
 
 		res = append(res, pv)
@@ -500,6 +498,56 @@ func (u *sellerUsecase) convertVariantOptions(ctx context.Context, req dtoreposi
 			Childs:            vos,
 		})
 	}
+
+	return res, nil
+}
+
+func (u *sellerUsecase) WithdrawSalesBalance(ctx context.Context, req dtousecase.WithdrawBalance) (dtousecase.WithdrawBalance, error) {
+	res := dtousecase.WithdrawBalance{}
+
+	log.Println("SellerID", req.SellerID)
+	orders, err := u.orderRepository.FindOrderByIDAndSellerID(ctx, dtorepository.ProductOrderRequest{ID: req.OrderID, SellerID: req.SellerID})
+	if err != nil {
+		return res, err
+	}
+
+	if len(orders) < 1 {
+		return res, util.ErrOrderDetailNotFound
+	}
+
+	if orders[0].Status != constant.StatusOrderCompleted {
+		return res, util.ErrOrderNotCompleted
+	}
+
+	var totalAmount decimal.Decimal
+
+	for _, o := range orders {
+		qty, err := decimal.NewFromString(fmt.Sprintf("%v", o.Quantity))
+		if err != nil {
+			return res, err
+		}
+
+		totalAmount = totalAmount.Add(o.IndividualPrice.Mul(qty))
+	}
+
+	buyerWallet, err := u.accountRepository.FindById(ctx, dtorepository.GetAccountRequest{UserId: orders[0].AccountID})
+	if err != nil {
+		return res, err
+	}
+
+	_, err = u.accountRepository.TopUpWalletBalanceByID(ctx, dtorepository.TopUpWalletRequest{
+		UserID:  req.SellerID,
+		Type:    constant.Withdraw,
+		From:    buyerWallet.WalletNumber,
+		Amount:  totalAmount,
+		OrderID: orders[0].ID,
+	})
+	if err != nil {
+		return res, err
+	}
+
+	res.Balance = totalAmount
+	res.OrderID = orders[0].ID
 
 	return res, nil
 }

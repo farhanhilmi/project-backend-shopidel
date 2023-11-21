@@ -15,4 +15,5 @@ var (
 	SaleMoneyIncomeType    = "Income"
 	SaleRefundCancelType   = "Refund"
 	DefaultReservedKeyword = "default_reserved_keyword"
+	Withdraw               = "Withdraw"
 )

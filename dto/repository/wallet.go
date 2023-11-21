@@ -21,9 +21,11 @@ type WalletResponse struct {
 }
 
 type TopUpWalletRequest struct {
-	UserID int
-	Amount decimal.Decimal
-	Type   string
+	UserID  int
+	Amount  decimal.Decimal
+	Type    string
+	From    string
+	OrderID int
 }
 
 type MyWalletTransactionHistoriesRequest struct {

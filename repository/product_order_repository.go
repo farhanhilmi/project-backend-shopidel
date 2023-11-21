@@ -33,6 +33,7 @@ type ProductOrdersRepository interface {
 	AddProductReview(ctx context.Context, req dtorepository.AddProductReviewRequest) (dtorepository.AddProductReviewResponse, error)
 	FindReviewByID(ctx context.Context, req dtorepository.ProductReviewRequest) (dtorepository.ProductReviewResponse, error)
 	FindOrderByIDAndAccount(ctx context.Context, req dtorepository.OrderDetailRequest) ([]model.ProductOrderDetail, error)
+	FindOrderByIDAndSellerID(ctx context.Context, req dtorepository.ProductOrderRequest) ([]model.ProductOrderSeller, error)
 }
 
 func NewProductOrdersRepository(db *gorm.DB) ProductOrdersRepository {
@@ -57,6 +58,14 @@ func (r *productOrdersRepository) FindAllOrderHistoriesBySellerAndStatus(ctx con
 		po.delivery_fee,
 		pod.quantity, 
 		pod.individual_price,
+		po.province,
+		po.district,
+		po.zip_code,
+		po.sub_district,
+		po.kelurahan,
+		po.address_detail as detail,
+		po.courier_name,
+		swth.is_withdrawn,
 		po.created_at,
 		po.updated_at,
 		po.deleted_at
@@ -67,6 +76,8 @@ func (r *productOrdersRepository) FindAllOrderHistoriesBySellerAndStatus(ctx con
 				on p.id = pod.product_id 
 			left join accounts a 
 				on a.id = po.account_id 
+			left join sale_wallet_transaction_histories swth 
+				on swth.product_order_id = po.id
 		where p.seller_id = ? and po.status ilike ?
 	`
 	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q, req.AccountID, req.Status))
@@ -224,7 +235,7 @@ func (r *productOrdersRepository) FindOrderByIDAndAccount(ctx context.Context, r
 
 	q := `
 	select po.*, a.shop_name, pod.quantity, pod.individual_price, p.name as product_name, pod.product_id, 
-		por.feedback, por.rating, por.created_at as review_created_at, por.id as review_id
+		por.feedback, por.rating, por.created_at as review_created_at, por.id as review_id, po.account_id as buyer_id
 		from product_orders po
 		left join product_order_details pod 
 			on pod.product_order_id = po.id
@@ -346,6 +357,14 @@ func (r *productOrdersRepository) FindAllOrderHistoriesBySeller(ctx context.Cont
 		po.delivery_fee,
 		pod.quantity, 
 		pod.individual_price,
+		po.province,
+		po.district,
+		po.zip_code,
+		po.sub_district,
+		po.kelurahan,
+		po.address_detail as detail,
+		po.courier_name,
+		swth.is_withdrawn,
 		po.created_at,
 		po.updated_at,
 		po.deleted_at
@@ -356,6 +375,8 @@ func (r *productOrdersRepository) FindAllOrderHistoriesBySeller(ctx context.Cont
 				on p.id = pod.product_id 
 			left join accounts a 
 				on a.id = po.account_id 
+			left join sale_wallet_transaction_histories swth 
+				on swth.product_order_id = po.id
 		where p.seller_id = ?
 	`
 
@@ -441,6 +462,30 @@ func (r *productOrdersRepository) FindByIDAndSellerID(ctx context.Context, req d
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return order, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return order, err
+	}
+
+	return order, err
+}
+
+func (r *productOrdersRepository) FindOrderByIDAndSellerID(ctx context.Context, req dtorepository.ProductOrderRequest) ([]model.ProductOrderSeller, error) {
+	order := []model.ProductOrderSeller{}
+
+	err := r.db.WithContext(ctx).Raw(`
+	select po.id, po.account_id, p.id as product_id, p.seller_id, pod.individual_price, pod.quantity, po.status
+		from product_order_details pod
+		left join products p on p.id = pod.product_id 
+		left join product_orders po on po.id = pod.product_order_id 
+	where pod.product_order_id = ? and p.seller_id = ?;
+	`, req.ID, req.SellerID).Scan(&order).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return order, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return order, err
 	}
 
 	return order, err
@@ -717,6 +762,8 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 	orderDetailReq := []model.ProductOrderDetails{}
 	productVariants := []model.ProductCombinationVariant{}
 
+	productVariantCombinationIds := []int{}
+
 	for _, o := range req.ProductVariants {
 		variant := model.ProductCombinationVariant{
 			ID:    o.ProductVariantSelectionCombinationID,
@@ -729,6 +776,7 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 			VariantName:     o.VariantName,
 			ProductID:       o.ProductID,
 		}
+		productVariantCombinationIds = append(productVariantCombinationIds, o.ProductVariantSelectionCombinationID)
 		productVariants = append(productVariants, variant)
 		orderDetailReq = append(orderDetailReq, product)
 	}
@@ -763,6 +811,15 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 	}
 
 	_, err = r.productVariantCombinationRepository.DecreaseStockWithTx(ctx, tx, productVariants)
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	err = tx.WithContext(ctx).
+		Where("product_variant_selection_combination_id IN ?", productVariantCombinationIds).
+		Where("account_id", req.AccountID).
+		Delete(&model.AccountCarts{}).Error
 	if err != nil {
 		tx.Rollback()
 		return res, err

@@ -492,12 +492,12 @@ func (u *productOrderUsecase) convertOrderHistoriesReponse(ctx context.Context, 
 }
 
 func (u *productOrderUsecase) convertSellerOrderHistoriesReponse(ctx context.Context, pagination dtogeneral.PaginationData, orders []dtorepository.ProductSellerOrderHistoriesResponse) ([]dtousecase.SellerOrdersResponse, dtogeneral.PaginationData, error) {
-	orderHistories := make(map[string][]dtousecase.OrderProduct)
+	orderHistories := make(map[string][]dtousecase.SellerOrderProduct)
 	productOrders := []dtousecase.SellerOrdersResponse{}
 	orderKeys := []string{}
 
 	for _, o := range orders {
-		product := dtousecase.OrderProduct{
+		product := dtousecase.SellerOrderProduct{
 			ProductName:          o.ProductName,
 			Quantity:             o.Quantity,
 			IndividualPrice:      o.IndividualPrice,
@@ -506,7 +506,22 @@ func (u *productOrderUsecase) convertSellerOrderHistoriesReponse(ctx context.Con
 			VariantName:          o.VariantName,
 		}
 
-		orderKey := fmt.Sprintf("%v*@*%v*@*%v*@*%v", o.ID, o.BuyerName, o.Status, o.CreatedAt)
+		orderKey := fmt.Sprintf(
+			"%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v*@*%v",
+			o.ID,
+			o.BuyerName,
+			o.Status,
+			o.CreatedAt,
+			o.Province,
+			o.District,
+			o.ZipCode,
+			o.SubDistrict,
+			o.Kelurahan,
+			o.Detail,
+			o.DeliveryFee,
+			o.CourierName,
+			o.IsWithdrawn,
+		)
 		if _, exists := orderHistories[orderKey]; !exists {
 			orderKeys = append(orderKeys, orderKey)
 		}
@@ -529,14 +544,32 @@ func (u *productOrderUsecase) convertSellerOrderHistoriesReponse(ctx context.Con
 		if err != nil {
 			return nil, dtogeneral.PaginationData{}, err
 		}
+
+		shipping := dtousecase.AddressOrder{
+			Province:    orderKey[4],
+			District:    orderKey[5],
+			ZipCode:     orderKey[6],
+			SubDistrict: orderKey[7],
+			Kelurahan:   orderKey[8],
+			Detail:      orderKey[9],
+		}
+
+		promotions := dtousecase.OrderPromotions{}
+		isWithdrawn, _ := strconv.ParseBool(orderKey[12])
 		order := dtousecase.SellerOrdersResponse{
 			OrderID:      orderId,
 			Products:     products,
 			Status:       orderKey[2],
 			TotalPayment: totalAmount,
 			BuyerName:    orderKey[1],
+			Shipping:     shipping,
+			Promotion:    promotions,
+			DeliveryFee:  orderKey[10],
+			CourierName:  orderKey[11],
+			IsWithdrawn:  isWithdrawn,
 			CreateAt:     orderKey[3],
 		}
+
 		productOrders = append(productOrders, order)
 	}
 

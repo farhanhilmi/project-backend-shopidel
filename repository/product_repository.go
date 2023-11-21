@@ -59,13 +59,13 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 			p.id,
 			p.name,
 			p.description,
-			aa.district,
+			seller_address.district,
 			0 as total_sold, 
 			product_price.lowest_price as "price", 
 			round( CAST(float8 (random() * 5) as numeric), 1) as rating,
 			product_image.picture_url, 
 			case
-				when 0 in ($1) then
+				when 0 in $1 then
 					case 
 						when category_level_2.level_2_id is not null then category_level_2.level_2_id
 						when category_level_3.level_2_id is not null then category_level_3.level_2_id
@@ -78,7 +78,7 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 					end
 			end as "category_id",
 			case
-				when 0 in ($1) then
+				when 0 in $2 then
 					case
 						when category_level_2.level_2_name is not null then category_level_2.level_2_name
 						when category_level_3.level_2_name is not null then category_level_3.level_2_name
@@ -129,10 +129,17 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 					from product_variant_selection_combinations pvsc2
 					where pvsc2.product_id = p.id
 					group by pvsc2.product_id 
+					limit 1
 				) product_price on product_price.product_id = p.id
-			left join account_addresses aa 
-				on aa.account_id = p.seller_id
-				and aa.is_seller_default is true
+			left join lateral (
+				select 
+					aa.account_id,
+					aa.district
+				from account_addresses aa 
+				where aa.is_seller_default is true
+					and aa.account_id = p.seller_id
+				limit 1
+			) seller_address on seller_address.account_id = p.seller_id
 			left join accounts as seller
 				on seller.id = p.seller_id
 			left join (
@@ -184,9 +191,9 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 							and level_1."level" = 1
 						where level_3."level" = 3
 							and (
-								level_3.id in ($1)
-								or level_2.id in ($1)
-								or level_1.id in ($1)
+								level_3.id in $3
+								or level_2.id in $4
+								or level_1.id in $5
 							)
 					) union all (
 						select
@@ -197,21 +204,21 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 							and level_1."level" = 1
 						where level_2."level" = 2
 							and (
-								level_2.id in ($1)
-								or level_1.id in ($1)
+								level_2.id in $6
+								or level_1.id in $7
 							) 
 					) union all (
 						select
 							level_1.id 
 						from categories level_1
 						where level_1."level" = 1
-							and level_1.id in ($1)
+							and level_1.id in $8
 					)
 				) a
 			) as child on child.id = p.category_id 
 			where 
 				(
-					0 in ($1)
+					0 in $9
 					or child.id is not null
 				)
 	`
@@ -223,7 +230,17 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 		categoriesId = strings.Split(req.CategoryId, "#")
 	}
 
-	query := r.db.WithContext(ctx).Table("(?) as t", r.db.Raw(q, categoriesId))
+	query := r.db.WithContext(ctx).Table("(?) as t", r.db.WithContext(ctx).Raw(q,
+		categoriesId,
+		categoriesId,
+		categoriesId,
+		categoriesId,
+		categoriesId,
+		categoriesId,
+		categoriesId,
+		categoriesId,
+		categoriesId,
+	))
 	if req.StartDate != "" {
 		query = query.Where("created_at >= ?", req.StartDate)
 	}
@@ -470,13 +487,24 @@ func (r *productRepository) FindImages(ctx context.Context, productId int) (dtor
 	pictures := []dtorepository.ProductPicture{}
 
 	q := `
-		select
-			pi2.url as "PictureUrl"
-		from product_images pi2 
-		where pi2.product_id = $1
+		select 
+			a."PictureUrl"
+		from (
+			(
+				select
+					pi2.url as "PictureUrl"
+				from product_videos pi2 
+				where pi2.product_id = $2
+			) union all (
+				select
+					pi2.url as "PictureUrl"
+				from product_images pi2 
+				where pi2.product_id = $1
+			)
+		) a
 	`
 
-	err := r.db.WithContext(ctx).Raw(q, productId).Scan(&pictures).Error
+	err := r.db.WithContext(ctx).Raw(q, productId, productId).Scan(&pictures).Error
 	if err != nil {
 		return res, err
 	}

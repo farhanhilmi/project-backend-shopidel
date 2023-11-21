@@ -288,3 +288,20 @@ func (h *SellerHandler) GetProductByID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes})
 }
+
+func (h *SellerHandler) WithdrawOrderSales(c *gin.Context) {
+	id := c.Param("orderId")
+	orderId, err := strconv.Atoi(id)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	productReq := dtousecase.WithdrawBalance{
+		SellerID: c.GetInt("userId"),
+		OrderID:  orderId,
+	}
+
+	product, err := h.sellerUsecase.WithdrawSalesBalance(c.Request.Context(), productReq)
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: product})
+}

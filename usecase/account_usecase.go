@@ -114,7 +114,7 @@ func (u *accountUsecase) ChangePassword(ctx context.Context, req dtousecase.Chan
 	if err != nil {
 		return err
 	}
-	
+
 	if !util.CheckPasswordHash(req.OldPassword, account.Password) {
 		return util.ErrInvalidPassword
 	}
@@ -654,6 +654,7 @@ func (u *accountUsecase) TopUpBalanceWallet(ctx context.Context, walletReq dtous
 		UserID: walletReq.UserID,
 		Amount: walletReq.Amount,
 		Type:   "TOP UP",
+		From:   "5550000012345",
 	})
 
 	if errors.Is(err, util.ErrNoRecordFound) {

@@ -218,7 +218,7 @@ type AddressOrder struct {
 	ZipCode     string `json:"zip_code"`
 	SubDistrict string `json:"sub_district"`
 	Kelurahan   string `json:"kelurahan"`
-	Detail      string `json:"detaill"`
+	Detail      string `json:"detail"`
 }
 type OrderDetailResponse struct {
 	OrderID      int             `json:"order_id"`
@@ -253,6 +253,15 @@ type OrderProduct struct {
 	IndividualPrice      decimal.Decimal    `json:"individual_price"`
 	Review               ProductOrderReview `json:"review,omitempty"`
 	IsReviewed           bool               `json:"is_reviewed"`
+}
+
+type SellerOrderProduct struct {
+	ProductID            int                `json:"product_id"`
+	ProductOrderDetailID int                `json:"product_order_detail_id"`
+	ProductName          string             `json:"product_name"`
+	VariantName          string             `json:"variant_name"`
+	Quantity             int                `json:"quantity"`
+	IndividualPrice      decimal.Decimal    `json:"individual_price"`
 }
 
 type GetProductReviewsRequest struct {
