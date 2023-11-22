@@ -29,7 +29,7 @@ type ProductRepository interface {
 	FindProductVariant(ctx context.Context, req dtorepository.FindProductVariantRequest) (dtorepository.FindProductVariantResponse, error)
 	FindProductVariantByID(ctx context.Context, req dtorepository.ProductCart) (dtorepository.ProductCart, error)
 	FindProductFavorites(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
-	FindAllProductFavorites(ctx context.Context, req dtorepository.ProductFavoritesParams) ([]model.FavoriteProductList, int64, error)
+	FindAllProductFavorites(ctx context.Context, req dtorepository.ProductFavoritesParams) ([]dtousecase.GetFavoriteProductListResponse, int64, error)
 	AddProductFavorite(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
 	RemoveProductFavorite(ctx context.Context, req dtorepository.FavoriteProduct) (dtorepository.FavoriteProduct, error)
 	FindSellerAnotherProducts(ctx context.Context, sellerId int) ([]dtousecase.AnotherProduct, error)
@@ -590,8 +590,8 @@ func (r *productRepository) FindProductFavorites(ctx context.Context, req dtorep
 	return res, err
 }
 
-func (r *productRepository) FindAllProductFavorites(ctx context.Context, req dtorepository.ProductFavoritesParams) ([]model.FavoriteProductList, int64, error) {
-	res := []model.FavoriteProductList{}
+func (r *productRepository) FindAllProductFavorites(ctx context.Context, req dtorepository.ProductFavoritesParams) ([]dtousecase.GetFavoriteProductListResponse, int64, error) {
+	res := []dtousecase.GetFavoriteProductListResponse{}
 	var totalItems int64
 
 	q := `
@@ -602,7 +602,25 @@ func (r *productRepository) FindAllProductFavorites(ctx context.Context, req dto
 			p.name, 
 			product_price.lowest_price as price, 
 			product_image.picture_url, 
-			aa.district 
+			aa.district,
+			TRIM(BOTH '-' FROM 
+				REGEXP_REPLACE(
+					REGEXP_REPLACE(
+						LOWER(p."name"), 
+						'[^a-z0-9]+', '-', 'g'
+					), 
+					'-+', '-', 'g'
+				)
+			) AS "product_name_slug",
+			TRIM(BOTH '-' FROM 
+				REGEXP_REPLACE(
+					REGEXP_REPLACE(
+						LOWER(seller.shop_name), 
+						'[^a-z0-9]+', '-', 'g'
+					), 
+					'-+', '-', 'g'
+				)
+			) AS "shop_name_slug"
 		from favorite_products fp 
 			left join products p 
 					on p.id = fp.product_id
@@ -627,6 +645,8 @@ func (r *productRepository) FindAllProductFavorites(ctx context.Context, req dto
 					where pvsc2.product_id = p.id
 					group by pvsc2.product_id 
 				) product_price on product_price.product_id = p.id
+			left join accounts seller
+				on seller.id = p.seller_id
 		where fp.account_id = ?
 	`
 	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q, req.AccountID))
