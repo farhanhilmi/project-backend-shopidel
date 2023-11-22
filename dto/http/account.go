@@ -183,6 +183,7 @@ type UpdateAddressResponse struct {
 }
 
 type ChangePasswordRequest struct {
+	OTP         string `json:"otp"`
 	OldPassword string `json:"old_password"`
 	NewPassword string `json:"new_password"`
 }

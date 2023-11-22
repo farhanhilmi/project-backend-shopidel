@@ -23,6 +23,8 @@ type Accounts struct {
 	SellerBalance           decimal.Decimal `gorm:"type:decimal;default:0"`
 	ForgetPasswordToken     string          `gorm:"type:varchar;default:null"`
 	ForgetPasswordExpiredAt time.Time       `gorm:"type:timestamp;default:null"`
+	ChangePasswordToken     string          `gorm:"type:varchar;default:null"`
+	ChangePasswordExpiredAt time.Time       `gorm:"type:timestamp;default:null"`
 	CreatedAt               time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	UpdatedAt               time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	DeletedAt               time.Time       `gorm:"type:timestamp;default:null"`
