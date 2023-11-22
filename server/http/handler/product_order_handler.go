@@ -16,11 +16,13 @@ import (
 
 type ProductOrderHandler struct {
 	productOrderUsecase usecase.ProductOrderUsecase
+	promotionUsecase    usecase.PromotionUsecase
 }
 
-func NewProductOrderHandler(productOrderUsecase usecase.ProductOrderUsecase) *ProductOrderHandler {
+func NewProductOrderHandler(pou usecase.ProductOrderUsecase, pu usecase.PromotionUsecase) *ProductOrderHandler {
 	return &ProductOrderHandler{
-		productOrderUsecase: productOrderUsecase,
+		productOrderUsecase: pou,
+		promotionUsecase:    pu,
 	}
 }
 
@@ -185,6 +187,32 @@ func (h *ProductOrderHandler) GetCouriers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
+}
+
+func (h *ProductOrderHandler) GetShopAvailablePromotions(c *gin.Context) {
+	sellerId, err := strconv.Atoi(c.Param("sellerId"))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response, err := h.promotionUsecase.GetShopAvailablePromotions(c.Request.Context(), dtousecase.GetShopAvailablePromotionsRequest{ShopId: sellerId})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response.ShopPromotions})
+}
+
+func (h *ProductOrderHandler) GetMarketplacePromotions(c *gin.Context) {
+	response, err := h.promotionUsecase.GetMarketplacePromotions(c.Request.Context())
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response.MarketplacePromotions})
 }
 
 func (h *ProductOrderHandler) AddProductReview(c *gin.Context) {

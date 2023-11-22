@@ -644,6 +644,8 @@ func (r *productRepository) FindAllProductFavorites(ctx context.Context, req dto
 					where pvsc2.product_id = p.id
 					group by pvsc2.product_id 
 				) product_price on product_price.product_id = p.id
+			left join accounts seller
+				on seller.id = p.seller_id
 		where fp.account_id = ?
 	`
 	query := r.db.WithContext(ctx).Table("(?) as t", gorm.Expr(q, req.AccountID))

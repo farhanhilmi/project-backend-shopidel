@@ -36,6 +36,9 @@ func dropTable() {
 			product_orders,
 			MyWalletTransactionHistories,
 			used_emails,
+			marketplace_promotions,
+			shop_promotion_selected_products,
+			shop_promotions,
 			products,
 			product_videos,
 			product_variants,
@@ -65,6 +68,9 @@ func createTable() {
 		&model.Couriers{},
 		&model.Category{},
 		&model.Products{},
+		&model.ShopPromotion{},
+		&model.ShopPromotionSelectedProduct{},
+		&model.MarketplacePromotion{},
 		&model.ProductImages{},
 		&model.ProductVideos{},
 		&model.ProductVariants{},
@@ -123,6 +129,9 @@ func seeding() {
 		seeder.SellerShowcases,
 		seeder.SellerShowcaseProducts,
 		seeder.ProductOrderReviewImages,
+		seeder.ShopPromotions,
+		seeder.ShopPromotionSelectedProducts,
+		seeder.MarketplacePromotions,
 	}
 
 	for _, seed := range seeders {
@@ -138,6 +147,7 @@ func seeding() {
 		ALTER SEQUENCE Product_variant_selection_combinations_id_seq RESTART WITH 1000;
 		ALTER SEQUENCE product_variants_id_seq RESTART WITH 1000;
 		ALTER SEQUENCE product_orders_id_seq RESTART WITH 1000;
+		ALTER SEQUENCE shop_promotions_id_seq RESTART WITH 1000;
 	`).Error
 	if err != nil {
 		panic(err)
