@@ -22,7 +22,7 @@ type ShopPromotion struct {
 	DiscountPercentage decimal.Decimal `json:"discount_percentage"`
 	SelectedProductsId []int           `json:"selected_products,omitempty"`
 	Quota              int             `json:"quota,omitempty"`
-	TotalUsed          int             `json:"total_used,omitempty"`
+	TotalUsed          int             `json:"total_used"`
 	StartDate          time.Time       `json:"start_date,omitempty"`
 	EndDate            time.Time       `json:"end_date,omitempty"`
 }
@@ -41,10 +41,15 @@ type MarketplacePromotion struct {
 
 type GetShopPromotionsRequest struct {
 	ShopId int
+	Page   int
 }
 
 type GetShopPromotionsResponse struct {
 	ShopPromotions []ShopPromotion
+	CurrentPage    int
+	TotalPages     int
+	TotalItems     int
+	Limit          int
 }
 
 type CreateShopPromotionRequest struct {

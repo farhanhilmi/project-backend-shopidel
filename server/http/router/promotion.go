@@ -14,6 +14,7 @@ func NewShopPromotionRouter(h *handler.PromotionOrderHandler, gin *gin.Engine) *
 	promotion.POST("", h.CreateShopPromotion)
 	promotion.GET("/:shopPromotionId", h.GetShopPromotionDetail)
 	promotion.PUT("/:shopPromotionId", h.UpdateShopPromotion)
+	promotion.DELETE("/:shopPromotionId", h.DeleteShopPromotion)
 
 	return gin
 }
