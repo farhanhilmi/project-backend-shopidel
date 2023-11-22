@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -132,7 +131,6 @@ func (u *accountUsecase) RequestOTP(ctx context.Context, req dtousecase.ChangePa
 		Token:          token,
 		ExpiresAt:      expirationTime,
 	}
-	fmt.Println(data, "DATA")
 
 	err = util.SendMailOTP(data)
 	if err != nil {
@@ -160,6 +158,14 @@ func (u *accountUsecase) ChangePassword(ctx context.Context, req dtousecase.Chan
 	})
 	if err != nil {
 		return err
+	}
+
+	if !(account.ChangePasswordToken == req.OTP) {
+		return util.ErrInvalidOTP
+	}
+
+	if account.ChangePasswordExpiredAt.Before(time.Now()) {
+		return util.ErrExpiredOTP
 	}
 
 	if !util.CheckPasswordHash(req.OldPassword, account.Password) {

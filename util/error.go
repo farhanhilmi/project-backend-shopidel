@@ -77,4 +77,6 @@ var (
 	ErrIncorrectPassword         = &CustomError{Message: "Invalid Password", Code: Unauthorized}
 	ErrOrderNotInDelivered       = &CustomError{Message: "The order you selected is not or has not been delivered", Code: BadRequest}
 	ErrOrderNotCompleted         = &CustomError{Message: "The order you selected has not been completed", Code: BadRequest}
+	ErrInvalidOTP                = &CustomError{Message: "Invalid OTP", Code: Unauthorized}
+	ErrExpiredOTP                = &CustomError{Message: "OTP Expired, send a new OTP Request", Code: BadRequest}
 )

@@ -36,8 +36,9 @@ func (h *AccountHandler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	uReq := dtousecase.ChangePasswordRequest {
-		AccountID:  c.GetInt("userId"),
+	uReq := dtousecase.ChangePasswordRequest{
+		AccountID:   c.GetInt("userId"),
+		OTP:         req.OTP,
 		OldPassword: req.OldPassword,
 		NewPassword: req.NewPassword,
 	}
@@ -46,7 +47,7 @@ func (h *AccountHandler) ChangePassword(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Pasword Successfully Changed"})
 }
 
@@ -59,7 +60,7 @@ func (h *AccountHandler) RequestChangePasswordOTP(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: fmt.Sprintf("OTP Successfully sent to %s", account.Email)})
 }
 
