@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -22,7 +21,7 @@ func NewPromotionHandler(pu usecase.PromotionUsecase) *PromotionOrderHandler {
 	}
 }
 
-func (h *PromotionOrderHandler) CreateShopPromotions(c *gin.Context) {
+func (h *PromotionOrderHandler) CreateShopPromotion(c *gin.Context) {
 	uid := c.GetInt("userId")
 
 	req := dtohttp.CreateShopPromotionRequest{}
@@ -71,8 +70,46 @@ func (h *PromotionOrderHandler) GetShopPromotionDetail(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	fmt.Println("here")
+
 	response, err := h.promotionUsecase.GetShopPromotionDetail(c.Request.Context(), spid)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
+}
+
+func (h *PromotionOrderHandler) UpdateShopPromotion(c *gin.Context) {
+	uid := c.GetInt("userId")
+
+	spid, err := strconv.Atoi(c.Param("shopPromotionId"))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	req := dtohttp.UpdateShopPromotionRequest{}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
+		return
+	}
+
+	uReq := dtousecase.UpdateShopPromotionRequest{
+		Id:                 spid,
+		ShopId:             uid,
+		Name:               req.Name,
+		Quota:              req.Quota,
+		StartDate:          req.StartDate,
+		EndDate:            req.EndDate,
+		MinPurchaseAmount:  req.MinPurchaseAmount,
+		MaxPurchaseAmount:  req.MaxPurchaseAmount,
+		DiscountPercentage: req.DiscountPercentage,
+		SelectedProductsId: req.SelectedProductsId,
+	}
+
+	response, err := h.promotionUsecase.UpdateShopPromotion(c.Request.Context(), uReq)
 	if err != nil {
 		c.Error(err)
 		return

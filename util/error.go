@@ -77,4 +77,5 @@ var (
 	ErrIncorrectPassword         = &CustomError{Message: "Invalid Password", Code: Unauthorized}
 	ErrOrderNotInDelivered       = &CustomError{Message: "The order you selected is not or has not been delivered", Code: BadRequest}
 	ErrOrderNotCompleted         = &CustomError{Message: "The order you selected has not been completed", Code: BadRequest}
+	ErrShopPromotionNotFound     = &CustomError{Message: "shop promotion not found", Code: BadRequest}
 )
