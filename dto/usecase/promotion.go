@@ -1,0 +1,73 @@
+package dtousecase
+
+import (
+	"time"
+
+	"github.com/shopspring/decimal"
+)
+
+type GetShopAvailablePromotionsRequest struct {
+	ShopId int
+}
+
+type GetShopAvailablePromotionsResponse struct {
+	ShopPromotions []ShopPromotion
+}
+
+type ShopPromotion struct {
+	ID                 int             `json:"id"`
+	Name               string          `json:"name"`
+	MinPurchaseAmount  decimal.Decimal `json:"min_purchase_amount"`
+	MaxPurchaseAmount  decimal.Decimal `json:"max_purchase_amount"`
+	DiscountPercentage decimal.Decimal `json:"discount_percentage"`
+	SelectedProductsId []int           `json:"selected_products,omitempty"`
+	Quota              int             `json:"quota,omitempty"`
+	TotalUsed          int             `json:"total_used,omitempty"`
+	StartDate          time.Time       `json:"start_date,omitempty"`
+	EndDate            time.Time       `json:"end_date,omitempty"`
+}
+
+type GetMarketplacePromotionsResponse struct {
+	MarketplacePromotions []MarketplacePromotion
+}
+
+type MarketplacePromotion struct {
+	ID                 int             `json:"id"`
+	Name               string          `json:"name"`
+	MinPurchaseAmount  decimal.Decimal `json:"min_purchase_amount"`
+	MaxPurchaseAmount  decimal.Decimal `json:"max_purchase_amount"`
+	DiscountPercentage decimal.Decimal `json:"discount_percentage"`
+}
+
+type GetShopPromotionsRequest struct {
+	ShopId int
+}
+
+type GetShopPromotionsResponse struct {
+	ShopPromotions []ShopPromotion
+}
+
+type CreateShopPromotionRequest struct {
+	ShopId             int
+	Name               string
+	Quota              int
+	StartDate          time.Time
+	EndDate            time.Time
+	MinPurchaseAmount  decimal.Decimal
+	MaxPurchaseAmount  decimal.Decimal
+	DiscountPercentage decimal.Decimal
+	SelectedProductsId []int
+}
+
+type CreateShopPromotionResponse struct {
+	Id                 int
+	ShopId             int
+	Name               string
+	Quota              int
+	StartDate          time.Time
+	EndDate            time.Time
+	MinPurchaseAmount  decimal.Decimal
+	MaxPurchaseAmount  decimal.Decimal
+	DiscountPercentage decimal.Decimal
+	SelectedProductsId []int
+}
