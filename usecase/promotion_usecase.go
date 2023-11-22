@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 
+	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/model"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/repository"
@@ -10,6 +11,7 @@ import (
 
 type PromotionUsecase interface {
 	CreateShopPromotions(ctx context.Context, req dtousecase.CreateShopPromotionRequest) (dtousecase.CreateShopPromotionResponse, error)
+	DeleteShopPromotions(ctx context.Context, shopPromotionId int, shopId int) error
 	GetShopAvailablePromotions(ctx context.Context, req dtousecase.GetShopAvailablePromotionsRequest) (dtousecase.GetShopAvailablePromotionsResponse, error)
 	GetMarketplacePromotions(ctx context.Context) (dtousecase.GetMarketplacePromotionsResponse, error)
 	GetShopPromotions(ctx context.Context, req dtousecase.GetShopPromotionsRequest) (dtousecase.GetShopPromotionsResponse, error)
@@ -80,6 +82,15 @@ func (u *promotionUsecase) CreateShopPromotions(ctx context.Context, req dtousec
 	return res, nil
 }
 
+func (u *promotionUsecase) DeleteShopPromotions(ctx context.Context, shopPromotionId int, shopId int) error {
+	err := u.promotionRepository.DeleteShopPromotion(ctx, shopPromotionId, shopId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (u *promotionUsecase) GetShopAvailablePromotions(ctx context.Context, req dtousecase.GetShopAvailablePromotionsRequest) (dtousecase.GetShopAvailablePromotionsResponse, error) {
 	res := dtousecase.GetShopAvailablePromotionsResponse{}
 
@@ -130,13 +141,19 @@ func (u *promotionUsecase) GetMarketplacePromotions(ctx context.Context) (dtouse
 
 func (u *promotionUsecase) GetShopPromotions(ctx context.Context, req dtousecase.GetShopPromotionsRequest) (dtousecase.GetShopPromotionsResponse, error) {
 	res := dtousecase.GetShopPromotionsResponse{}
+	res.ShopPromotions = []dtousecase.ShopPromotion{}
 
-	marketplacePromotions, err := u.promotionRepository.FindShopPromotions(ctx, req.ShopId)
+	rRes, err := u.promotionRepository.FindShopPromotions(ctx, dtorepository.FindShopPromotionsRequest{ShopId: req.ShopId, Page: req.Page})
 	if err != nil {
 		return res, err
 	}
 
-	for _, mp := range marketplacePromotions {
+	res.CurrentPage = rRes.CurrentPage
+	res.Limit = rRes.Limit
+	res.TotalItems = rRes.TotalItems
+	res.TotalPages = rRes.TotalPages
+
+	for _, mp := range rRes.ShopPromotions {
 		res.ShopPromotions = append(res.ShopPromotions, dtousecase.ShopPromotion{
 			ID:                 mp.ID,
 			Name:               mp.Name,
@@ -164,7 +181,7 @@ func (u *promotionUsecase) GetShopPromotionDetail(ctx context.Context, shopPromo
 	sps := []dtousecase.ShopPromotionSelectedProduct{}
 	for _, selectedProduct := range rRes.SelectedProducts {
 		sps = append(sps, dtousecase.ShopPromotionSelectedProduct{
-			ProductId:   selectedProduct.ID,
+			ProductId:   selectedProduct.ProductId,
 			ProductName: selectedProduct.Product.Name,
 			CreatedAt:   selectedProduct.CreatedAt,
 		})

@@ -52,16 +52,50 @@ func (h *PromotionOrderHandler) CreateShopPromotion(c *gin.Context) {
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
 }
 
-func (h *PromotionOrderHandler) GetShopPromotions(c *gin.Context) {
+func (h *PromotionOrderHandler) DeleteShopPromotion(c *gin.Context) {
 	uid := c.GetInt("userId")
 
-	response, err := h.promotionUsecase.GetShopPromotions(c.Request.Context(), dtousecase.GetShopPromotionsRequest{ShopId: uid})
+	spid, err := strconv.Atoi(c.Param("shopPromotionId"))
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response.ShopPromotions})
+	err = h.promotionUsecase.DeleteShopPromotions(c.Request.Context(), spid, uid)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "shop promotion successfully deleted"})
+}
+
+func (h *PromotionOrderHandler) GetShopPromotions(c *gin.Context) {
+	uid := c.GetInt("userId")
+	pageString := c.Query("page")
+	page := 1
+	if pageString != "" {
+		res, err := strconv.Atoi(pageString)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		page = res
+	}
+
+	response, err := h.promotionUsecase.GetShopPromotions(c.Request.Context(), dtousecase.GetShopPromotionsRequest{ShopId: uid, Page: page})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONPagination{Data: response.ShopPromotions, Pagination: dtogeneral.PaginationData{
+		TotalPage:   response.TotalPages,
+		TotalItem:   response.TotalItems,
+		CurrentPage: response.CurrentPage,
+		Limit:       response.Limit,
+	}})
 }
 
 func (h *PromotionOrderHandler) GetShopPromotionDetail(c *gin.Context) {
