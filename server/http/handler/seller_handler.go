@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -188,14 +187,6 @@ func (h *SellerHandler) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	form, err := c.MultipartForm()
-	if err != nil {
-		log.Println("ERR", err)
-		c.Error(util.ErrNoImage)
-		return
-	}
-
-	files := form.File["images[]"]
 	id := c.Param("productId")
 	productId, err := strconv.Atoi(id)
 	if err != nil {
@@ -217,7 +208,14 @@ func (h *SellerHandler) UpdateProduct(c *gin.Context) {
 		IsActive:          req.IsActive,
 		Variants:          req.Variants,
 		VideoURL:          req.VideoURL,
-		Images:            files,
+	}
+
+	form, err := c.MultipartForm()
+	if err != nil {
+		productReq.Images = nil
+	} else {
+		files := form.File["images[]"]
+		productReq.Images = files
 	}
 
 	product, err := h.sellerUsecase.UpdateProduct(c.Request.Context(), productReq)
