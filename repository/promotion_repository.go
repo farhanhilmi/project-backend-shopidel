@@ -16,6 +16,7 @@ type PromotionRepository interface {
 	FindMarketplacePromotions(ctx context.Context) ([]model.MarketplacePromotion, error)
 	FindShopPromotions(ctx context.Context, shopId int) ([]model.ShopPromotion, error)
 	CreateShopPromotion(ctx context.Context, req model.ShopPromotion) (model.ShopPromotion, error)
+	FindShopPromotion(ctx context.Context, shopPromotionId int) (model.ShopPromotion, error)
 }
 
 func NewPromotionRepository(db *gorm.DB) PromotionRepository {
@@ -50,6 +51,17 @@ func (r *promotionRepository) FindShopPromotions(ctx context.Context, shopId int
 	res := []model.ShopPromotion{}
 
 	err := r.db.WithContext(ctx).Where("shop_id = ?", shopId).Find(&res).Error
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (r *promotionRepository) FindShopPromotion(ctx context.Context, shopPromotionId int) (model.ShopPromotion, error) {
+	res := model.ShopPromotion{}
+
+	err := r.db.WithContext(ctx).Where("id = ?", shopPromotionId).Preload("SelectedProducts").Preload("SelectedProducts.Product").Find(&res).Error
 	if err != nil {
 		return res, err
 	}

@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtohttp "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/http"
@@ -18,18 +20,6 @@ func NewPromotionHandler(pu usecase.PromotionUsecase) *PromotionOrderHandler {
 	return &PromotionOrderHandler{
 		promotionUsecase: pu,
 	}
-}
-
-func (h *PromotionOrderHandler) GetShopPromotions(c *gin.Context) {
-	uid := c.GetInt("userId")
-
-	response, err := h.promotionUsecase.GetShopPromotions(c.Request.Context(), dtousecase.GetShopPromotionsRequest{ShopId: uid})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response.ShopPromotions})
 }
 
 func (h *PromotionOrderHandler) CreateShopPromotions(c *gin.Context) {
@@ -55,6 +45,34 @@ func (h *PromotionOrderHandler) CreateShopPromotions(c *gin.Context) {
 	}
 
 	response, err := h.promotionUsecase.CreateShopPromotions(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
+}
+
+func (h *PromotionOrderHandler) GetShopPromotions(c *gin.Context) {
+	uid := c.GetInt("userId")
+
+	response, err := h.promotionUsecase.GetShopPromotions(c.Request.Context(), dtousecase.GetShopPromotionsRequest{ShopId: uid})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response.ShopPromotions})
+}
+
+func (h *PromotionOrderHandler) GetShopPromotionDetail(c *gin.Context) {
+	spid, err := strconv.Atoi(c.Param("shopPromotionId"))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	fmt.Println("here")
+	response, err := h.promotionUsecase.GetShopPromotionDetail(c.Request.Context(), spid)
 	if err != nil {
 		c.Error(err)
 		return

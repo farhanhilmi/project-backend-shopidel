@@ -12,6 +12,7 @@ func NewShopPromotionRouter(h *handler.PromotionOrderHandler, gin *gin.Engine) *
 
 	promotion.GET("", h.GetShopPromotions)
 	promotion.POST("", h.CreateShopPromotions)
+	promotion.GET("/:shopPromotionId", h.GetShopPromotionDetail)
 
 	return gin
 }

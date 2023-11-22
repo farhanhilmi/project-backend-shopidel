@@ -13,6 +13,7 @@ type PromotionUsecase interface {
 	GetMarketplacePromotions(ctx context.Context) (dtousecase.GetMarketplacePromotionsResponse, error)
 	GetShopPromotions(ctx context.Context, req dtousecase.GetShopPromotionsRequest) (dtousecase.GetShopPromotionsResponse, error)
 	CreateShopPromotions(ctx context.Context, req dtousecase.CreateShopPromotionRequest) (dtousecase.CreateShopPromotionResponse, error)
+	GetShopPromotionDetail(ctx context.Context, shopPromotionId int) (dtousecase.GetShopPromotionDetailResponse, error)
 }
 
 type promotionUsecase struct {
@@ -101,6 +102,40 @@ func (u *promotionUsecase) GetShopPromotions(ctx context.Context, req dtousecase
 			StartDate:          mp.StartDate,
 			EndDate:            mp.EndDate,
 		})
+	}
+
+	return res, nil
+}
+
+func (u *promotionUsecase) GetShopPromotionDetail(ctx context.Context, shopPromotionId int) (dtousecase.GetShopPromotionDetailResponse, error) {
+	res := dtousecase.GetShopPromotionDetailResponse{}
+
+	rRes, err := u.promotionRepository.FindShopPromotion(ctx, shopPromotionId)
+	if err != nil {
+		return res, nil
+	}
+
+	sps := []dtousecase.ShopPromotionSelectedProduct{}
+	for _, selectedProduct := range rRes.SelectedProducts {
+		sps = append(sps, dtousecase.ShopPromotionSelectedProduct{
+			ProductId:   selectedProduct.ID,
+			ProductName: selectedProduct.Product.Name,
+			CreatedAt:   selectedProduct.CreatedAt,
+		})
+	}
+
+	res = dtousecase.GetShopPromotionDetailResponse{
+		ID:                 rRes.ID,
+		Name:               rRes.Name,
+		MinPurchaseAmount:  rRes.MinPurchaseAmount,
+		MaxPurchaseAmount:  rRes.MaxPurchaseAmount,
+		DiscountPercentage: rRes.DiscountPercentage,
+		Quota:              rRes.Quota,
+		TotalUsed:          rRes.TotalUsed,
+		StartDate:          rRes.StartDate,
+		EndDate:            rRes.EndDate,
+		CreatedAt:          rRes.CreatedAt,
+		SelectedProducts:   sps,
 	}
 
 	return res, nil
