@@ -81,4 +81,5 @@ var (
 	ErrExpiredOTP                = &CustomError{Message: "OTP Expired, send a new OTP Request", Code: BadRequest}
 	ErrPasswordIdentical         = &CustomError{Message: "New password identical to old password, please create a unique Password", Code: BadRequest}
 	ErrShopPromotionNotFound     = &CustomError{Message: "shop promotion not found", Code: BadRequest}
+	ErrShowcaseNotFound          = &CustomError{Message: "showcase not found", Code: BadRequest}
 )

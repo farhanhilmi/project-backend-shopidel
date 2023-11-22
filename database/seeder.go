@@ -148,6 +148,7 @@ func seeding() {
 		ALTER SEQUENCE product_variants_id_seq RESTART WITH 1000;
 		ALTER SEQUENCE product_orders_id_seq RESTART WITH 1000;
 		ALTER SEQUENCE shop_promotions_id_seq RESTART WITH 1000;
+		ALTER SEQUENCE seller_showcases_id_seq RESTART WITH 1000;
 	`).Error
 	if err != nil {
 		panic(err)
