@@ -46,6 +46,14 @@ type RequestForgetPasswordRequest struct {
 	Password                string
 }
 
+type RequestChangePasswordRequest struct {
+	UserId                  int
+	Email                   string
+	ChangePasswordToken     string
+	ChangePasswordExpiredAt time.Time
+	Password                string
+}
+
 type AddressRequest struct {
 	UserId int
 }
@@ -66,6 +74,8 @@ type GetAccountResponse struct {
 	Balance                 decimal.Decimal
 	ForgetPasswordToken     string
 	ForgetPasswordExpiredAt time.Time
+	ChangePasswordToken     string
+	ChangePasswordExpiredAt time.Time
 }
 
 type EditAccountResponse struct {
