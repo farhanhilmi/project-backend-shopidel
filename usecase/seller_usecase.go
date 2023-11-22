@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path"
 	"time"
@@ -30,6 +29,7 @@ type SellerUsecase interface {
 	GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListSellerResponse, *dtogeneral.PaginationData, error)
 	GetProductByID(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductSellerResponse, error)
 	WithdrawSalesBalance(ctx context.Context, req dtousecase.WithdrawBalance) (dtousecase.WithdrawBalance, error)
+	UpdateProduct(ctx context.Context, req dtousecase.AddNewProductRequest) (dtousecase.AddNewProductResponse, error)
 }
 
 type sellerUsecase struct {
@@ -276,6 +276,14 @@ func (u *sellerUsecase) AddNewProduct(ctx context.Context, req dtousecase.AddNew
 func (u *sellerUsecase) UpdateProduct(ctx context.Context, req dtousecase.AddNewProductRequest) (dtousecase.AddNewProductResponse, error) {
 	res := dtousecase.AddNewProductResponse{}
 
+	_, err := u.productRepository.FindByIDAndSeller(ctx, dtorepository.ProductRequest{ProductID: req.ProductID, AccountId: req.SellerID})
+	if err != nil && !errors.Is(err, util.ErrNoRecordFound) {
+		return res, err
+	}
+	if errors.Is(err, util.ErrNoRecordFound) {
+		return res, util.ErrProductNotFound
+	}
+
 	productVariants := []dtousecase.ProductVariants{}
 
 	if len(req.Variants) == 1 {
@@ -346,7 +354,8 @@ func (u *sellerUsecase) UpdateProduct(ctx context.Context, req dtousecase.AddNew
 		imageLinks = append(imageLinks, imageUrl)
 	}
 
-	product, err := u.productRepository.AddNewProduct(ctx, dtorepository.AddNewProductRequest{
+	product, err := u.productRepository.UpdateProduct(ctx, dtorepository.AddNewProductRequest{
+		ProductID:         req.ProductID,
 		SellerID:          req.SellerID,
 		ProductName:       req.ProductName,
 		Description:       req.Description,
@@ -545,15 +554,14 @@ func (u *sellerUsecase) convertProductVariants(ctx context.Context, productName 
 		if data.SelectionName1 == constant.DefaultReservedKeyword {
 			pv.Variant1.Name = ""
 			pv.Variant1.Value = ""
-			log.Println("ADWDED")
 		} else {
-			pv.Variant1.Name = data.SelectionName1
-			pv.Variant1.Value = data.VariantName1
+			pv.Variant1.Name = data.VariantName1
+			pv.Variant1.Value = data.SelectionName1
 
 			if data.SelectionName2 != "" {
 				variant2 := &dtousecase.ProductSelectionSeller{}
-				variant2.Name = data.SelectionName2
-				variant2.Value = data.VariantName2
+				variant2.Name = data.VariantName2
+				variant2.Value = data.SelectionName2
 				pv.Variant2 = variant2
 			}
 		}
