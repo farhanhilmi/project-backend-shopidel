@@ -60,6 +60,40 @@ type CreateShopPromotionRequest struct {
 }
 
 type CreateShopPromotionResponse struct {
+	Id                 int             `json:"id"`
+	ShopId             int             `json:"shop_id"`
+	Name               string          `json:"name"`
+	Quota              int             `json:"quota"`
+	StartDate          time.Time       `json:"start_date"`
+	EndDate            time.Time       `json:"end_date"`
+	MinPurchaseAmount  decimal.Decimal `json:"min_purchase_amount"`
+	MaxPurchaseAmount  decimal.Decimal `json:"max_purchase_amount"`
+	DiscountPercentage decimal.Decimal `json:"disount_percentage"`
+	SelectedProductsId []int           `json:"selected_products_id"`
+	CreatedAt          time.Time       `json:"created_at"`
+}
+
+type GetShopPromotionDetailResponse struct {
+	ID                 int                            `json:"id"`
+	Name               string                         `json:"name"`
+	MinPurchaseAmount  decimal.Decimal                `json:"min_purchase_amount"`
+	MaxPurchaseAmount  decimal.Decimal                `json:"max_purchase_amount"`
+	DiscountPercentage decimal.Decimal                `json:"discount_percentage"`
+	Quota              int                            `json:"quota,omitempty"`
+	TotalUsed          int                            `json:"total_used,omitempty"`
+	StartDate          time.Time                      `json:"start_date,omitempty"`
+	EndDate            time.Time                      `json:"end_date,omitempty"`
+	SelectedProducts   []ShopPromotionSelectedProduct `json:"selected_products"`
+	CreatedAt          time.Time                      `json:"created_at"`
+}
+
+type ShopPromotionSelectedProduct struct {
+	ProductId   int       `json:"product_id"`
+	ProductName string    `json:"product_name"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+type UpdateShopPromotionRequest struct {
 	Id                 int
 	ShopId             int
 	Name               string
@@ -70,4 +104,18 @@ type CreateShopPromotionResponse struct {
 	MaxPurchaseAmount  decimal.Decimal
 	DiscountPercentage decimal.Decimal
 	SelectedProductsId []int
+}
+
+type UpdateShopPromotionResponse struct {
+	Id                 int             `json:"id"`
+	ShopId             int             `json:"shop_id"`
+	Name               string          `json:"name"`
+	Quota              int             `json:"quota"`
+	StartDate          time.Time       `json:"start_date"`
+	EndDate            time.Time       `json:"end_date"`
+	MinPurchaseAmount  decimal.Decimal `json:"min_purchase_amount"`
+	MaxPurchaseAmount  decimal.Decimal `json:"max_purchase_amount"`
+	DiscountPercentage decimal.Decimal `json:"disount_percentage"`
+	SelectedProductsId []int           `json:"selected_products_id"`
+	CreatedAt          time.Time       `json:"created_at"`
 }
