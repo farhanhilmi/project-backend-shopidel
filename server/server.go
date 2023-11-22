@@ -35,6 +35,7 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 	myWalletRepo := repository.NewWalletTransactionHistoryRepository(db)
 	productRepo := repository.NewProductRepository(db)
 	promotionRepo := repository.NewPromotionRepository(db)
+	showcaseRepo := repository.NewShowcaseRepository(db)
 
 	pouc := usecase.ProductOrderUsecaseConfig{
 		ProductOrderRepository:              productOrderRepo,
@@ -44,7 +45,6 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 		CourierRepository:                   courierRepo,
 		ProductRepository:                   productRepo,
 	}
-
 	auc := usecase.AccountUsecaseConfig{
 		AccountRepository:   accountRepo,
 		UsedEmailRepository: usedEmailRepo,
@@ -54,20 +54,20 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 	puc := usecase.ProductUsecaseConfig{
 		ProductRepository: productRepo,
 	}
-
 	wuc := usecase.MyWalletTransactionUsecaseConfig{
 		WalletTransactionRepo: myWalletRepo,
 		AccountRepository:     accountRepo,
 	}
-
 	suc := usecase.SellerUsecaseConfig{
 		AccountRepository: accountRepo,
 		ProductRepository: productRepo,
 		OrderRepository:   productOrderRepo,
 	}
-
 	pruc := usecase.PromotionUsecaseConfig{
 		PromotionRepository: promotionRepo,
+	}
+	suuc := usecase.ShowcaseUsecaseConfig{
+		ShowcaseRepository: showcaseRepo,
 	}
 
 	productUsecase := usecase.NewProductUsecase(puc)
@@ -76,12 +76,14 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 	walletTransactionUsecase := usecase.NewMyWalletTransactionUsecase(wuc)
 	sellerUsecase := usecase.NewSellerUsecase(suc)
 	pru := usecase.NewPromotionUsecase(pruc)
+	su := usecase.NewShowcaseUsecase(suuc)
 
 	accountHandler := handler.NewAccountHandler(accountUsecase, walletTransactionUsecase)
 	productOrderHandler := handler.NewProductOrderHandler(productOrderUsecase, pru)
 	productHandler := handler.NewProductHandler(productUsecase)
 	sellerHandler := handler.NewSellerHandler(handler.SellerHandlerConfig{SellerUsecase: sellerUsecase})
 	promotionHandler := handler.NewPromotionHandler(pru)
+	showcaseHandler := handler.NewShowcaseHandler(su)
 
 	configCors := cors.DefaultConfig()
 	configCors.AllowAllOrigins = true
@@ -98,6 +100,7 @@ func Start(gin *gin.Engine, db *gorm.DB) {
 	router_seller.NewSellerProfileRouter(sellerHandler, gin)
 	router_seller.NewSellerProductRouter(sellerHandler, gin)
 	router.NewShopPromotionRouter(promotionHandler, gin)
+	router.NewShowcaseRouter(showcaseHandler, gin)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", config.GetEnv("PORT")),
