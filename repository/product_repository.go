@@ -981,7 +981,7 @@ func (r *productRepository) UpdateProduct(ctx context.Context, req dtorepository
 	}
 
 	if req.VideoURL != "" {
-		err = tx.WithContext(ctx).Model(&model.ProductVideos{}).Where("id", res.ID).Update("url", req.VideoURL).Error
+		err = tx.WithContext(ctx).Model(&model.ProductVideos{}).Where("product_id", res.ID).Update("url", req.VideoURL).Error
 		if err != nil {
 			tx.Rollback()
 			return res, err
@@ -998,16 +998,12 @@ func (r *productRepository) UpdateProduct(ctx context.Context, req dtorepository
 		productImages = append(productImages, image)
 	}
 
-	err = tx.WithContext(ctx).Where("product_id", res.ID).Delete(model.ProductImages{}).Error
-	if err != nil {
-		tx.Rollback()
-		return res, err
-	}
-
-	err = tx.WithContext(ctx).Create(&productImages).Error
-	if err != nil {
-		tx.Rollback()
-		return res, err
+	if len(req.Images) != 0 {
+		err = tx.WithContext(ctx).Create(&productImages).Error
+		if err != nil {
+			tx.Rollback()
+			return res, err
+		}
 	}
 
 	productVariantDeleted := []model.ProductVariants{}
@@ -1091,7 +1087,9 @@ func (r *productRepository) UpdateProduct(ctx context.Context, req dtorepository
 
 	for _, v := range req.Variants {
 		var imageUrl string
-		if v.ImageID != "" && v.Variant1.Name != "" {
+		if v.ImageURL != "" {
+			imageUrl = v.ImageURL
+		} else if v.ImageID != "" && v.Variant1.Name != "" {
 			imageUrl, err = util.GetVariantImageURL(v.ImageID)
 			if err != nil {
 				tx.Rollback()
