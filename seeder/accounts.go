@@ -27,7 +27,7 @@ var Accounts = []*model.Accounts{
 		ID:           2,
 		Username:     "satoni",
 		FullName:     "Ahmad Satoni",
-		Email:        "satoni@mail.com",
+		Email:        "satoni@yopmail.com",
 		PhoneNumber:  "089828738222",
 		Password:     "$2a$14$ggRGSX9uKrEfapylGVadWee/P1yCOKduFFqnzNdq7U3ble5nxtNqC",
 		WalletNumber: "4200000000002",

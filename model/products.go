@@ -31,7 +31,7 @@ type ProductVariants struct {
 	Name      string    `gorm:"type:varchar;not null"`
 	CreatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	UpdatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
-	DeletedAt time.Time `gorm:"type:timestamp;default:null"`
+	// DeletedAt time.Time `gorm:"type:timestamp;default:null"`
 }
 
 type ProductVariantSelections struct {
@@ -40,7 +40,7 @@ type ProductVariantSelections struct {
 	Name             string    `gorm:"type:varchar;not null"`
 	CreatedAt        time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	UpdatedAt        time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
-	DeletedAt        time.Time `gorm:"type:timestamp;default:null"`
+	// DeletedAt        time.Time `gorm:"type:timestamp;default:null"`
 }
 
 type ProductVariantSelectionCombinations struct {
@@ -53,7 +53,7 @@ type ProductVariantSelectionCombinations struct {
 	PictureURL                 string          `gorm:"type:varchar;not null"`
 	CreatedAt                  time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	UpdatedAt                  time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
-	DeletedAt                  time.Time       `gorm:"type:timestamp;default:null"`
+	// DeletedAt                  time.Time       `gorm:"type:timestamp;default:null"`
 }
 
 type Category struct {

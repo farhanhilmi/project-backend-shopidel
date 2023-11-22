@@ -285,6 +285,7 @@ type DeleteAddressRequest struct {
 
 type ChangePasswordRequest struct {
 	AccountID   int
+	OTP         string
 	OldPassword string
 	NewPassword string
 }

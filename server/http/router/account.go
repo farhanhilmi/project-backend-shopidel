@@ -25,6 +25,7 @@ func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 		{
 			profile.GET("", h.GetProfile)
 			profile.PUT("", h.EditProfile)
+			profile.GET("/request-otp", h.RequestChangePasswordOTP)
 			profile.POST("/change-password", h.ChangePassword)
 		}
 

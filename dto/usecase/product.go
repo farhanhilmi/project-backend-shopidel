@@ -334,10 +334,11 @@ type AddNewProductVariant struct {
 	Stock    int                      `form:"stock"`
 	Price    decimal.Decimal          `form:"price"`
 	ImageID  string                   `form:"image_id"`
-	ImageURL string
+	ImageURL string                   `form:"image_url"`
 }
 
 type AddNewProductRequest struct {
+	ProductID         int
 	SellerID          int
 	ProductName       string
 	Description       string

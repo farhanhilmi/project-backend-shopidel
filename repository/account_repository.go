@@ -55,9 +55,10 @@ type AccountRepository interface {
 	FindByToken(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
 	SaveForgetPasswordToken(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
 	UpdatePassword(ctx context.Context, req dtorepository.RequestForgetPasswordRequest) (dtorepository.GetAccountResponse, error)
-	UpdatePassord(ctx context.Context, req dtorepository.ChangePasswordRequest) error
+	ChangePasswordUpdate(ctx context.Context, req dtorepository.ChangePasswordRequest) (dtorepository.GetAccountResponse, error)
 	FindCategories(ctx context.Context) ([]dtorepository.Category, error)
 	FindCategoryByID(ctx context.Context, categoryID int) (dtorepository.Category, error)
+	SaveChangePasswordToken(ctx context.Context, req dtorepository.RequestChangePasswordRequest) (dtorepository.GetAccountResponse, error)
 }
 
 type accountRepository struct {
@@ -200,13 +201,25 @@ func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.
 	return &res, nil
 }
 
-func (r *accountRepository) UpdatePassord(ctx context.Context, req dtorepository.ChangePasswordRequest) error {
-	err := r.db.WithContext(ctx).Model(&model.Accounts{}).Where("id = ?", req.AccountID).Update("password", req.NewPassword).Error
+func (r *accountRepository) ChangePasswordUpdate(ctx context.Context, req dtorepository.ChangePasswordRequest) (dtorepository.GetAccountResponse, error) {
+	res := dtorepository.GetAccountResponse{}
+	
+	err := r.db.WithContext(ctx).Model(&model.Accounts{}).
+	Where("id = ?", req.AccountID).
+	Update("password", req.NewPassword).
+	Update("change_password_token", gorm.Expr("NULL")).
+	Update("change_password_expired_at", gorm.Expr("NULL")).
+	Scan(&res).
+	Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
 	if err != nil {
-		return err
+		return res, err
 	}
 
-	return nil
+	return res, nil
 }
 
 func (r *accountRepository) GetAddresses(ctx context.Context, req dtorepository.AddressRequest) (*[]dtorepository.AddressResponse, error) {
@@ -624,6 +637,8 @@ func (r *accountRepository) FindById(ctx context.Context, req dtorepository.GetA
 	res.ForgetPasswordExpiredAt = account.ForgetPasswordExpiredAt
 	res.ForgetPasswordToken = account.ForgetPasswordToken
 	res.ShopName = account.ShopName
+	res.ChangePasswordToken = account.ChangePasswordToken
+	res.ChangePasswordExpiredAt = account.ChangePasswordExpiredAt
 
 	return res, err
 }
@@ -893,6 +908,26 @@ func (r *accountRepository) SaveForgetPasswordToken(ctx context.Context, req dto
 	res := dtorepository.GetAccountResponse{}
 
 	err := r.db.WithContext(ctx).Model(&model.Accounts{}).Where("id = ?", req.UserId).Update("forget_password_token", req.ForgetPasswordToken).Update("forget_password_expired_at", req.ForgetPasswordExpiredAt).Scan(&res).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, util.ErrNoRecordFound
+	}
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (r *accountRepository) SaveChangePasswordToken(ctx context.Context, req dtorepository.RequestChangePasswordRequest) (dtorepository.GetAccountResponse, error) {
+	res := dtorepository.GetAccountResponse{}
+
+	err := r.db.WithContext(ctx).Model(&model.Accounts{}).
+	Where("id = ?", req.UserId).
+	Update("change_password_token", req.ChangePasswordToken).
+	Update("change_password_expired_at", req.ChangePasswordExpiredAt).
+	Scan(&res).
+	Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound

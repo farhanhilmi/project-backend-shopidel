@@ -178,6 +178,56 @@ func (h *SellerHandler) AddNewProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: res})
 }
 
+func (h *SellerHandler) UpdateProduct(c *gin.Context) {
+	var req dtohttp.AddNewProductRequest
+
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	id := c.Param("productId")
+	productId, err := strconv.Atoi(id)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	productReq := dtousecase.AddNewProductRequest{
+		ProductID:         productId,
+		SellerID:          c.GetInt("userId"),
+		ProductName:       req.ProductName,
+		Description:       req.Description,
+		CategoryID:        req.CategoryID,
+		HazardousMaterial: req.HazardousMaterial,
+		IsNew:             req.IsNew,
+		InternalSKU:       req.InternalSKU,
+		Weight:            req.Weight,
+		Size:              req.Size,
+		IsActive:          req.IsActive,
+		Variants:          req.Variants,
+		VideoURL:          req.VideoURL,
+	}
+
+	form, err := c.MultipartForm()
+	if err != nil {
+		productReq.Images = nil
+	} else {
+		files := form.File["images[]"]
+		productReq.Images = files
+	}
+
+	product, err := h.sellerUsecase.UpdateProduct(c.Request.Context(), productReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res := fmt.Sprintf("Successfully update product %v", product.ProductName)
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: res})
+}
+
 func (h *SellerHandler) DeleteProduct(c *gin.Context) {
 
 	id := c.Param("productId")
