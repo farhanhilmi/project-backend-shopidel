@@ -180,8 +180,12 @@ func (u *accountUsecase) ChangePassword(ctx context.Context, req dtousecase.Chan
 		return util.ErrWeakPassword
 	}
 
-	if util.CheckPasswordHash(account.Password, req.NewPassword) {
+	if req.OldPassword == req.NewPassword {
 		return util.ErrSamePassword
+	}
+
+	if util.CheckPasswordIdentical(account.Username, req.NewPassword) {
+		return util.ErrPasswordIdentical
 	}
 
 	password, err := util.HashPassword(req.NewPassword)

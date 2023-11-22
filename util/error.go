@@ -72,11 +72,12 @@ var (
 	ErrRequestForgetToken        = &CustomError{Message: "The link you used is invalid or unable to be processed", Code: Unauthorized}
 	ErrSellerNotFound            = &CustomError{Message: "Seller not found", Code: NotFound}
 	ErrOrderDetailNotFound       = &CustomError{Message: "We could not find the order you are looking for", Code: NotFound}
-	ErrSamePassword              = &CustomError{Message: "New Password cannot be the same with previous password", Code: BadRequest}
+	ErrSamePassword              = &CustomError{Message: "New Password cannot be the same with old password", Code: BadRequest}
 	ErrNoImage                   = &CustomError{Message: "You should choose at least one product image", Code: BadRequest}
 	ErrIncorrectPassword         = &CustomError{Message: "Invalid Password", Code: Unauthorized}
 	ErrOrderNotInDelivered       = &CustomError{Message: "The order you selected is not or has not been delivered", Code: BadRequest}
 	ErrOrderNotCompleted         = &CustomError{Message: "The order you selected has not been completed", Code: BadRequest}
 	ErrInvalidOTP                = &CustomError{Message: "Invalid OTP", Code: Unauthorized}
 	ErrExpiredOTP                = &CustomError{Message: "OTP Expired, send a new OTP Request", Code: BadRequest}
+	ErrPasswordIdentical         = &CustomError{Message: "New password identical to old password, please create a unique Password", Code: BadRequest}
 )
