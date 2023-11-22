@@ -338,6 +338,7 @@ type AddNewProductVariant struct {
 }
 
 type AddNewProductRequest struct {
+	ProductID         int
 	SellerID          int
 	ProductName       string
 	Description       string

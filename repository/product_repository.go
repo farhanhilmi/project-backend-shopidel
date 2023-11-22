@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"math"
 	"strings"
 	"time"
@@ -42,6 +41,7 @@ type ProductRepository interface {
 	FindByIDAndSeller(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error)
 	FindSellerProducts(ctx context.Context, req dtorepository.ProductListParam) ([]dtorepository.ProductListSellerResponse, int64, error)
 	FindProductImages(ctx context.Context, req dtorepository.ProductRequest) ([]dtorepository.ProductImages, error)
+	UpdateProduct(ctx context.Context, req dtorepository.AddNewProductRequest) (dtorepository.AddNewProductResponse, error)
 }
 
 func NewProductRepository(db *gorm.DB) ProductRepository {
@@ -520,6 +520,7 @@ func (r *productRepository) FindProductVariant(ctx context.Context, req dtorepos
 
 	q := `
 		select 
+			pv.id,
 			pvsc.id as "VariantId",
 			pvsc.product_variant_selection_id1 as "SelectionId1",
 			pvs."name" as "SelectionName1",
@@ -872,7 +873,176 @@ func (r *productRepository) AddNewProduct(ctx context.Context, req dtorepository
 		productVariants = append(productVariants, variant)
 	}
 
-	log.Println(productVariants)
+	err = tx.WithContext(ctx).Create(&productVariants).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	variantSelections := []dtorepository.ProductVariantType{}
+
+	for _, v := range req.Variants {
+		selections := []dtorepository.ProductVariantType{
+			{
+				VariantName:  v.Variant1.Name,
+				VariantValue: v.Variant1.Value,
+			},
+			{
+				VariantName:  v.Variant2.Name,
+				VariantValue: v.Variant2.Value,
+			},
+		}
+
+		variantSelections = append(variantSelections, selections...)
+	}
+
+	selections := removeDuplicateValues(variantSelections)
+
+	productVariantSelections := []model.ProductVariantSelections{}
+
+	for _, selection := range selections {
+		for _, v := range productVariants {
+			if v.Name == selection.VariantName {
+				variant := model.ProductVariantSelections{
+					ProductVariantID: v.ID,
+					Name:             selection.VariantValue,
+				}
+				productVariantSelections = append(productVariantSelections, variant)
+			}
+		}
+	}
+
+	err = tx.WithContext(ctx).Create(&productVariantSelections).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	for _, v := range req.Variants {
+		var imageUrl string
+		if v.ImageID != "" && v.Variant1.Name != "" {
+			imageUrl, err = util.GetVariantImageURL(v.ImageID)
+			if err != nil {
+				tx.Rollback()
+				return res, err
+			}
+		}
+
+		variantCombination := model.ProductVariantSelectionCombinations{
+			ProductID:  res.ID,
+			Price:      v.Price,
+			PictureURL: imageUrl,
+			Stock:      v.Stock,
+		}
+		for _, selection := range productVariantSelections {
+			if v.Variant1.Value == selection.Name {
+				variantCombination.ProductVariantSelectionID1 = selection.ID
+			}
+		}
+		for _, selection := range productVariantSelections {
+			if v.Variant2.Value == selection.Name {
+				variantCombination.ProductVariantSelectionID2 = selection.ID
+			}
+		}
+		err = tx.WithContext(ctx).Create(&variantCombination).Error
+		if err != nil {
+			tx.Rollback()
+			return res, err
+		}
+	}
+
+	tx.Commit()
+
+	return res, err
+}
+
+func (r *productRepository) UpdateProduct(ctx context.Context, req dtorepository.AddNewProductRequest) (dtorepository.AddNewProductResponse, error) {
+	res := dtorepository.AddNewProductResponse{}
+
+	product := model.Products{
+		Name:              req.ProductName,
+		Description:       req.Description,
+		CategoryID:        req.CategoryID,
+		SellerID:          req.SellerID,
+		HazardousMaterial: *req.HazardousMaterial,
+		Weight:            req.Weight,
+		Size:              req.Size,
+		IsNew:             *req.IsNew,
+		IsActive:          *req.IsActive,
+		InternalSKU:       req.InternalSKU,
+	}
+
+	tx := r.db.Begin()
+
+	err := tx.WithContext(ctx).Model(&model.Products{}).Where("id", req.ProductID).Updates(&product).Scan(&res).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	if req.VideoURL != "" {
+		err = tx.WithContext(ctx).Model(&model.ProductVideos{}).Where("id", res.ID).Update("url", req.VideoURL).Error
+		if err != nil {
+			tx.Rollback()
+			return res, err
+		}
+	}
+
+	productImages := []model.ProductImages{}
+
+	for _, url := range req.Images {
+		image := model.ProductImages{
+			ProductID: res.ID,
+			URL:       url,
+		}
+		productImages = append(productImages, image)
+	}
+
+	err = tx.WithContext(ctx).Where("product_id", res.ID).Delete(model.ProductImages{}).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	err = tx.WithContext(ctx).Create(&productImages).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	productVariantDeleted := []model.ProductVariants{}
+
+	err = tx.WithContext(ctx).Clauses(clause.Returning{}).Where("product_id = ?", res.ID).Delete(&productVariantDeleted).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	productCombinationsDeleted := []model.ProductVariantSelectionCombinations{}
+	err = tx.WithContext(ctx).Clauses(clause.Returning{}).Where("product_id = ?", res.ID).Delete(&productCombinationsDeleted).Error
+	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	productSelectionDeleted := []model.ProductVariantSelections{}
+	for _, v := range productVariantDeleted {
+		err = tx.WithContext(ctx).Where("product_variant_id = ?", v.ID).Delete(&productSelectionDeleted).Error
+		if err != nil {
+			tx.Rollback()
+			return res, err
+		}
+	}
+
+	productVariants := []model.ProductVariants{}
+
+	for _, v := range req.ProductVariants {
+		variant := model.ProductVariants{
+			ProductID: res.ID,
+			Name:      v.Name,
+		}
+		productVariants = append(productVariants, variant)
+	}
 
 	err = tx.WithContext(ctx).Create(&productVariants).Error
 	if err != nil {
