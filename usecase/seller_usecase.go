@@ -30,6 +30,7 @@ type SellerUsecase interface {
 	GetProductByID(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductSellerResponse, error)
 	WithdrawSalesBalance(ctx context.Context, req dtousecase.WithdrawBalance) (dtousecase.WithdrawBalance, error)
 	UpdateProduct(ctx context.Context, req dtousecase.AddNewProductRequest) (dtousecase.AddNewProductResponse, error)
+	UpdateShopProfile(ctx context.Context, req dtousecase.UpdateShopProfileRequest) (dtousecase.UpdateShopProfileResponse, error)
 }
 
 type sellerUsecase struct {
@@ -63,7 +64,7 @@ func NewSellerUsecase(config SellerUsecaseConfig) SellerUsecase {
 func (u *sellerUsecase) GetProfile(ctx context.Context, req dtousecase.GetSellerProfileRequest) (dtousecase.GetSellerProfileResponse, error) {
 	res := dtousecase.GetSellerProfileResponse{}
 
-	seller, err := u.accountRepository.FirstSeller(ctx, dtorepository.SellerDataRequest{ShopName: req.ShopName})
+	seller, err := u.accountRepository.FirstSeller(ctx, dtorepository.SellerDataRequest{ShopName: req.ShopName, ShopId: req.ShopId})
 	if err != nil {
 		return res, err
 	}
@@ -80,7 +81,8 @@ func (u *sellerUsecase) GetProfile(ctx context.Context, req dtousecase.GetSeller
 	}
 	res.SellerPictureUrl = seller.ProfilePicture
 	res.ShopNameSlug = seller.ShopNameSlug
-	res.SellerStars = "4.8"
+	res.SellerStars = seller.Stars
+	res.SellerDescription = seller.Description
 
 	return res, nil
 }
@@ -665,4 +667,15 @@ func (u *sellerUsecase) WithdrawSalesBalance(ctx context.Context, req dtousecase
 	res.OrderID = orders[0].ID
 
 	return res, nil
+}
+
+func (u *sellerUsecase) UpdateShopProfile(ctx context.Context, req dtousecase.UpdateShopProfileRequest) (dtousecase.UpdateShopProfileResponse, error) {
+	res := dtousecase.UpdateShopProfileResponse{}
+
+	rRes, err := u.accountRepository.UpdateShopProfile(ctx, req)
+	if err != nil {
+		return res, err
+	}
+
+	return rRes, nil
 }

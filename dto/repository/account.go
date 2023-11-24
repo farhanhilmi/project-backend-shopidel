@@ -161,6 +161,7 @@ type DeleteAddressResponse struct {
 	AddressId int
 }
 type SellerDataRequest struct {
+	ShopId   int
 	ShopName string
 }
 
@@ -169,10 +170,12 @@ type SellerDataResponse struct {
 	Name                string
 	ProfilePicture      string
 	District            string
-	StartOperatingHours string
-	EndOperatingHours   string
+	StartOperatingHours time.Time
+	EndOperatingHours   time.Time
 	TimeZone            string
 	ShopNameSlug        string
+	Description         string
+	Stars               decimal.Decimal
 }
 
 type FindSellerBestSellingRequest struct {

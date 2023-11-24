@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtohttp "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/http"
@@ -34,14 +36,80 @@ func NewSellerHandler(config SellerHandlerConfig) *SellerHandler {
 
 func (h *SellerHandler) GetProfile(c *gin.Context) {
 	shopName := c.Param("shopName")
+	uReq := dtousecase.GetSellerProfileRequest{}
 
-	uRes, err := h.sellerUsecase.GetProfile(c.Request.Context(), dtousecase.GetSellerProfileRequest{ShopName: shopName})
+	shopId, err := strconv.Atoi(shopName)
+	if err != nil {
+		uReq.ShopName = shopName
+	} else {
+		uReq.ShopId = shopId
+	}
+
+	uRes, err := h.sellerUsecase.GetProfile(c.Request.Context(), uReq)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: uRes})
+	res := dtohttp.GetSellerProfileResponse{
+		SellerName:       uRes.SellerName,
+		SellerPictureUrl: uRes.SellerPictureUrl,
+		SellerDistrict:   uRes.SellerDistrict,
+		SellerOperatingHour: dtohttp.SellerOperatingHour{
+			Start: uRes.SellerOperatingHour.Start.Format("15:04"),
+			End:   uRes.SellerOperatingHour.End.Format("15:04"),
+		},
+		ShopNameSlug:      uRes.ShopNameSlug,
+		SellerStars:       uRes.SellerStars,
+		SellerDescription: uRes.SellerDescription,
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
+}
+
+func (h *SellerHandler) UpdateProfile(c *gin.Context) {
+	shopId := c.GetInt("userId")
+	body := dtohttp.UpdateSellerProfileBody{}
+
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.Error(err)
+		return
+	}
+
+	openingHours, err := time.Parse("15:04", body.OpeningHours)
+	if err != nil {
+		c.Error(errors.New("opening hours format is 00:00"))
+		return
+	}
+
+	closingHours, err := time.Parse("15:04", body.ClosingHours)
+	if err != nil {
+		c.Error(errors.New("closing hours format is 00:00"))
+		return
+	}
+
+	uReq := dtousecase.UpdateShopProfileRequest{
+		ShopId:          shopId,
+		ShopName:        body.ShopName,
+		ShopDescription: body.ShopDescription,
+		OpeningHours:    openingHours,
+		ClosingHours:    closingHours,
+	}
+
+	uRes, err := h.sellerUsecase.UpdateShopProfile(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res := dtohttp.UpdateSellerProfileResponse{
+		ShopName:        uRes.ShopName,
+		ShopDescription: uRes.ShopDescription,
+		OpeningHours:    uRes.OpeningHours.Format("15:04"),
+		ClosingHours:    uRes.ClosingHours.Format("15:04"),
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
 }
 
 func (h *SellerHandler) GetBestSelling(c *gin.Context) {
@@ -85,7 +153,7 @@ func (h *SellerHandler) GetShowcaseProducts(c *gin.Context) {
 	if p == 0 {
 		p = 1
 	}
-	limit := 2
+	limit := 20
 
 	uRes, err := h.sellerUsecase.GetShowcaseProducts(c.Request.Context(), dtousecase.GetSellerShowcaseProductRequest{ShopName: shopName, ShowcaseId: showcaseId, Page: p, Limit: limit})
 	if err != nil {

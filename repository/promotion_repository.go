@@ -19,6 +19,7 @@ type PromotionRepository interface {
 	FindMarketplacePromotions(ctx context.Context) ([]model.MarketplacePromotion, error)
 	FindShopPromotions(ctx context.Context, req dtorepository.FindShopPromotionsRequest) (dtorepository.FindShopPromotionsResponse, error)
 	FindShopPromotion(ctx context.Context, shopPromotionId int) (model.ShopPromotion, error)
+	FindMarketplacePromotion(ctx context.Context, marketplacePromotionId int) (model.MarketplacePromotion, error)
 	UpdateShopPromotion(ctx context.Context, req model.ShopPromotion) (model.ShopPromotion, error)
 }
 
@@ -70,7 +71,7 @@ func (r *promotionRepository) DeleteShopPromotion(ctx context.Context, shopPromo
 func (r *promotionRepository) FindShopAvailablePromotions(ctx context.Context, shopId int) ([]model.ShopPromotion, error) {
 	res := []model.ShopPromotion{}
 
-	err := r.db.WithContext(ctx).Where("shop_id = ? and start_date < Now() and end_date > Now() and Quota > 0 and deleted_at is null", shopId).Preload("SelectedProducts").Find(&res).Error
+	err := r.db.WithContext(ctx).Where("shop_id = ? and start_date < Now() and end_date > Now() and Quota > 0 and deleted_at is null", shopId).Find(&res).Error
 	if err != nil {
 		return res, err
 	}
@@ -124,7 +125,18 @@ func (r *promotionRepository) FindShopPromotions(ctx context.Context, req dtorep
 func (r *promotionRepository) FindShopPromotion(ctx context.Context, shopPromotionId int) (model.ShopPromotion, error) {
 	res := model.ShopPromotion{}
 
-	err := r.db.WithContext(ctx).Where("id = ? and deleted_at is null", shopPromotionId).Preload("SelectedProducts").Preload("SelectedProducts.Product").Find(&res).Error
+	err := r.db.WithContext(ctx).Where("id = ? and start_date < Now() and end_date > Now() and Quota > 0 and deleted_at is null", shopPromotionId).Find(&res).Error
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (r *promotionRepository) FindMarketplacePromotion(ctx context.Context, marketplacePromotionId int) (model.MarketplacePromotion, error) {
+	res := model.MarketplacePromotion{}
+
+	err := r.db.WithContext(ctx).Where("id = ? and start_date < Now() and end_date > Now() and Quota > 0 and deleted_at is null", marketplacePromotionId).Find(&res).Error
 	if err != nil {
 		return res, err
 	}
@@ -143,26 +155,16 @@ func (r *promotionRepository) UpdateShopPromotion(ctx context.Context, req model
 			return err
 		}
 
-		sps := []model.ShopPromotionSelectedProduct{}
-		if err := tx.Where("shop_promotion_id = ?", req.ID).Find(&sps).Error; err != nil {
-
-			return err
+		spu := model.ShopPromotion{
+			Name:              req.Name,
+			Quota:             req.Quota,
+			StartDate:         req.StartDate,
+			EndDate:           req.EndDate,
+			MinPurchaseAmount: req.MinPurchaseAmount,
+			MaxPurchaseAmount: req.MaxPurchaseAmount,
 		}
 
-		sp.Name = req.Name
-		sp.Quota = req.Quota
-		sp.StartDate = req.StartDate
-		sp.EndDate = req.EndDate
-		sp.MinPurchaseAmount = req.MinPurchaseAmount
-		sp.MaxPurchaseAmount = req.MaxPurchaseAmount
-		sp.DiscountPercentage = req.DiscountPercentage
-		sp.SelectedProducts = req.SelectedProducts
-
-		if err := tx.Delete(&sps).Error; err != nil {
-			return err
-		}
-
-		if err := tx.Save(&sp).Error; err != nil {
+		if err := tx.Model(&sp).Updates(spu).Error; err != nil {
 			return err
 		}
 

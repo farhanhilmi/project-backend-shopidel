@@ -34,6 +34,7 @@ type ProductOrdersRepository interface {
 	FindReviewByID(ctx context.Context, req dtorepository.ProductReviewRequest) (dtorepository.ProductReviewResponse, error)
 	FindOrderByIDAndAccount(ctx context.Context, req dtorepository.OrderDetailRequest) ([]model.ProductOrderDetail, error)
 	FindOrderByIDAndSellerID(ctx context.Context, req dtorepository.ProductOrderRequest) ([]model.ProductOrderSeller, error)
+	FindProductOrderByOrderDetailId(ctx context.Context, productOrderDetailId int) (model.ProductOrders, error)
 }
 
 func NewProductOrdersRepository(db *gorm.DB) ProductOrdersRepository {
@@ -234,20 +235,30 @@ func (r *productOrdersRepository) FindOrderByIDAndAccount(ctx context.Context, r
 	res := []model.ProductOrderDetail{}
 
 	q := `
-	select po.*, a.shop_name, pod.quantity, pod.individual_price, p.name as product_name, pod.product_id, 
-		por.feedback, por.rating, por.created_at as review_created_at, por.id as review_id, po.account_id as buyer_id
+		select 
+			po.*, 
+			a.shop_name, 
+			pod.quantity, 
+			pod.individual_price, 
+			p.name as product_name, 
+			pod.product_id, 
+			por.feedback, 
+			por.rating, 
+			por.created_at as review_created_at, 
+			por.id as review_id, 
+			po.account_id as buyer_id
 		from product_orders po
-		left join product_order_details pod 
-			on pod.product_order_id = po.id
-		left join products p 
-			on p.id = pod.product_id 
-		left join product_order_reviews por 
-			on por.product_order_detail_id = po.id 
-		left join accounts a 
-			on a.id = p.seller_id
-		left join product_order_review_images pori 
-			on pori.product_review_id = por.id
-	where po.account_id = ? and po.id = ?
+			left join product_order_details pod 
+				on pod.product_order_id = po.id
+			left join products p 
+				on p.id = pod.product_id 
+			left join product_order_reviews por 
+				on por.product_order_detail_id = po.id 
+			left join accounts a 
+				on a.id = p.seller_id
+			left join product_order_review_images pori 
+				on pori.product_review_id = por.id
+		where po.account_id = ? and po.id = ?
 	`
 
 	err := r.db.WithContext(ctx).Raw(q, req.AccountID, req.OrderID).Scan(&res).Error
@@ -357,6 +368,8 @@ func (r *productOrdersRepository) FindAllOrderHistoriesBySeller(ctx context.Cont
 		po.delivery_fee,
 		pod.quantity, 
 		pod.individual_price,
+		po.marketplace_total_discounted_price,
+		po.shop_total_discounted_price,
 		po.province,
 		po.district,
 		po.zip_code,
@@ -408,9 +421,22 @@ func (r *productOrdersRepository) FindAllOrderHistoriesByUserAndStatus(ctx conte
 	res := []model.ProductOrderHistories{}
 
 	q := `
-	select po.*, pod.variant_name, pod.id as product_order_detail_id, po.status, a.shop_name, pod.quantity, pod.individual_price, p.name as product_name, p.id as product_id, 
-	por.feedback, por.rating, por.created_at as review_created_at, por.id as review_id, pori.image_url as review_image_url
-		from product_orders po
+	select 
+		po.*, 
+		pod.variant_name, 
+		pod.id as product_order_detail_id, 
+		po.status, 
+		a.shop_name, 
+		pod.quantity, 
+		pod.individual_price, 
+		p.name as product_name, 
+		p.id as product_id, 
+		por.feedback, 
+		por.rating, 
+		por.created_at as review_created_at, 
+		por.id as review_id, 
+		pori.image_url as review_image_url
+	from product_orders po
 		left join product_order_details pod 
 			on pod.product_order_id = po.id
 		left join products p 
@@ -447,6 +473,23 @@ func (r *productOrdersRepository) FindAllOrderHistoriesByUserAndStatus(ctx conte
 	}
 
 	return res, totalItems, nil
+}
+
+func (r *productOrdersRepository) FindProductOrderByOrderDetailId(ctx context.Context, productOrderDetailId int) (model.ProductOrders, error) {
+	res := model.ProductOrders{}
+
+	pod := model.ProductOrderDetails{}
+
+	if err := r.db.WithContext(ctx).Where("id = ?", productOrderDetailId).Find(&pod).Error; err != nil {
+		return res, err
+	}
+
+	err := r.db.WithContext(ctx).Where("id = ?", pod.ProductOrderID).Find(&res).Error
+	if err != nil {
+		return res, err
+	}
+
+	return res, err
 }
 
 func (r *productOrdersRepository) FindByIDAndSellerID(ctx context.Context, req dtorepository.ProductOrderRequest) ([]model.ProductOrderSeller, error) {
@@ -739,18 +782,22 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 	tx := r.db.Begin()
 
 	a := model.ProductOrders{
-		CourierName:   req.CourierName,
-		AccountID:     req.AccountID,
-		DeliveryFee:   req.DeliveryFee,
-		District:      req.District,
-		ProductName:   req.ProductName,
-		Province:      req.Province,
-		SubDistrict:   req.SubDistrict,
-		Kelurahan:     req.Kelurahan,
-		Notes:         req.Notes,
-		Status:        req.Status,
-		ZipCode:       req.ZipCode,
-		AddressDetail: req.AddressDetail,
+		CourierName:                     req.CourierName,
+		AccountID:                       req.AccountID,
+		DeliveryFee:                     req.DeliveryFee,
+		District:                        req.District,
+		ProductName:                     req.ProductName,
+		Province:                        req.Province,
+		SubDistrict:                     req.SubDistrict,
+		Kelurahan:                       req.Kelurahan,
+		Notes:                           req.Notes,
+		Status:                          req.Status,
+		ZipCode:                         req.ZipCode,
+		AddressDetail:                   req.AddressDetail,
+		MarketplacePromotionId:          req.MarketplacePromotionId,
+		MarketplaceTotalDiscountedPrice: req.MarketplaceTotalDiscountedPrice,
+		ShopPromotionId:                 req.ShopPromotionId,
+		ShopTotalDiscountedPrice:        req.ShopTotalDiscountedPrice,
 	}
 
 	err := tx.WithContext(ctx).Create(&a).Scan(&res).Error
@@ -823,6 +870,36 @@ func (r *productOrdersRepository) Create(ctx context.Context, req dtorepository.
 	if err != nil {
 		tx.Rollback()
 		return res, err
+	}
+
+	shopPromotion := model.ShopPromotion{}
+	if err := tx.First(&shopPromotion).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		tx.Rollback()
+		return res, err
+	}
+
+	if shopPromotion.ID != 0 {
+		shopPromotion.TotalUsed += 1
+		shopPromotion.Quota -= 1
+		if err := tx.Updates(&shopPromotion).Error; err != nil {
+			tx.Rollback()
+			return res, err
+		}
+	}
+
+	marketplacePromotion := model.MarketplacePromotion{}
+	if err := tx.First(&marketplacePromotion).Error; err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	if marketplacePromotion.ID != 0 {
+		marketplacePromotion.TotalUsed += 1
+		marketplacePromotion.Quota -= 1
+		if err := tx.Updates(marketplacePromotion).Error; err != nil {
+			tx.Rollback()
+			return res, err
+		}
 	}
 
 	tx.Commit()
