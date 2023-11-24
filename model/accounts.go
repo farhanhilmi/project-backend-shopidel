@@ -25,6 +25,9 @@ type Accounts struct {
 	ForgetPasswordExpiredAt time.Time       `gorm:"type:timestamp;default:null"`
 	ChangePasswordToken     string          `gorm:"type:varchar;default:null"`
 	ChangePasswordExpiredAt time.Time       `gorm:"type:timestamp;default:null"`
+	ShopDescription         string          `gorm:"default:null"`
+	ShopOpeningHours        time.Time       `gorm:"type:time;default:null"`
+	ShopClosingHours        time.Time       `gorm:"type:time;default:null"`
 	CreatedAt               time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	UpdatedAt               time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	DeletedAt               time.Time       `gorm:"type:timestamp;default:null"`

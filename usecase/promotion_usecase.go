@@ -40,24 +40,15 @@ func NewPromotionUsecase(config PromotionUsecaseConfig) PromotionUsecase {
 func (u *promotionUsecase) CreateShopPromotions(ctx context.Context, req dtousecase.CreateShopPromotionRequest) (dtousecase.CreateShopPromotionResponse, error) {
 	res := dtousecase.CreateShopPromotionResponse{}
 
-	sps := []model.ShopPromotionSelectedProduct{}
-
-	for _, selectedProductId := range req.SelectedProductsId {
-		sps = append(sps, model.ShopPromotionSelectedProduct{
-			ProductId: selectedProductId,
-		})
-	}
-
 	sp := model.ShopPromotion{
-		ShopId:             req.ShopId,
-		Name:               req.Name,
-		Quota:              req.Quota,
-		StartDate:          req.StartDate,
-		EndDate:            req.EndDate,
-		MinPurchaseAmount:  req.MinPurchaseAmount,
-		MaxPurchaseAmount:  req.MaxPurchaseAmount,
-		DiscountPercentage: req.DiscountPercentage,
-		SelectedProducts:   sps,
+		ShopId:            req.ShopId,
+		Name:              req.Name,
+		Quota:             req.Quota,
+		StartDate:         req.StartDate,
+		EndDate:           req.EndDate,
+		MinPurchaseAmount: req.MinPurchaseAmount,
+		MaxPurchaseAmount: req.MaxPurchaseAmount,
+		DiscountAmount:    req.DiscountAmount,
 	}
 
 	rRes, err := u.promotionRepository.CreateShopPromotion(ctx, sp)
@@ -66,17 +57,16 @@ func (u *promotionUsecase) CreateShopPromotions(ctx context.Context, req dtousec
 	}
 
 	res = dtousecase.CreateShopPromotionResponse{
-		Id:                 rRes.ID,
-		ShopId:             rRes.ShopId,
-		Name:               rRes.Name,
-		Quota:              rRes.Quota,
-		StartDate:          rRes.StartDate,
-		EndDate:            rRes.EndDate,
-		MinPurchaseAmount:  rRes.MinPurchaseAmount,
-		MaxPurchaseAmount:  rRes.MaxPurchaseAmount,
-		DiscountPercentage: rRes.DiscountPercentage,
-		SelectedProductsId: req.SelectedProductsId,
-		CreatedAt:          rRes.CreatedAt,
+		Id:                rRes.ID,
+		ShopId:            rRes.ShopId,
+		Name:              rRes.Name,
+		Quota:             rRes.Quota,
+		StartDate:         rRes.StartDate,
+		EndDate:           rRes.EndDate,
+		MinPurchaseAmount: rRes.MinPurchaseAmount,
+		MaxPurchaseAmount: rRes.MaxPurchaseAmount,
+		DiscountAmount:    rRes.DiscountAmount,
+		CreatedAt:         rRes.CreatedAt,
 	}
 
 	return res, nil
@@ -93,6 +83,7 @@ func (u *promotionUsecase) DeleteShopPromotions(ctx context.Context, shopPromoti
 
 func (u *promotionUsecase) GetShopAvailablePromotions(ctx context.Context, req dtousecase.GetShopAvailablePromotionsRequest) (dtousecase.GetShopAvailablePromotionsResponse, error) {
 	res := dtousecase.GetShopAvailablePromotionsResponse{}
+	res.ShopPromotions = []dtousecase.AvailableShopPromotion{}
 
 	shopPromotions, err := u.promotionRepository.FindShopAvailablePromotions(ctx, req.ShopId)
 	if err != nil {
@@ -100,16 +91,12 @@ func (u *promotionUsecase) GetShopAvailablePromotions(ctx context.Context, req d
 	}
 
 	for _, shopPromotion := range shopPromotions {
-		sp := dtousecase.ShopPromotion{
-			ID:                 shopPromotion.ID,
-			Name:               shopPromotion.Name,
-			MinPurchaseAmount:  shopPromotion.MinPurchaseAmount,
-			MaxPurchaseAmount:  shopPromotion.MaxPurchaseAmount,
-			DiscountPercentage: shopPromotion.DiscountPercentage,
-		}
-
-		for _, selectedProduct := range shopPromotion.SelectedProducts {
-			sp.SelectedProductsId = append(sp.SelectedProductsId, selectedProduct.ID)
+		sp := dtousecase.AvailableShopPromotion{
+			ID:                shopPromotion.ID,
+			Name:              shopPromotion.Name,
+			MinPurchaseAmount: shopPromotion.MinPurchaseAmount,
+			MaxPurchaseAmount: shopPromotion.MaxPurchaseAmount,
+			DiscountAmount:    shopPromotion.DiscountAmount,
 		}
 
 		res.ShopPromotions = append(res.ShopPromotions, sp)
@@ -128,11 +115,11 @@ func (u *promotionUsecase) GetMarketplacePromotions(ctx context.Context) (dtouse
 
 	for _, mp := range marketplacePromotions {
 		res.MarketplacePromotions = append(res.MarketplacePromotions, dtousecase.MarketplacePromotion{
-			ID:                 mp.ID,
-			Name:               mp.Name,
-			MaxPurchaseAmount:  mp.MaxPurchaseAmount,
-			MinPurchaseAmount:  mp.MinPurchaseAmount,
-			DiscountPercentage: mp.DiscountPercentage,
+			ID:                mp.ID,
+			Name:              mp.Name,
+			MaxPurchaseAmount: mp.MaxPurchaseAmount,
+			MinPurchaseAmount: mp.MinPurchaseAmount,
+			DiscountAmount:    mp.DiscountAmount,
 		})
 	}
 
@@ -155,15 +142,15 @@ func (u *promotionUsecase) GetShopPromotions(ctx context.Context, req dtousecase
 
 	for _, mp := range rRes.ShopPromotions {
 		res.ShopPromotions = append(res.ShopPromotions, dtousecase.ShopPromotion{
-			ID:                 mp.ID,
-			Name:               mp.Name,
-			MaxPurchaseAmount:  mp.MaxPurchaseAmount,
-			MinPurchaseAmount:  mp.MinPurchaseAmount,
-			DiscountPercentage: mp.DiscountPercentage,
-			Quota:              mp.Quota,
-			TotalUsed:          mp.TotalUsed,
-			StartDate:          mp.StartDate,
-			EndDate:            mp.EndDate,
+			ID:                mp.ID,
+			Name:              mp.Name,
+			MaxPurchaseAmount: mp.MaxPurchaseAmount,
+			MinPurchaseAmount: mp.MinPurchaseAmount,
+			DiscountAmount:    mp.DiscountAmount,
+			Quota:             mp.Quota,
+			TotalUsed:         mp.TotalUsed,
+			StartDate:         mp.StartDate,
+			EndDate:           mp.EndDate,
 		})
 	}
 
@@ -175,30 +162,20 @@ func (u *promotionUsecase) GetShopPromotionDetail(ctx context.Context, shopPromo
 
 	rRes, err := u.promotionRepository.FindShopPromotion(ctx, shopPromotionId)
 	if err != nil {
-		return res, nil
-	}
-
-	sps := []dtousecase.ShopPromotionSelectedProduct{}
-	for _, selectedProduct := range rRes.SelectedProducts {
-		sps = append(sps, dtousecase.ShopPromotionSelectedProduct{
-			ProductId:   selectedProduct.ProductId,
-			ProductName: selectedProduct.Product.Name,
-			CreatedAt:   selectedProduct.CreatedAt,
-		})
+		return res, err
 	}
 
 	res = dtousecase.GetShopPromotionDetailResponse{
-		ID:                 rRes.ID,
-		Name:               rRes.Name,
-		MinPurchaseAmount:  rRes.MinPurchaseAmount,
-		MaxPurchaseAmount:  rRes.MaxPurchaseAmount,
-		DiscountPercentage: rRes.DiscountPercentage,
-		Quota:              rRes.Quota,
-		TotalUsed:          rRes.TotalUsed,
-		StartDate:          rRes.StartDate,
-		EndDate:            rRes.EndDate,
-		CreatedAt:          rRes.CreatedAt,
-		SelectedProducts:   sps,
+		ID:                rRes.ID,
+		Name:              rRes.Name,
+		MinPurchaseAmount: rRes.MinPurchaseAmount,
+		MaxPurchaseAmount: rRes.MaxPurchaseAmount,
+		DiscountAmount:    rRes.DiscountAmount,
+		Quota:             rRes.Quota,
+		TotalUsed:         rRes.TotalUsed,
+		StartDate:         rRes.StartDate,
+		EndDate:           rRes.EndDate,
+		CreatedAt:         rRes.CreatedAt,
 	}
 
 	return res, nil
@@ -207,26 +184,16 @@ func (u *promotionUsecase) GetShopPromotionDetail(ctx context.Context, shopPromo
 func (u *promotionUsecase) UpdateShopPromotion(ctx context.Context, req dtousecase.UpdateShopPromotionRequest) (dtousecase.UpdateShopPromotionResponse, error) {
 	res := dtousecase.UpdateShopPromotionResponse{}
 
-	sps := []model.ShopPromotionSelectedProduct{}
-
-	for _, selectedProductId := range req.SelectedProductsId {
-		sps = append(sps, model.ShopPromotionSelectedProduct{
-			ShopPromotionId: req.Id,
-			ProductId:       selectedProductId,
-		})
-	}
-
 	sp := model.ShopPromotion{
-		ID:                 req.Id,
-		ShopId:             req.ShopId,
-		Name:               req.Name,
-		Quota:              req.Quota,
-		StartDate:          req.StartDate,
-		EndDate:            req.EndDate,
-		MinPurchaseAmount:  req.MinPurchaseAmount,
-		MaxPurchaseAmount:  req.MaxPurchaseAmount,
-		DiscountPercentage: req.DiscountPercentage,
-		SelectedProducts:   sps,
+		ID:                req.Id,
+		ShopId:            req.ShopId,
+		Name:              req.Name,
+		Quota:             req.Quota,
+		StartDate:         req.StartDate,
+		EndDate:           req.EndDate,
+		MinPurchaseAmount: req.MinPurchaseAmount,
+		MaxPurchaseAmount: req.MaxPurchaseAmount,
+		DiscountAmount:    req.DiscountAmount,
 	}
 
 	rRes, err := u.promotionRepository.UpdateShopPromotion(ctx, sp)
@@ -235,17 +202,16 @@ func (u *promotionUsecase) UpdateShopPromotion(ctx context.Context, req dtouseca
 	}
 
 	res = dtousecase.UpdateShopPromotionResponse{
-		Id:                 rRes.ID,
-		ShopId:             rRes.ShopId,
-		Name:               rRes.Name,
-		Quota:              rRes.Quota,
-		StartDate:          rRes.StartDate,
-		EndDate:            rRes.EndDate,
-		MinPurchaseAmount:  rRes.MinPurchaseAmount,
-		MaxPurchaseAmount:  rRes.MaxPurchaseAmount,
-		DiscountPercentage: rRes.DiscountPercentage,
-		SelectedProductsId: req.SelectedProductsId,
-		CreatedAt:          rRes.CreatedAt,
+		Id:                rRes.ID,
+		ShopId:            rRes.ShopId,
+		Name:              rRes.Name,
+		Quota:             rRes.Quota,
+		StartDate:         rRes.StartDate,
+		EndDate:           rRes.EndDate,
+		MinPurchaseAmount: rRes.MinPurchaseAmount,
+		MaxPurchaseAmount: rRes.MaxPurchaseAmount,
+		DiscountAmount:    rRes.DiscountAmount,
+		CreatedAt:         rRes.CreatedAt,
 	}
 
 	return res, nil

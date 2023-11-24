@@ -125,14 +125,16 @@ func (h *ProductOrderHandler) CheckoutOrder(c *gin.Context) {
 	}
 
 	uReq := dtousecase.CheckoutOrderRequest{
-		ProductVariant:       req.ProductVariant,
-		VoucherID:            req.VoucherID,
-		DestinationAddressID: req.DestinationAddressID,
-		UserID:               c.GetInt("userId"),
-		CourierID:            req.CourierID,
-		Notes:                req.Notes,
-		SellerID:             req.SellerID,
-		Weight:               req.Weight,
+		ProductVariant:         req.ProductVariant,
+		VoucherID:              req.VoucherID,
+		DestinationAddressID:   req.DestinationAddressID,
+		UserID:                 c.GetInt("userId"),
+		CourierID:              req.CourierID,
+		Notes:                  req.Notes,
+		SellerID:               req.SellerID,
+		Weight:                 req.Weight,
+		ShopPromotionId:        req.ShopPromotionId,
+		MarketplacePromotionId: req.MarketplacePromotionId,
 	}
 
 	_, err = h.productOrderUsecase.CheckoutOrder(c.Request.Context(), uReq)

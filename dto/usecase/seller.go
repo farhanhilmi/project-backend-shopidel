@@ -7,16 +7,18 @@ import (
 )
 
 type GetSellerProfileRequest struct {
+	ShopId   int
 	ShopName string
 }
 
 type GetSellerProfileResponse struct {
-	SellerName          string              `json:"seller_name"`
-	SellerPictureUrl    string              `json:"seller_picture_url"`
-	SellerDistrict      string              `json:"seller_district"`
-	SellerOperatingHour SellerOperatingHour `json:"seller_operating_hour"`
-	ShopNameSlug        string              `json:"shop_name_slug"`
-	SellerStars         string              `json:"seller_stars"`
+	SellerName          string
+	SellerPictureUrl    string
+	SellerDistrict      string
+	SellerOperatingHour SellerOperatingHour
+	ShopNameSlug        string
+	SellerStars         decimal.Decimal
+	SellerDescription   string
 }
 
 type GetSellerProductsRequest struct {
@@ -66,8 +68,8 @@ type GetSellerShowcaseProductResponse struct {
 }
 
 type SellerOperatingHour struct {
-	Start string `json:"start"`
-	End   string `json:"end"`
+	Start time.Time
+	End   time.Time
 }
 
 type GetSellerShowcaseProducts struct {
@@ -90,4 +92,20 @@ type SellerProduct struct {
 type SellerShowcase struct {
 	ShowcaseId   int    `json:"showcase_id"`
 	ShowcaseName string `json:"showcase_name"`
+}
+
+type UpdateShopProfileRequest struct {
+	ShopId          int
+	ShopName        string
+	ShopDescription string
+	OpeningHours    time.Time
+	ClosingHours    time.Time
+}
+
+type UpdateShopProfileResponse struct {
+	ShopId          int
+	ShopName        string
+	ShopDescription string
+	OpeningHours    time.Time
+	ClosingHours    time.Time
 }

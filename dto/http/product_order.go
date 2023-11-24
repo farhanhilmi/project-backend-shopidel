@@ -42,13 +42,15 @@ type ProductOrderReceiveResponse struct {
 }
 
 type CheckoutOrderRequest struct {
-	SellerID             int                              `json:"seller_id" binding:"required"`
-	ProductVariant       []dtousecase.ProductVariantOrder `json:"product_variant" binding:"required"`
-	DestinationAddressID string                           `json:"destination_address_id" binding:"required"`
-	VoucherID            int                              `json:"voucher_id"`
-	Notes                string                           `json:"notes"`
-	Weight               string                           `json:"weight" binding:"required"`
-	CourierID            int                              `json:"courier_id" binding:"required"`
+	SellerID               int                              `json:"seller_id" binding:"required"`
+	ProductVariant         []dtousecase.ProductVariantOrder `json:"product_variant" binding:"required"`
+	DestinationAddressID   string                           `json:"destination_address_id" binding:"required"`
+	VoucherID              int                              `json:"voucher_id"`
+	Notes                  string                           `json:"notes"`
+	Weight                 string                           `json:"weight" binding:"required"`
+	CourierID              int                              `json:"courier_id" binding:"required"`
+	ShopPromotionId        int                              `json:"shop_promotion_id"`
+	MarketplacePromotionId int                              `json:"marketplace_promotion_id"`
 }
 
 type AddProductReviewRequest struct {

@@ -181,7 +181,6 @@ func (u *productUsecase) GetProductDetail(ctx context.Context, req dtousecase.Ge
 	res.Description = rRes.Description
 	res.Variants = variants
 	res.VariantOptions = options
-	res.IsFavorite = rRes.IsFavorite
 
 	return res, nil
 }
@@ -225,7 +224,6 @@ func (u *productUsecase) GetProductDetailV2(ctx context.Context, req dtousecase.
 	res.Description = rRes.Description
 	res.Variants = variants
 	res.VariantOptions = options
-	res.IsFavorite = rRes.IsFavorite
 
 	return res, nil
 }

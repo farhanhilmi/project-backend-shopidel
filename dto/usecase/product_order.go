@@ -41,14 +41,16 @@ type ProductVariantOrder struct {
 }
 
 type CheckoutOrderRequest struct {
-	ProductVariant       []ProductVariantOrder
-	DestinationAddressID string
-	VoucherID            int
-	UserID               int
-	CourierID            int
-	SellerID             int
-	Notes                string
-	Weight               string
+	ProductVariant         []ProductVariantOrder
+	DestinationAddressID   string
+	VoucherID              int
+	UserID                 int
+	CourierID              int
+	SellerID               int
+	Notes                  string
+	Weight                 string
+	ShopPromotionId        int
+	MarketplacePromotionId int
 }
 
 type CheckoutOrderResponse struct {

@@ -131,7 +131,7 @@ func (r *showcaseRepository) UpdateShowcase(ctx context.Context, req model.Selle
 			return err
 		}
 
-		if err := tx.Save(&sp).Error; err != nil {
+		if err := tx.Updates(&sp).Error; err != nil {
 			return err
 		}
 

@@ -9,5 +9,6 @@ WORKDIR /app
 COPY --from=buildStage /app/output ./output
 COPY ./.env ./.env
 COPY ./template_forget_password.html ./template_forget_password.html
+COPY ./template_change_password.html ./template_change_password.html
 EXPOSE 8080
 CMD [ "./output" ]

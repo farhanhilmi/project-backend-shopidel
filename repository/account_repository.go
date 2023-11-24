@@ -59,6 +59,7 @@ type AccountRepository interface {
 	FindCategories(ctx context.Context) ([]dtorepository.Category, error)
 	FindCategoryByID(ctx context.Context, categoryID int) (dtorepository.Category, error)
 	SaveChangePasswordToken(ctx context.Context, req dtorepository.RequestChangePasswordRequest) (dtorepository.GetAccountResponse, error)
+	UpdateShopProfile(ctx context.Context, req dtousecase.UpdateShopProfileRequest) (dtousecase.UpdateShopProfileResponse, error)
 }
 
 type accountRepository struct {
@@ -203,14 +204,14 @@ func (r *accountRepository) CreateSeller(ctx context.Context, req dtorepository.
 
 func (r *accountRepository) ChangePasswordUpdate(ctx context.Context, req dtorepository.ChangePasswordRequest) (dtorepository.GetAccountResponse, error) {
 	res := dtorepository.GetAccountResponse{}
-	
+
 	err := r.db.WithContext(ctx).Model(&model.Accounts{}).
-	Where("id = ?", req.AccountID).
-	Update("password", req.NewPassword).
-	Update("change_password_token", gorm.Expr("NULL")).
-	Update("change_password_expired_at", gorm.Expr("NULL")).
-	Scan(&res).
-	Error
+		Where("id = ?", req.AccountID).
+		Update("password", req.NewPassword).
+		Update("change_password_token", gorm.Expr("NULL")).
+		Update("change_password_expired_at", gorm.Expr("NULL")).
+		Scan(&res).
+		Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound
@@ -923,11 +924,11 @@ func (r *accountRepository) SaveChangePasswordToken(ctx context.Context, req dto
 	res := dtorepository.GetAccountResponse{}
 
 	err := r.db.WithContext(ctx).Model(&model.Accounts{}).
-	Where("id = ?", req.UserId).
-	Update("change_password_token", req.ChangePasswordToken).
-	Update("change_password_expired_at", req.ChangePasswordExpiredAt).
-	Scan(&res).
-	Error
+		Where("id = ?", req.UserId).
+		Update("change_password_token", req.ChangePasswordToken).
+		Update("change_password_expired_at", req.ChangePasswordExpiredAt).
+		Scan(&res).
+		Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound
@@ -1125,8 +1126,8 @@ func (r *accountRepository) FirstSeller(ctx context.Context, req dtorepository.S
 			a.shop_name as "Name",
 			a.profile_picture as "ProfilePicture",
 			aa.district as "District",
-			'08:00' as "StartOperatingHours",
-			'20:00' as "EndOperatingHours",
+			a.shop_opening_hours as "StartOperatingHours",
+			a.shop_closing_hours as "EndOperatingHours",
 			'asia/jakarta' as "TimeZone",
 			TRIM(BOTH '-' FROM 
 					REGEXP_REPLACE(
@@ -1136,10 +1137,23 @@ func (r *accountRepository) FirstSeller(ctx context.Context, req dtorepository.S
 						), 
 						'-+', '-', 'g'
 					)
-				) as "ShopNameSlug"
+				) as "ShopNameSlug",
+			a.shop_description as "Description",
+			coalesce(shop_stars.stars_average, 0) as "Stars"
 		from accounts a
 		left join account_addresses aa 
-			on aa.account_id  = a.id 
+			on aa.account_id  = a.id
+		left join (
+			select
+				po.account_id,
+				avg(por.rating) as stars_average
+			from product_orders po 
+			left join product_order_details pod 
+				on pod.product_order_id = po.id 
+			left join product_order_reviews por
+				on por.product_order_detail_id = pod.id 
+			group by po.account_id 
+		) shop_stars on shop_stars.account_id = a.id
 		where TRIM(BOTH '-' FROM 
 					REGEXP_REPLACE(
 						REGEXP_REPLACE(
@@ -1149,12 +1163,13 @@ func (r *accountRepository) FirstSeller(ctx context.Context, req dtorepository.S
 						'-+', '-', 'g'
 					)
 				) ilike ?
+			OR a.id = ?
 	`
 
-	if err := r.db.WithContext(ctx).Raw(q, req.ShopName).Scan(&res).Error; err != nil {
+	if err := r.db.WithContext(ctx).Raw(q, req.ShopName, req.ShopId).Find(&res).Error; err != nil {
 		return res, err
 	}
-
+	fmt.Println(res)
 	return res, nil
 }
 
@@ -1447,6 +1462,37 @@ func (r *accountRepository) FindCategoryByID(ctx context.Context, categoryID int
 	if err := r.db.WithContext(ctx).Raw(q, categoryID).Scan(&res).Error; err != nil {
 		return res, err
 	}
+
+	return res, nil
+}
+
+func (r *accountRepository) UpdateShopProfile(ctx context.Context, req dtousecase.UpdateShopProfileRequest) (dtousecase.UpdateShopProfileResponse, error) {
+	res := dtousecase.UpdateShopProfileResponse{}
+
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		a := model.Accounts{}
+
+		if err := tx.Where("id = ?", req.ShopId).Find(&a).Error; err != nil {
+			return err
+		}
+
+		a.ShopName = req.ShopName
+		a.ShopDescription = req.ShopDescription
+		a.ShopOpeningHours = req.OpeningHours
+		a.ShopClosingHours = req.ClosingHours
+
+		if err := tx.Updates(&a).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return res, err
+	}
+
+	res = dtousecase.UpdateShopProfileResponse(req)
 
 	return res, nil
 }

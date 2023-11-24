@@ -9,6 +9,7 @@ import (
 func NewSellerProfileRouter(h *handler.SellerHandler, gin *gin.Engine) *gin.Engine {
 	seller := gin.Group("sellers")
 	{
+		seller.PUT("", middleware.AuthenticateJWT(), h.UpdateProfile)
 		seller.GET("/:shopName/profile", h.GetProfile)
 		seller.GET("/:shopName/best-selling", h.GetBestSelling)
 		seller.GET("/:shopName/showcases", h.GetShowcases)

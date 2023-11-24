@@ -69,7 +69,6 @@ func createTable() {
 		&model.Category{},
 		&model.Products{},
 		&model.ShopPromotion{},
-		&model.ShopPromotionSelectedProduct{},
 		&model.MarketplacePromotion{},
 		&model.ProductImages{},
 		&model.ProductVideos{},
@@ -130,7 +129,6 @@ func seeding() {
 		seeder.SellerShowcaseProducts,
 		seeder.ProductOrderReviewImages,
 		seeder.ShopPromotions,
-		seeder.ShopPromotionSelectedProducts,
 		seeder.MarketplacePromotions,
 	}
 

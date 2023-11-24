@@ -8,25 +8,29 @@ import (
 )
 
 type ProductOrderRequest struct {
-	ID                 int
-	Province           string
-	District           string
-	SubDistrict        string
-	Kelurahan          string
-	ZipCode            string
-	AddressDetail      string
-	AccountID          int
-	SellerID           int
-	CourierName        string
-	Status             string
-	Notes              string
-	SellerWalletNumber string
-	BuyerWalletNumber  string
-	ProductName        string
-	DeliveryFee        decimal.Decimal
-	TotalAmount        decimal.Decimal
-	TotalSellerAmount  decimal.Decimal
-	ProductVariants    []ProductOrderDetailRequest
+	ID                              int
+	Province                        string
+	District                        string
+	SubDistrict                     string
+	Kelurahan                       string
+	ZipCode                         string
+	AddressDetail                   string
+	AccountID                       int
+	SellerID                        int
+	CourierName                     string
+	Status                          string
+	Notes                           string
+	SellerWalletNumber              string
+	BuyerWalletNumber               string
+	ProductName                     string
+	DeliveryFee                     decimal.Decimal
+	TotalAmount                     decimal.Decimal
+	TotalSellerAmount               decimal.Decimal
+	ProductVariants                 []ProductOrderDetailRequest
+	MarketplacePromotionId          int
+	MarketplaceTotalDiscountedPrice decimal.Decimal
+	ShopPromotionId                 int
+	ShopTotalDiscountedPrice        decimal.Decimal
 }
 
 type ReceiveOrderRequest struct {
@@ -157,28 +161,30 @@ type ProductReviewResponse struct {
 }
 
 type ProductSellerOrderHistoriesResponse struct {
-	ID                   int
-	ProductOrderID       int
-	Status               string
-	BuyerName            string
-	ProductID            int
-	ProductName          string
-	VariantName          string
-	ProductOrderDetailID int
-	DeliveryFee          int
-	Quantity             int
-	IndividualPrice      decimal.Decimal
-	Province             string
-	District             string
-	ZipCode              string
-	SubDistrict          string
-	Kelurahan            string
-	Detail               string
-	CourierName          string
-	IsWithdrawn          bool
-	CreatedAt            time.Time
-	UpdatedAt            time.Time
-	DeletedAt            time.Time
+	ID                              int
+	ProductOrderID                  int
+	Status                          string
+	BuyerName                       string
+	ProductID                       int
+	ProductName                     string
+	VariantName                     string
+	ProductOrderDetailID            int
+	DeliveryFee                     int
+	Quantity                        int
+	IndividualPrice                 decimal.Decimal
+	Province                        string
+	District                        string
+	ZipCode                         string
+	SubDistrict                     string
+	Kelurahan                       string
+	Detail                          string
+	CourierName                     string
+	IsWithdrawn                     bool
+	MarketplaceTotalDiscountedPrice decimal.Decimal
+	ShopTotalDiscountedPrice        decimal.Decimal
+	CreatedAt                       time.Time
+	UpdatedAt                       time.Time
+	DeletedAt                       time.Time
 }
 
 type ProductSellerOrderHistoryRequest struct {

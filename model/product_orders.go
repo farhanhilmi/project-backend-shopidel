@@ -7,22 +7,26 @@ import (
 )
 
 type ProductOrders struct {
-	ID            int             `gorm:"primaryKey;not null,autoIncrement;serial"`
-	AccountID     int             `gorm:"foreignKey:AccountID;type:bigint;not null"`
-	CourierName   string          `gorm:"type:varchar"`
-	ProductName   string          `gorm:"type:varchar"`
-	DeliveryFee   decimal.Decimal `gorm:"type:decimal;not null"`
-	Province      string          `gorm:"type:varchar"`
-	District      string          `gorm:"type:varchar"`
-	SubDistrict   string          `gorm:"type:varchar"`
-	Kelurahan     string          `gorm:"type:varchar"`
-	ZipCode       string          `gorm:"type:varchar"`
-	AddressDetail string          `gorm:"type:text"`
-	Status        string          `gorm:"type:varchar"`
-	Notes         string          `gorm:"type:varchar;default:null"`
-	CreatedAt     time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
-	UpdatedAt     time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
-	DeletedAt     time.Time       `gorm:"type:timestamp;default:null"`
+	ID                              int             `gorm:"primaryKey;not null,autoIncrement;serial"`
+	AccountID                       int             `gorm:"foreignKey:AccountID;type:bigint;not null"`
+	CourierName                     string          `gorm:"type:varchar"`
+	ProductName                     string          `gorm:"type:varchar"`
+	DeliveryFee                     decimal.Decimal `gorm:"type:decimal;not null"`
+	Province                        string          `gorm:"type:varchar"`
+	District                        string          `gorm:"type:varchar"`
+	SubDistrict                     string          `gorm:"type:varchar"`
+	Kelurahan                       string          `gorm:"type:varchar"`
+	ZipCode                         string          `gorm:"type:varchar"`
+	AddressDetail                   string          `gorm:"type:text"`
+	Status                          string          `gorm:"type:varchar"`
+	Notes                           string          `gorm:"type:varchar;default:null"`
+	MarketplacePromotionId          int             `gorm:"default:null"`
+	MarketplaceTotalDiscountedPrice decimal.Decimal `gorm:"default:null"`
+	ShopPromotionId                 int             `gorm:"default:null"`
+	ShopTotalDiscountedPrice        decimal.Decimal `gorm:"default:null"`
+	CreatedAt                       time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
+	UpdatedAt                       time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
+	DeletedAt                       time.Time       `gorm:"type:timestamp;default:null"`
 }
 
 type Couriers struct {
@@ -35,19 +39,15 @@ type Couriers struct {
 }
 
 type ProductOrderDetails struct {
-	ID                              int             `gorm:"primaryKey;not null,autoIncrement;serial"`
-	ProductOrderID                  int             `gorm:"foreignKey:ProductOrderID;type:bigint;not null"`
-	ProductID                       int             `gorm:"foreignKey:ProductID;type:bigint;not null"`
-	Quantity                        int             `gorm:"type:int;not null"`
-	VariantName                     string          `gorm:"type:varchar"`
-	IndividualPrice                 decimal.Decimal `gorm:"type:decimal;not null"`
-	MarketplacePromotionId          int
-	MarketplaceTotalDiscountedPrice decimal.Decimal
-	ShopPromotionId                 int
-	ShopTotalDiscountedPrice        decimal.Decimal
-	CreatedAt                       time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
-	UpdatedAt                       time.Time `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
-	DeletedAt                       time.Time `gorm:"type:timestamp;default:null"`
+	ID              int             `gorm:"primaryKey;not null,autoIncrement;serial"`
+	ProductOrderID  int             `gorm:"foreignKey:ProductOrderID;type:bigint;not null"`
+	ProductID       int             `gorm:"foreignKey:ProductID;type:bigint;not null"`
+	Quantity        int             `gorm:"type:int;not null"`
+	VariantName     string          `gorm:"type:varchar"`
+	IndividualPrice decimal.Decimal `gorm:"type:decimal;not null"`
+	CreatedAt       time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
+	UpdatedAt       time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
+	DeletedAt       time.Time       `gorm:"type:timestamp;default:null"`
 }
 
 type ProductOrderSeller struct {
@@ -85,29 +85,33 @@ type ProductOrderHistories struct {
 }
 
 type ProductOrderDetail struct {
-	ID              int
-	ProductName     string
-	Quantity        int
-	Status          string
-	ProductID       int
-	IndividualPrice decimal.Decimal
-	PictureURL      string
-	Feedback        string
-	Rating          int
-	ReviewID        int
-	ShopName        string
-	Province        string
-	District        string
-	ZipCode         string
-	SubDistrict     string
-	Kelurahan       string
-	Detail          string
-	BuyerID         int
-	DeliveryFee     decimal.Decimal
-	ReviewCreatedAt time.Time
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	DeletedAt       time.Time
+	ID                              int
+	ProductName                     string
+	Quantity                        int
+	Status                          string
+	ProductID                       int
+	IndividualPrice                 decimal.Decimal
+	PictureURL                      string
+	Feedback                        string
+	Rating                          int
+	ReviewID                        int
+	ShopName                        string
+	Province                        string
+	District                        string
+	ZipCode                         string
+	SubDistrict                     string
+	Kelurahan                       string
+	Detail                          string
+	BuyerID                         int
+	DeliveryFee                     decimal.Decimal
+	ReviewCreatedAt                 time.Time
+	MarketplacePromotionId          int
+	MarketplaceTotalDiscountedPrice decimal.Decimal
+	ShopPromotionId                 int
+	ShopTotalDiscountedPrice        decimal.Decimal
+	CreatedAt                       time.Time
+	UpdatedAt                       time.Time
+	DeletedAt                       time.Time
 }
 
 type ProductOrderReviews struct {

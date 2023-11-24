@@ -39,6 +39,7 @@ type productOrderUsecase struct {
 	accountAddressRepository  repository.AccountAddressRepository
 	accountRepository         repository.AccountRepository
 	courierRepository         repository.CourierRepository
+	promotionRepository       repository.PromotionRepository
 }
 
 type ProductOrderUsecaseConfig struct {
@@ -48,6 +49,7 @@ type ProductOrderUsecaseConfig struct {
 	AccountAddressRepository            repository.AccountAddressRepository
 	AccountRepository                   repository.AccountRepository
 	CourierRepository                   repository.CourierRepository
+	PromotionRepository                 repository.PromotionRepository
 }
 
 func NewProductOrderUsecase(config ProductOrderUsecaseConfig) ProductOrderUsecase {
@@ -69,6 +71,9 @@ func NewProductOrderUsecase(config ProductOrderUsecaseConfig) ProductOrderUsecas
 	}
 	if config.ProductRepository != nil {
 		au.productRepository = config.ProductRepository
+	}
+	if config.PromotionRepository != nil {
+		au.promotionRepository = config.PromotionRepository
 	}
 
 	return au
@@ -185,25 +190,34 @@ func (u *productOrderUsecase) CheckoutOrder(ctx context.Context, req dtousecase.
 		return nil, err
 	}
 
+	shopPromotionAmount, marketplacePromotionAmount, err := u.getPromotionAmount(ctx, totalPayment, req.ShopPromotionId, req.MarketplacePromotionId)
+	if err != nil {
+		return nil, err
+	}
+
 	orderRequest := dtorepository.ProductOrderRequest{
-		Province:           address.Province,
-		District:           address.District,
-		SubDistrict:        address.SubDistrict,
-		Kelurahan:          address.Kelurahan,
-		AddressDetail:      address.Detail,
-		ZipCode:            address.ZipCode,
-		AccountID:          req.UserID,
-		SellerID:           req.SellerID,
-		ProductName:        product.Name,
-		CourierName:        courier.Name,
-		Status:             constant.StatusOrderOnProcess,
-		Notes:              req.Notes,
-		DeliveryFee:        deliveryFee,
-		TotalAmount:        totalPayment,
-		TotalSellerAmount:  totalPayment.Sub(deliveryFee),
-		ProductVariants:    orderDetails,
-		BuyerWalletNumber:  account.WalletNumber,
-		SellerWalletNumber: seller.WalletNumber,
+		Province:                        address.Province,
+		District:                        address.District,
+		SubDistrict:                     address.SubDistrict,
+		Kelurahan:                       address.Kelurahan,
+		AddressDetail:                   address.Detail,
+		ZipCode:                         address.ZipCode,
+		AccountID:                       req.UserID,
+		SellerID:                        req.SellerID,
+		ProductName:                     product.Name,
+		CourierName:                     courier.Name,
+		Status:                          constant.StatusOrderOnProcess,
+		Notes:                           req.Notes,
+		DeliveryFee:                     deliveryFee,
+		TotalAmount:                     totalPayment.Sub(shopPromotionAmount).Sub(marketplacePromotionAmount),
+		TotalSellerAmount:               totalPayment.Sub(deliveryFee).Sub(shopPromotionAmount),
+		ProductVariants:                 orderDetails,
+		BuyerWalletNumber:               account.WalletNumber,
+		SellerWalletNumber:              seller.WalletNumber,
+		MarketplacePromotionId:          req.MarketplacePromotionId,
+		MarketplaceTotalDiscountedPrice: marketplacePromotionAmount,
+		ShopPromotionId:                 req.ShopPromotionId,
+		ShopTotalDiscountedPrice:        shopPromotionAmount,
 	}
 
 	order, err := u.productOrderRepository.Create(ctx, orderRequest)
@@ -214,6 +228,49 @@ func (u *productOrderUsecase) CheckoutOrder(ctx context.Context, req dtousecase.
 	return &dtousecase.CheckoutOrderResponse{
 		ID: order.ID,
 	}, nil
+}
+
+func (u *productOrderUsecase) getPromotionAmount(ctx context.Context, totalPayment decimal.Decimal, shopPromotionId int, marketplacePromotionId int) (decimal.Decimal, decimal.Decimal, error) {
+	shopPromotionAmount := decimal.Decimal{}
+	marketplacePromotionAmount := decimal.Decimal{}
+
+	if shopPromotionId != 0 {
+		shopPromotion, err := u.promotionRepository.FindShopPromotion(ctx, shopPromotionId)
+
+		if err != nil {
+			return shopPromotionAmount, marketplacePromotionAmount, err
+		}
+
+		if shopPromotion.ID == 0 {
+			return shopPromotionAmount, marketplacePromotionAmount, util.ErrShopPromotionNotFound
+		}
+
+		if shopPromotion.MinPurchaseAmount.GreaterThan(totalPayment) {
+			return shopPromotionAmount, marketplacePromotionAmount, util.ErrShopPromotionMinimumAmountGreaterThanTotalPayment
+		}
+
+		shopPromotionAmount = shopPromotion.DiscountAmount
+	}
+
+	if marketplacePromotionId != 0 {
+		marketplacePromotion, err := u.promotionRepository.FindMarketplacePromotion(ctx, marketplacePromotionId)
+
+		if err != nil {
+			return shopPromotionAmount, marketplacePromotionAmount, err
+		}
+
+		if marketplacePromotion.ID == 0 {
+			return shopPromotionAmount, marketplacePromotionAmount, util.ErrMarketplacePromotionNotFound
+		}
+
+		if marketplacePromotion.MinPurchaseAmount.GreaterThan(totalPayment) {
+			return shopPromotionAmount, marketplacePromotionAmount, util.ErrMarketplacePromotionMinimumAmountGreaterThanTotalPayment
+		}
+
+		marketplacePromotionAmount = marketplacePromotion.DiscountAmount
+	}
+
+	return shopPromotionAmount, marketplacePromotionAmount, nil
 }
 
 func (u *productOrderUsecase) CancelOrderBySeller(ctx context.Context, req dtousecase.ProductOrderRequest) (*dtousecase.ProductOrderResponse, error) {
@@ -464,7 +521,17 @@ func (u *productOrderUsecase) convertOrderHistoriesReponse(ctx context.Context, 
 	for _, k := range orderKeys {
 		products := orderHistories[k]
 		var totalAmount decimal.Decimal
-		for _, o := range products {
+		for i, o := range products {
+			if i == 0 {
+				po, err := u.productOrderRepository.FindProductOrderByOrderDetailId(ctx, o.ProductOrderDetailID)
+				if err != nil {
+					return nil, dtogeneral.PaginationData{}, err
+				}
+				totalAmount = totalAmount.Add(po.DeliveryFee)
+				totalAmount = totalAmount.Sub(po.ShopTotalDiscountedPrice)
+				totalAmount = totalAmount.Sub(po.MarketplaceTotalDiscountedPrice)
+			}
+
 			qty, err := decimal.NewFromString(fmt.Sprintf("%v", o.Quantity))
 			if err != nil {
 				return nil, dtogeneral.PaginationData{}, err
@@ -495,6 +562,7 @@ func (u *productOrderUsecase) convertSellerOrderHistoriesReponse(ctx context.Con
 	orderHistories := make(map[string][]dtousecase.SellerOrderProduct)
 	productOrders := []dtousecase.SellerOrdersResponse{}
 	orderKeys := []string{}
+	promotionKeys := map[int]dtousecase.OrderPromotions{}
 
 	for _, o := range orders {
 		product := dtousecase.SellerOrderProduct{
@@ -522,15 +590,25 @@ func (u *productOrderUsecase) convertSellerOrderHistoriesReponse(ctx context.Con
 			o.CourierName,
 			o.IsWithdrawn,
 		)
+
 		if _, exists := orderHistories[orderKey]; !exists {
 			orderKeys = append(orderKeys, orderKey)
 		}
+
+		if _, exists := promotionKeys[o.ID]; !exists {
+			promotionKeys[o.ID] = dtousecase.OrderPromotions{
+				MarketplaceVoucher: o.MarketplaceTotalDiscountedPrice,
+				ShopVoucher:        o.ShopTotalDiscountedPrice,
+			}
+		}
+
 		orderHistories[orderKey] = append(orderHistories[orderKey], product)
 	}
 
 	for _, k := range orderKeys {
 		products := orderHistories[k]
 		var totalAmount decimal.Decimal
+
 		for _, o := range products {
 			qty, err := decimal.NewFromString(fmt.Sprintf("%v", o.Quantity))
 			if err != nil {
@@ -554,7 +632,6 @@ func (u *productOrderUsecase) convertSellerOrderHistoriesReponse(ctx context.Con
 			Detail:      orderKey[9],
 		}
 
-		promotions := dtousecase.OrderPromotions{}
 		isWithdrawn, _ := strconv.ParseBool(orderKey[12])
 		order := dtousecase.SellerOrdersResponse{
 			OrderID:      orderId,
@@ -563,11 +640,14 @@ func (u *productOrderUsecase) convertSellerOrderHistoriesReponse(ctx context.Con
 			TotalPayment: totalAmount,
 			BuyerName:    orderKey[1],
 			Shipping:     shipping,
-			Promotion:    promotions,
-			DeliveryFee:  orderKey[10],
-			CourierName:  orderKey[11],
-			IsWithdrawn:  isWithdrawn,
-			CreateAt:     orderKey[3],
+			Promotion: dtousecase.OrderPromotions{
+				MarketplaceVoucher: promotionKeys[orderId].MarketplaceVoucher,
+				ShopVoucher:        promotionKeys[orderId].ShopVoucher,
+			},
+			DeliveryFee: orderKey[10],
+			CourierName: orderKey[11],
+			IsWithdrawn: isWithdrawn,
+			CreateAt:    orderKey[3],
 		}
 
 		productOrders = append(productOrders, order)
@@ -724,7 +804,10 @@ func (u *productOrderUsecase) GetOrderDetail(ctx context.Context, req dtousecase
 		products = append(products, product)
 	}
 
-	promotions := dtousecase.OrderPromotions{}
+	promotions := dtousecase.OrderPromotions{
+		MarketplaceVoucher: order[0].MarketplaceTotalDiscountedPrice,
+		ShopVoucher:        order[0].ShopTotalDiscountedPrice,
+	}
 	shipping := dtousecase.AddressOrder{
 		Province:    order[0].Province,
 		District:    order[0].District,

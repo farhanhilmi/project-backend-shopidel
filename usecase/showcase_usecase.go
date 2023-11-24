@@ -112,7 +112,7 @@ func (u *showcaseUsecase) GetShowcaseDetail(ctx context.Context, showcaseId int)
 	}
 
 	for _, selectedProduct := range rRes.ShowcaseProducts {
-		selectedProducts = append(res.SelectedProducts, dtousecase.ShowcaseSelectedProduct{
+		selectedProducts = append(selectedProducts, dtousecase.ShowcaseSelectedProduct{
 			ProductId:   selectedProduct.ProductId,
 			ProductName: selectedProduct.Product.Name,
 			CreatedAt:   selectedProduct.CreatedAt,

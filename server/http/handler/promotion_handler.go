@@ -32,15 +32,14 @@ func (h *PromotionOrderHandler) CreateShopPromotion(c *gin.Context) {
 	}
 
 	uReq := dtousecase.CreateShopPromotionRequest{
-		ShopId:             uid,
-		Name:               req.Name,
-		Quota:              req.Quota,
-		StartDate:          req.StartDate,
-		EndDate:            req.EndDate,
-		MinPurchaseAmount:  req.MinPurchaseAmount,
-		MaxPurchaseAmount:  req.MaxPurchaseAmount,
-		DiscountPercentage: req.DiscountPercentage,
-		SelectedProductsId: req.SelectedProductsId,
+		ShopId:            uid,
+		Name:              req.Name,
+		Quota:             req.Quota,
+		StartDate:         req.StartDate,
+		EndDate:           req.EndDate,
+		MinPurchaseAmount: req.MinPurchaseAmount,
+		MaxPurchaseAmount: req.MaxPurchaseAmount,
+		DiscountAmount:    req.DiscountAmount,
 	}
 
 	response, err := h.promotionUsecase.CreateShopPromotions(c.Request.Context(), uReq)
@@ -131,16 +130,15 @@ func (h *PromotionOrderHandler) UpdateShopPromotion(c *gin.Context) {
 	}
 
 	uReq := dtousecase.UpdateShopPromotionRequest{
-		Id:                 spid,
-		ShopId:             uid,
-		Name:               req.Name,
-		Quota:              req.Quota,
-		StartDate:          req.StartDate,
-		EndDate:            req.EndDate,
-		MinPurchaseAmount:  req.MinPurchaseAmount,
-		MaxPurchaseAmount:  req.MaxPurchaseAmount,
-		DiscountPercentage: req.DiscountPercentage,
-		SelectedProductsId: req.SelectedProductsId,
+		Id:                spid,
+		ShopId:            uid,
+		Name:              req.Name,
+		Quota:             req.Quota,
+		StartDate:         req.StartDate,
+		EndDate:           req.EndDate,
+		MinPurchaseAmount: req.MinPurchaseAmount,
+		MaxPurchaseAmount: req.MaxPurchaseAmount,
+		DiscountAmount:    req.DiscountAmount,
 	}
 
 	response, err := h.promotionUsecase.UpdateShopPromotion(c.Request.Context(), uReq)

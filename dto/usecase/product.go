@@ -54,7 +54,6 @@ type GetProductDetailResponse struct {
 	Images         []string         `json:"images"`
 	VariantOptions []VariantOption  `json:"variant_options,omitempty"`
 	Variants       []ProductVariant `json:"variants,omitempty"`
-	IsFavorite     bool             `json:"is_favorite,omitempty"`
 	ProductReviews []ProductReview  `json:"product_review"`
 }
 
@@ -219,8 +218,8 @@ type ProductOrderHistoryRequest struct {
 }
 
 type OrderPromotions struct {
-	MarketplaceVoucher string `json:"marketplace_voucher"`
-	ShopVoucher        string `json:"shop_voucher"`
+	MarketplaceVoucher decimal.Decimal `json:"marketplace_voucher"`
+	ShopVoucher        decimal.Decimal `json:"shop_voucher"`
 }
 
 type AddressOrder struct {
