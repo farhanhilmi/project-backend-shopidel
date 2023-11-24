@@ -153,7 +153,7 @@ func (h *SellerHandler) GetShowcaseProducts(c *gin.Context) {
 	if p == 0 {
 		p = 1
 	}
-	limit := 2
+	limit := 20
 
 	uRes, err := h.sellerUsecase.GetShowcaseProducts(c.Request.Context(), dtousecase.GetSellerShowcaseProductRequest{ShopName: shopName, ShowcaseId: showcaseId, Page: p, Limit: limit})
 	if err != nil {
