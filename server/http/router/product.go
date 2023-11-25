@@ -15,6 +15,7 @@ func NewProductRouter(h *handler.ProductHandler, gin *gin.Engine) *gin.Engine {
 	product.GET("/:productId/reviews", h.GetProductReviews)
 	product.GET("/:productId/pictures", h.GetProductPictures)
 	product.GET("/:productId/recommended-products", h.GetProductDetailRecomendedProduct)
+	product.GET("/:productId/total-favorites", h.GetProductTotalFavorites)
 	product.GET("/:productId", middleware.IfExistAuthenticateJWT(), h.GetProductDetail)
 	product.POST("/:productId/favorites/add-favorite", middleware.AuthenticateJWT(), h.AddToFavorite)
 	product.GET("/detail/:shopName/:productName", middleware.IfExistAuthenticateJWT(), h.GetProductDetailV2)

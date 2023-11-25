@@ -20,6 +20,7 @@ type ProductUsecase interface {
 	GetProductReviews(ctx context.Context, req dtousecase.GetProductReviewsRequest) (dtousecase.GetProductReviewsResponse, error)
 	GetProductPictures(ctx context.Context, req dtousecase.GetProductPicturesRequest) (*dtousecase.GetProductPicturesResponse, error)
 	GetProductDetailRecomendedProducts(ctx context.Context, req dtousecase.GetProductDetailRecomendedProductRequest) (*dtousecase.GetProductDetailRecomendedProductResponse, error)
+	GetProductTotalFavorites(ctx context.Context, productId int) (int, error)
 }
 
 type productUsecase struct {
@@ -224,6 +225,8 @@ func (u *productUsecase) GetProductDetailV2(ctx context.Context, req dtousecase.
 	res.Description = rRes.Description
 	res.Variants = variants
 	res.VariantOptions = options
+	res.Sold = rRes.Sold
+	res.Stars = rRes.Stars
 
 	return res, nil
 }
@@ -259,6 +262,10 @@ func (u *productUsecase) GetProductDetailRecomendedProducts(ctx context.Context,
 	res.AnotherProducts = anotherProducts
 
 	return res, nil
+}
+
+func (u *productUsecase) GetProductTotalFavorites(ctx context.Context, productId int) (int, error) {
+	return u.productRepository.FindProductTotalFavorites(ctx, productId)
 }
 
 func (u *productUsecase) convertProductVariants(ctx context.Context, productName string, req dtorepository.FindProductVariantResponse) ([]dtousecase.ProductVariant, error) {
