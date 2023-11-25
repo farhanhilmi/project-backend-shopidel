@@ -241,6 +241,7 @@ type AddNewProductRequest struct {
 	IsActive          *bool
 	Variants          []dtousecase.AddNewProductVariant
 	Images            []string
+	DeletedImages     []string
 	VideoURL          string
 	ProductVariants   []dtousecase.ProductVariants
 }
