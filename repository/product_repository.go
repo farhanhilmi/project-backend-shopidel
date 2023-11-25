@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"strings"
 	"time"
@@ -823,11 +824,11 @@ func (r *productRepository) AddNewProduct(ctx context.Context, req dtorepository
 		Description:       req.Description,
 		CategoryID:        req.CategoryID,
 		SellerID:          req.SellerID,
-		HazardousMaterial: *req.HazardousMaterial,
+		HazardousMaterial: req.HazardousMaterial,
 		Weight:            req.Weight,
 		Size:              req.Size,
-		IsNew:             *req.IsNew,
-		IsActive:          *req.IsActive,
+		IsNew:             req.IsNew,
+		IsActive:          req.IsActive,
 		InternalSKU:       req.InternalSKU,
 	}
 
@@ -964,13 +965,16 @@ func (r *productRepository) UpdateProduct(ctx context.Context, req dtorepository
 		Description:       req.Description,
 		CategoryID:        req.CategoryID,
 		SellerID:          req.SellerID,
-		HazardousMaterial: *req.HazardousMaterial,
+		HazardousMaterial: req.HazardousMaterial,
 		Weight:            req.Weight,
 		Size:              req.Size,
-		IsNew:             *req.IsNew,
-		IsActive:          *req.IsActive,
+		IsNew:             req.IsNew,
+		IsActive:          req.IsActive,
 		InternalSKU:       req.InternalSKU,
 	}
+
+	log.Println("IsNew", product.IsNew)
+	log.Println("product", product)
 
 	tx := r.db.Begin()
 
@@ -1000,6 +1004,16 @@ func (r *productRepository) UpdateProduct(ctx context.Context, req dtorepository
 
 	if len(req.Images) != 0 {
 		err = tx.WithContext(ctx).Create(&productImages).Error
+		if err != nil {
+			tx.Rollback()
+			return res, err
+		}
+	}
+
+	log.Println("req.DeletedImages", req.DeletedImages)
+
+	for _, url := range req.DeletedImages {
+		err = tx.WithContext(ctx).Where("url = ?", url).Delete(&model.ProductImages{}).Error
 		if err != nil {
 			tx.Rollback()
 			return res, err

@@ -68,7 +68,7 @@ type GetProductSellerResponse struct {
 	Size              decimal.Decimal        `json:"size" binding:"required"`
 	IsActive          *bool                  `json:"is_active" binding:"required"`
 	VideoURL          string                 `json:"video_url"`
-	Category          ProductCategory        `json:"category"`
+	CategoryID        int                    `json:"category_id"`
 	Images            []string               `json:"images"`
 	VariantOptions    []SellerVariantOption  `json:"variant_options"`
 	Variants          []ProductVariantSeller `json:"variants"`
@@ -341,6 +341,7 @@ type AddNewProductRequest struct {
 	SellerID          int
 	ProductName       string
 	Description       string
+	DeletedImages     []string
 	CategoryID        int
 	HazardousMaterial *bool
 	IsNew             *bool

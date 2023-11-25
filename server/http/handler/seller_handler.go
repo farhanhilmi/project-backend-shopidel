@@ -269,6 +269,7 @@ func (h *SellerHandler) UpdateProduct(c *gin.Context) {
 		Description:       req.Description,
 		CategoryID:        req.CategoryID,
 		HazardousMaterial: req.HazardousMaterial,
+		DeletedImages:     req.DeletedImages,
 		IsNew:             req.IsNew,
 		InternalSKU:       req.InternalSKU,
 		Weight:            req.Weight,

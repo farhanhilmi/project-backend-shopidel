@@ -45,6 +45,7 @@ type UpdateCartRequest struct {
 type AddNewProductRequest struct {
 	ProductName       string                            `form:"product_name" binding:"required"`
 	Description       string                            `form:"description"`
+	DeletedImages     []string                          `form:"deleted_images[]"`
 	CategoryID        int                               `form:"category_id" binding:"required"`
 	HazardousMaterial *bool                             `form:"hazardous_material" binding:"required"`
 	IsNew             *bool                             `form:"is_new" binding:"required"`
