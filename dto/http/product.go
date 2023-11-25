@@ -60,3 +60,8 @@ type AddNewProductRequest struct {
 type UploadNewPhoto struct {
 	ImageID string `form:"image_id" binding:"required"`
 }
+
+type GetProductTotalFavorites struct {
+	ProductId      int `json:"product_id"`
+	TotalFavorites int `json:"total_favorites"`
+}

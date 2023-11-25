@@ -32,6 +32,8 @@ type ProductResponse struct {
 	Size              decimal.Decimal
 	IsActive          *bool
 	VideoURL          string
+	Stars             decimal.Decimal
+	Sold              int
 }
 
 type ProductImages struct {

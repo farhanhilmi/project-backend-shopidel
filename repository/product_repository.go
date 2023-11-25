@@ -43,6 +43,7 @@ type ProductRepository interface {
 	FindSellerProducts(ctx context.Context, req dtorepository.ProductListParam) ([]dtorepository.ProductListSellerResponse, int64, error)
 	FindProductImages(ctx context.Context, req dtorepository.ProductRequest) ([]dtorepository.ProductImages, error)
 	UpdateProduct(ctx context.Context, req dtorepository.AddNewProductRequest) (dtorepository.AddNewProductResponse, error)
+	FindProductTotalFavorites(ctx context.Context, productId int) (int, error)
 }
 
 func NewProductRepository(db *gorm.DB) ProductRepository {
@@ -61,9 +62,9 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 			p.name,
 			p.description,
 			seller_address.district,
-			0 as total_sold, 
+			coalesce(product_sold.quantity, 0) as total_sold, 
 			product_price.lowest_price as "price", 
-			round( CAST(float8 (random() * 5) as numeric), 1) as rating,
+			coalesce(product_rating.rating, 0) as rating,
 			product_image.picture_url, 
 			case
 				when 0 in $1 then
@@ -216,7 +217,21 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 							and level_1.id in $8
 					)
 				) a
-			) as child on child.id = p.category_id 
+			) as child on child.id = p.category_id
+			left join (
+				select
+					pod.product_id,
+					sum(pod.quantity) as quantity
+				from product_order_details pod
+				group by pod.product_id 
+			) as product_sold on product_sold.product_id = p.id
+			left join (
+				select
+					por.product_id,
+					round(avg(por.rating), 1) as rating
+				from product_order_reviews por
+				group by por.product_id 
+			) as product_rating on product_rating.product_id = p.id
 			where 
 				(
 					0 in $9
@@ -448,7 +463,9 @@ func (r *productRepository) FirstV2(ctx context.Context, req dtorepository.Produ
 				when fp.id is not null then true
 				else false
 			end as "IsFavorite",
-			p.seller_id as "SellerId"
+			p.seller_id as "SellerId",
+			coalesce(product_sold.quantity, 0) as "Sold",
+			coalesce(product_rating.rating , 0) as "Stars"
 		from products p 
 		left join favorite_products fp 
 			on fp.product_id = p.id 
@@ -464,6 +481,20 @@ func (r *productRepository) FirstV2(ctx context.Context, req dtorepository.Produ
 						'-+', '-', 'g'
 					)
 				) ilike $2
+		left join (
+			select
+				pod.product_id,
+				sum(pod.quantity) as quantity
+			from product_order_details pod
+			group by pod.product_id 
+		) as product_sold on product_sold.product_id = p.id
+		left join (
+			select
+				por.product_id,
+				round(avg(por.rating), 1) as rating
+			from product_order_reviews por
+			group by por.product_id 
+		) as product_rating on product_rating.product_id = p.id
 		where TRIM(BOTH '-' FROM 
 				REGEXP_REPLACE(
 					REGEXP_REPLACE(
@@ -1244,4 +1275,26 @@ func (r *productRepository) RemoveProductByID(ctx context.Context, req dtoreposi
 	tx.Commit()
 
 	return res, err
+}
+
+func (r *productRepository) FindProductTotalFavorites(ctx context.Context, productId int) (int, error) {
+	type totalFavorites struct {
+		Count int
+	}
+	res := totalFavorites{}
+
+	q := `
+		select
+			fp.product_id,
+			count(fp.account_id) as "Count"
+		from favorite_products fp 
+		where fp.product_id = ?
+		group by fp.product_id 
+	`
+
+	if err := r.db.WithContext(ctx).Raw(q, productId).Find(&res).Error; err != nil {
+		return 0, err
+	}
+
+	return res.Count, nil
 }

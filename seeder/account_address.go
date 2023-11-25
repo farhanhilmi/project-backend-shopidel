@@ -46,7 +46,7 @@ var AccountAddress = []model.AccountAddress{
 		ZipCode:              "40851",
 		Detail:               "Jl Telekomunikasi No 1 Bojongsoang",
 		RajaOngkirDistrictId: "10",
-		IsBuyerDefault:       false,
+		IsBuyerDefault:       true,
 		IsSellerDefault:      true,
 	},
 }
