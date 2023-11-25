@@ -372,6 +372,7 @@ func (u *sellerUsecase) UpdateProduct(ctx context.Context, req dtousecase.AddNew
 		ProductVariants:   productVariants,
 		Images:            imageLinks,
 		VideoURL:          req.VideoURL,
+		DeletedImages:     req.DeletedImages,
 	})
 	if err != nil {
 		return res, err
@@ -508,24 +509,6 @@ func (u *sellerUsecase) GetProductByID(ctx context.Context, req dtousecase.GetPr
 		images = append(images, img.URL)
 	}
 
-	category, err := u.accountRepository.FindCategoryByID(ctx, product.CategoryID)
-	if err != nil {
-		return res, err
-	}
-
-	productCategory := dtousecase.ProductCategory{
-		Id:   category.CategoryLevel1Id,
-		Name: category.CategoryLevel1Name,
-		Children: dtousecase.ProductCategoryChildren2{
-			Id:   category.CategoryLevel2Id,
-			Name: category.CategoryLevel2Name,
-			Children: dtousecase.ProductCategoryChildren3{
-				Id:   category.CategoryLevel3Id,
-				Name: category.CategoryLevel3Name,
-			},
-		},
-	}
-
 	res.Id = product.ID
 	res.ProductName = product.Name
 	res.Description = product.Description
@@ -539,7 +522,7 @@ func (u *sellerUsecase) GetProductByID(ctx context.Context, req dtousecase.GetPr
 	res.InternalSKU = product.InternalSKU
 	res.VideoURL = product.VideoURL
 	res.Images = images
-	res.Category = productCategory
+	res.CategoryID = product.CategoryID
 
 	return res, nil
 }

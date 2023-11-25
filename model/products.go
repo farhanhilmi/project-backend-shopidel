@@ -13,13 +13,13 @@ type Products struct {
 	CategoryID        int    `gorm:"foreignKey:CategoryID;type:bigint;not null"`
 	SellerID          int    `gorm:"foreignKey:SellerID;type:bigint;not null"`
 	Category          Category
-	HazardousMaterial bool            `gorm:"type:boolean;not null"`
+	HazardousMaterial *bool           `gorm:"type:boolean;not null;default:true"`
 	Weight            decimal.Decimal `gorm:"type:decimal;not null"`
 	Size              decimal.Decimal `gorm:"type:decimal;not null"`
-	IsNew             bool            `gorm:"type:boolean;not null"`
+	IsNew             *bool           `gorm:"type:boolean;not null"`
 	InternalSKU       string          `gorm:"type:varchar;"`
 	ViewCount         int             `gorm:"type:int;default:0"`
-	IsActive          bool            `gorm:"type:boolean;not null"`
+	IsActive          *bool           `gorm:"type:boolean;not null"`
 	CreatedAt         time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	UpdatedAt         time.Time       `gorm:"not null;default:CURRENT_TIMESTAMP;type:timestamp"`
 	DeletedAt         time.Time       `gorm:"type:timestamp;default:null"`
