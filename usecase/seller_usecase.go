@@ -473,11 +473,11 @@ func (u *sellerUsecase) GetProductByID(ctx context.Context, req dtousecase.GetPr
 		AccountId: req.AccountId,
 	}
 	product, err := u.productRepository.FindByIDAndSeller(ctx, rReq)
-	if errors.Is(err, util.ErrNoRecordFound) {
-		return res, util.ErrProductNotFound
-	}
 	if err != nil {
 		return res, err
+	}
+	if product.ID == 0 {
+		return res, util.ErrProductNotFound
 	}
 
 	rReq2 := dtorepository.FindProductVariantRequest{

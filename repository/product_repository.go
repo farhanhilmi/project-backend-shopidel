@@ -399,7 +399,14 @@ func (r *productRepository) FindByID(ctx context.Context, req dtorepository.Prod
 func (r *productRepository) FindByIDAndSeller(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error) {
 	res := dtorepository.ProductResponse{}
 
-	err := r.db.WithContext(ctx).Model(&model.Products{}).Where("id = ?", req.ProductID).Where("seller_id", req.AccountId).First(&model.Products{}).Scan(&res).Error
+	q := `
+	select p.*, pv.url as video_url from products p 
+		left join product_videos pv 
+		on pv.product_id = p.id
+	where p.seller_id = ? and p.id = ? LIMIT 1;
+	`
+
+	err := r.db.WithContext(ctx).Raw(q, req.AccountId, req.ProductID).Scan(&res).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return res, util.ErrNoRecordFound
@@ -1004,9 +1011,6 @@ func (r *productRepository) UpdateProduct(ctx context.Context, req dtorepository
 		InternalSKU:       req.InternalSKU,
 	}
 
-	log.Println("IsNew", product.IsNew)
-	log.Println("product", product)
-
 	tx := r.db.Begin()
 
 	err := tx.WithContext(ctx).Model(&model.Products{}).Where("id", req.ProductID).Updates(&product).Scan(&res).Error
@@ -1016,7 +1020,22 @@ func (r *productRepository) UpdateProduct(ctx context.Context, req dtorepository
 	}
 
 	if req.VideoURL != "" {
-		err = tx.WithContext(ctx).Model(&model.ProductVideos{}).Where("product_id", res.ID).Update("url", req.VideoURL).Error
+		video := model.ProductVideos{}
+		err = tx.WithContext(ctx).Model(&video).Where("product_id", res.ID).Update("url", req.VideoURL).Scan(&video).Error
+		if err != nil {
+			tx.Rollback()
+			return res, err
+		}
+
+		if video.ID == 0 {
+			err = tx.WithContext(ctx).Create(&model.ProductVideos{ProductID: res.ID, URL: req.VideoURL}).Error
+			if err != nil {
+				tx.Rollback()
+				return res, err
+			}
+		}
+	} else {
+		err = tx.WithContext(ctx).Where("product_id = ?", res.ID).Delete(&model.ProductVideos{}).Error
 		if err != nil {
 			tx.Rollback()
 			return res, err
