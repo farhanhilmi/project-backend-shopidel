@@ -107,13 +107,13 @@ func createProducts(db *gorm.DB, accountId int) {
 			Description:       product.Detail,
 			CategoryID:        product.CategoryId,
 			SellerID:          accountId,
-			HazardousMaterial: false,
+			HazardousMaterial: BoolPointer(false),
 			Weight:            decimal.NewFromInt(10),
 			Size:              decimal.NewFromInt(20),
-			IsNew:             true,
+			IsNew:             BoolPointer(true),
 			InternalSKU:       "",
 			ViewCount:         0,
-			IsActive:          true,
+			IsActive:          BoolPointer(true),
 		}
 
 		if err := db.Create(&p).Error; err != nil {
