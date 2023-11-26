@@ -321,7 +321,7 @@ func (h *SellerHandler) DeleteProduct(c *gin.Context) {
 }
 
 func (h *SellerHandler) ListProduct(c *gin.Context) {
-	limit, err := strconv.Atoi(c.DefaultQuery("limit", "30"))
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	if err != nil {
 		c.Error(err)
 		return

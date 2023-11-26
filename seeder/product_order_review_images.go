@@ -19,8 +19,4 @@ var ProductOrderReviewImages = []model.ProductOrderReviewImages{
 		ProductReviewID: 1,
 		ImageURL:        "https://mangathrill.com/wp-content/uploads/2019/07/Portgas.D..Ace_.full_.5794251280x720.png",
 	},
-	{
-		ProductReviewID: 2,
-		ImageURL:        "https://mangathrill.com/wp-content/uploads/2019/07/Portgas.D..Ace_.full_.5794251280x720.png",
-	},
 }

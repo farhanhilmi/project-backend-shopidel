@@ -152,5 +152,8 @@ func seeding() {
 		panic(err)
 	}
 
+	// seeder.SeedShops(db)
+	// seeder.SeedBuyers(db)
+
 	fmt.Println("successfully seed tables")
 }

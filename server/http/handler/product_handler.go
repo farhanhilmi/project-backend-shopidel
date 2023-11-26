@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
+	dtohttp "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/http"
 	dtorepository "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/repository"
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
 	"git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/usecase"
@@ -328,6 +329,28 @@ func (h *ProductHandler) GetProductDetailRecomendedProduct(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, res)
+}
+
+func (h *ProductHandler) GetProductTotalFavorites(c *gin.Context) {
+	id := c.Param("productId")
+	productId, err := strconv.Atoi(id)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	totalFavorites, err := h.productUsecase.GetProductTotalFavorites(c.Request.Context(), productId)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	res := dtohttp.GetProductTotalFavorites{
+		ProductId:      productId,
+		TotalFavorites: totalFavorites,
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: res})
 }
 
 func (h *ProductHandler) handleProductReviewsQueryParams(c *gin.Context, uReq *dtousecase.GetProductReviewsRequest) error {

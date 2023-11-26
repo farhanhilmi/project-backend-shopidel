@@ -1145,15 +1145,17 @@ func (r *accountRepository) FirstSeller(ctx context.Context, req dtorepository.S
 			on aa.account_id  = a.id
 		left join (
 			select
-				po.account_id,
+				p.seller_id,
 				avg(por.rating) as stars_average
 			from product_orders po 
 			left join product_order_details pod 
 				on pod.product_order_id = po.id 
 			left join product_order_reviews por
 				on por.product_order_detail_id = pod.id 
-			group by po.account_id 
-		) shop_stars on shop_stars.account_id = a.id
+			left join products p 
+				on p.id = pod.product_id 
+			group by p.seller_id
+		) shop_stars on shop_stars.seller_id = a.id
 		where TRIM(BOTH '-' FROM 
 					REGEXP_REPLACE(
 						REGEXP_REPLACE(
@@ -1183,8 +1185,9 @@ func (r *accountRepository) FindSellerBestSelling(ctx context.Context, req dtore
 			p."name" as  "Name",
 			product_lowest_price.lowest_price as "Price",
 			product_image.url as "PictureUrl",
-			4.8 as stars,
+			coalesce(product_rating.rating, 0) as "Stars",
 			p.created_at as "CreatedAt",
+			coalesce(product_sold.quantity, 0) as "TotalSold",
 			case 
 				when category_level_3.level_3_id is not null then category_level_3.level_2_name
 				when category_level_2.level_2_id is not null then category_level_2.level_2_name
@@ -1263,6 +1266,20 @@ func (r *accountRepository) FindSellerBestSelling(ctx context.Context, req dtore
 				on c3.id = c2.parent 
 			where c."level" = 3
 		) as category_level_3 on category_level_3.level_3_id = p.category_id 
+		left join (
+			select
+				pod.product_id,
+				sum(pod.quantity) as quantity
+			from product_order_details pod
+			group by pod.product_id 
+		) as product_sold on product_sold.product_id = p.id
+		left join (
+			select
+				por.product_id,
+				round(avg(por.rating), 1) as rating
+			from product_order_reviews por
+			group by por.product_id 
+		) as product_rating on product_rating.product_id = p.id
 		left join accounts seller
 			on seller.id = p.seller_id
 		where p.seller_id = ?
@@ -1313,6 +1330,8 @@ func (r *accountRepository) FindSellerShowcaseProduct(ctx context.Context, req d
 			product_lowest_price.lowest_price as "Price",
 			product_image.url as "PictureUrl",
 			4.8 as stars,
+			coalesce(product_sold.quantity, 0) as "TotalSold",
+			coalesce(product_rating.rating, 0) as "Stars",
 			p.created_at as "CreatedAt",
 			seller.shop_name as "ShopName",
 			TRIM(BOTH '-' FROM 
@@ -1356,6 +1375,20 @@ func (r *accountRepository) FindSellerShowcaseProduct(ctx context.Context, req d
 				where pi2.product_id = p.id
 				limit 1
 			) product_image on product_image.product_id = p.id 
+			left join (
+				select
+					pod.product_id,
+					sum(pod.quantity) as quantity
+				from product_order_details pod
+				group by pod.product_id 
+			) as product_sold on product_sold.product_id = p.id
+			left join (
+				select
+					por.product_id,
+					round(avg(por.rating), 1) as rating
+				from product_order_reviews por
+				group by por.product_id 
+			) as product_rating on product_rating.product_id = p.id
 			left join accounts seller
 				on seller.id = p.seller_id
 	`
