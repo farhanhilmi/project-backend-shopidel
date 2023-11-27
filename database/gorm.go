@@ -16,7 +16,6 @@ var db *gorm.DB
 func GetInstance() *gorm.DB {
 	if db == nil {
 		db = connect()
-		RunSeeder()
 	}
 
 	return db
