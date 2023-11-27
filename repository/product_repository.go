@@ -236,7 +236,7 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 				(
 					0 in $9
 					or child.id is not null
-				)
+				) and p.is_active = true
 	`
 
 	categoriesId := []string{"0"}
@@ -325,7 +325,7 @@ func (r *productRepository) FindSellerProducts(ctx context.Context, req dtorepos
 			p.updated_at,
 			p.deleted_at
 		from products p
-			where p.seller_id = $1
+			where p.seller_id = $1 and p.deleted_at is null
 	`
 
 	query := r.db.WithContext(ctx).Table("(?) as t", r.db.Raw(q, req.SellerID))

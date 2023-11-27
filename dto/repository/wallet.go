@@ -9,6 +9,11 @@ type UpdateWalletPINRequest struct {
 	WalletNewPIN string
 }
 
+type UpdatePhotoProfile struct {
+	UserID   int
+	ImageURL string
+}
+
 type UpdateWalletPINResponse struct {
 	UserID       int
 	WalletNewPIN string

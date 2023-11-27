@@ -60,6 +60,7 @@ type AccountRepository interface {
 	FindCategoryByID(ctx context.Context, categoryID int) (dtorepository.Category, error)
 	SaveChangePasswordToken(ctx context.Context, req dtorepository.RequestChangePasswordRequest) (dtorepository.GetAccountResponse, error)
 	UpdateShopProfile(ctx context.Context, req dtousecase.UpdateShopProfileRequest) (dtousecase.UpdateShopProfileResponse, error)
+	UpdatePhotoProfile(ctx context.Context, req dtorepository.UpdatePhotoProfile) (dtorepository.UpdatePhotoProfile, error)
 }
 
 type accountRepository struct {
@@ -405,6 +406,22 @@ func (r *accountRepository) DeleteCartProduct(ctx context.Context, req dtoreposi
 	}
 
 	return account, nil
+}
+
+func (r *accountRepository) UpdatePhotoProfile(ctx context.Context, req dtorepository.UpdatePhotoProfile) (dtorepository.UpdatePhotoProfile, error) {
+	account := model.Accounts{}
+
+	err := r.db.WithContext(ctx).Clauses(clause.Locking{
+		Strength: "UPDATE",
+		Table: clause.Table{
+			Name: clause.CurrentTable,
+		}}).Model(&account).Where("id = ?", req.UserID).Update("profile_picture", req.ImageURL).Error
+
+	if err != nil {
+		return dtorepository.UpdatePhotoProfile{}, err
+	}
+
+	return dtorepository.UpdatePhotoProfile{}, nil
 }
 
 func (r *accountRepository) UpdateWalletPINByID(ctx context.Context, req dtorepository.UpdateWalletPINRequest) (dtorepository.UpdateWalletPINResponse, error) {
