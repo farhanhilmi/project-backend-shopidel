@@ -51,6 +51,36 @@ func (h *AccountHandler) ChangePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Pasword Successfully Changed"})
 }
 
+func (h *AccountHandler) ChangePhotoProfile(c *gin.Context) {
+	var req dtohttp.ChangePhotoProfile
+
+	err := c.ShouldBind(&req)
+	if err != nil {
+		c.Error(util.ErrInvalidInput)
+		return
+	}
+
+	file, header, err := c.Request.FormFile("image")
+	if err != nil {
+		c.Error(util.ErrNoImage)
+		return
+	}
+
+	uReq := dtousecase.UpdatePhoto{
+		UserID:      c.GetInt("userId"),
+		Image:       file,
+		ImageHeader: header,
+	}
+
+	response, err := h.accountUsecase.UpdatePhotoProfile(c.Request.Context(), uReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Data: response})
+}
+
 func (h *AccountHandler) RequestChangePasswordOTP(c *gin.Context) {
 
 	account, err := h.accountUsecase.RequestOTP(c.Request.Context(), dtousecase.ChangePasswordRequest{

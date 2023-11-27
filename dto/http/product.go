@@ -1,6 +1,7 @@
 package dtohttp
 
 import (
+	"mime/multipart"
 	"time"
 
 	dtousecase "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/usecase"
@@ -64,4 +65,8 @@ type UploadNewPhoto struct {
 type GetProductTotalFavorites struct {
 	ProductId      int `json:"product_id"`
 	TotalFavorites int `json:"total_favorites"`
+}
+
+type ChangePhotoProfile struct {
+	Image *multipart.FileHeader `form:"image" binding:"required"`
 }

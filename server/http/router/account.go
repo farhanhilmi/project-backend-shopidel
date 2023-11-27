@@ -27,6 +27,7 @@ func NewAccountRouter(h *handler.AccountHandler, gin *gin.Engine) *gin.Engine {
 			profile.PUT("", h.EditProfile)
 			profile.GET("/request-otp", h.RequestChangePasswordOTP)
 			profile.POST("/change-password", h.ChangePassword)
+			profile.PUT("/change-photo", h.ChangePhotoProfile)
 		}
 
 		wallet := account.Group("wallets")

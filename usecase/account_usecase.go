@@ -3,6 +3,8 @@ package usecase
 import (
 	"context"
 	"errors"
+	"fmt"
+	"path"
 	"strings"
 	"time"
 
@@ -47,6 +49,7 @@ type AccountUsecase interface {
 	ChangePassword(ctx context.Context, req dtousecase.ChangePasswordRequest) error
 	GetCategories(ctx context.Context) (dtousecase.GetCategoriesResponse, error)
 	RequestOTP(ctx context.Context, req dtousecase.ChangePasswordRequest) (*model.Accounts, error)
+	UpdatePhotoProfile(ctx context.Context, req dtousecase.UpdatePhoto) (dtousecase.UpdatePhoto, error)
 }
 
 type accountUsecase struct {
@@ -106,6 +109,35 @@ func (u *accountUsecase) RegisterSeller(ctx context.Context, req dtousecase.Regi
 	res.ShopName = registeredSeller.ShopName
 
 	return &res, nil
+}
+
+func (u *accountUsecase) UpdatePhotoProfile(ctx context.Context, req dtousecase.UpdatePhoto) (dtousecase.UpdatePhoto, error) {
+	res := dtousecase.UpdatePhoto{}
+
+	currentTime := time.Now().UnixNano()
+
+	file, err := req.ImageHeader.Open()
+	if err != nil {
+		return res, err
+	}
+
+	fileExtension := path.Ext(req.ImageHeader.Filename)
+	originalFilename := req.ImageHeader.Filename[:len(req.ImageHeader.Filename)-len(fileExtension)]
+	newFilename := fmt.Sprintf("%s_%d", originalFilename, currentTime)
+
+	imageUrl, err := util.UploadToCloudinary(file, newFilename)
+	if err != nil {
+		return res, err
+	}
+
+	_, err = u.accountRepository.UpdatePhotoProfile(ctx, dtorepository.UpdatePhotoProfile{UserID: req.UserID, ImageURL: imageUrl})
+	if err != nil {
+		return res, err
+	}
+
+	res.ImageURL = imageUrl
+
+	return res, nil
 }
 
 func (u *accountUsecase) RequestOTP(ctx context.Context, req dtousecase.ChangePasswordRequest) (*model.Accounts, error) {

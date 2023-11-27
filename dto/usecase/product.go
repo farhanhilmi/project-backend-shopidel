@@ -358,6 +358,13 @@ type AddNewProductResponse struct {
 	ProductName string
 }
 
+type UpdatePhoto struct {
+	ImageURL    string                `json:"image_url"`
+	UserID      int                   `json:"-"`
+	Image       multipart.File        `json:"-"`
+	ImageHeader *multipart.FileHeader `json:"-"`
+}
+
 type UploadNewPhoto struct {
 	ImageID     string                `form:"image_id" binding:"required" json:"image_id"`
 	Image       multipart.File        `json:"-"`
