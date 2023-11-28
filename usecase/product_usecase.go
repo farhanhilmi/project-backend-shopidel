@@ -57,9 +57,32 @@ func (u *productUsecase) GetProducts(ctx context.Context, req dtousecase.Product
 		EndDate:    req.EndDate,
 	}
 
-	listProduct, totalItems, err := u.productRepository.FindProducts(ctx, uReq)
-	if err != nil {
-		return &listProduct, nil, err
+	homePageRecomendedProductLimit := 18
+
+	if req.Limit == homePageRecomendedProductLimit {
+		uReq.SortBy = "coalesce(product_sold.quantity, 0)"
+		uReq.Sort = "desc"
+	}
+
+	rRes := []dtorepository.ProductListResponse{}
+	var totalItems int64
+
+	if uReq.CategoryId == "" {
+		r, ti, err := u.productRepository.FindProducts(ctx, uReq)
+		if err != nil {
+			return &rRes, nil, err
+		}
+
+		rRes = r
+		totalItems = ti
+	} else {
+		r, ti, err := u.productRepository.FindProductsByCategories(ctx, uReq)
+		if err != nil {
+			return &rRes, nil, err
+		}
+
+		rRes = r
+		totalItems = ti
 	}
 
 	pagination := dtogeneral.PaginationData{
@@ -69,7 +92,7 @@ func (u *productUsecase) GetProducts(ctx context.Context, req dtousecase.Product
 		Limit:       req.Limit,
 	}
 
-	return &listProduct, &pagination, nil
+	return &rRes, &pagination, nil
 }
 
 func (u *productUsecase) AddToFavorite(ctx context.Context, req dtousecase.FavoriteProduct) (*dtousecase.FavoriteProduct, error) {

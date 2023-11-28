@@ -527,15 +527,14 @@ func (u *accountUsecase) EditProfile(ctx context.Context, req dtousecase.EditAcc
 	}
 
 	rReq := dtorepository.EditAccountRequest{
-		UserId:         req.UserId,
-		FullName:       req.FullName,
-		Username:       req.Username,
-		UsedEmail:      oldAccount.Email,
-		Email:          req.Email,
-		PhoneNumber:    req.PhoneNumber,
-		Gender:         req.Gender,
-		Birthdate:      req.Birthdate,
-		ProfilePicture: req.ProfilePicture,
+		UserId:      req.UserId,
+		FullName:    req.FullName,
+		Username:    req.Username,
+		UsedEmail:   oldAccount.Email,
+		Email:       req.Email,
+		PhoneNumber: req.PhoneNumber,
+		Gender:      req.Gender,
+		Birthdate:   req.Birthdate,
 	}
 
 	if oldAccount.Email == req.Email {
@@ -557,7 +556,6 @@ func (u *accountUsecase) EditProfile(ctx context.Context, req dtousecase.EditAcc
 	res.PhoneNumber = rReq.PhoneNumber
 	res.Gender = rReq.Gender
 	res.Birthdate = rReq.Birthdate
-	res.ProfilePicture = rReq.ProfilePicture
 
 	return &res, nil
 }

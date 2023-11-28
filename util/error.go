@@ -85,4 +85,6 @@ var (
 	ErrShowcaseNotFound                                         = &CustomError{Message: "showcase not found", Code: BadRequest}
 	ErrShopPromotionMinimumAmountGreaterThanTotalPayment        = &CustomError{Message: "shop promotion minimum amount is greater than total payment", Code: BadRequest}
 	ErrMarketplacePromotionMinimumAmountGreaterThanTotalPayment = &CustomError{Message: "marketplace promotion minimum amount is greater than total payment", Code: BadRequest}
+	ErrSameShop                                                 = &CustomError{Message: "you can't buy your own product", Code: BadRequest}
+	ErrVariantPhotoFailed                                       = &CustomError{Message: "failed to upload variant photo. please try again and choose variant photo.", Code: BadRequest}
 )

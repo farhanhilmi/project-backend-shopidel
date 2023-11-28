@@ -248,6 +248,25 @@ type AddNewProductRequest struct {
 	ProductVariants   []dtousecase.ProductVariants
 }
 
+type UpdateProductRequest struct {
+	ProductID         int
+	SellerID          int
+	ProductName       string
+	Description       string
+	CategoryID        int
+	HazardousMaterial *bool
+	IsNew             *bool
+	InternalSKU       string
+	Weight            decimal.Decimal
+	Size              decimal.Decimal
+	IsActive          *bool
+	Variants          []dtousecase.UpdateProductVariant
+	Images            []string
+	DeletedImages     []string
+	VideoURL          string
+	ProductVariants   []dtousecase.ProductVariants
+}
+
 type AddNewProductResponse struct {
 	ID                int
 	Name              string

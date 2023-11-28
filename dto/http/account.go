@@ -24,13 +24,12 @@ type CheckPasswordRequest struct {
 }
 
 type EditAccountRequest struct {
-	FullName       string    `json:"full_name" binding:"required"`
-	Username       string    `json:"username" binding:"alphanum"`
-	Email          string    `json:"email" binding:"email"`
-	PhoneNumber    string    `json:"phone_number" binding:"e164"`
-	Gender         string    `json:"gender" binding:"lowercase"`
-	Birthdate      time.Time `json:"birthdate"`
-	ProfilePicture string    `json:"profile_picture"`
+	FullName    string    `json:"full_name" binding:"required"`
+	Username    string    `json:"username" binding:"alphanum"`
+	Email       string    `json:"email" binding:"email"`
+	PhoneNumber string    `json:"phone_number" binding:"e164"`
+	Gender      string    `json:"gender" binding:"lowercase"`
+	Birthdate   time.Time `json:"birthdate"`
 }
 
 type GetAccountRequest struct {

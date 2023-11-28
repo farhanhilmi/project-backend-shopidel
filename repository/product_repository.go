@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -26,6 +27,7 @@ type ProductRepository interface {
 	First(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error)
 	FirstV2(ctx context.Context, req dtorepository.ProductRequestV2) (dtorepository.ProductResponse, error)
 	FindProducts(ctx context.Context, req dtorepository.ProductListParam) ([]dtorepository.ProductListResponse, int64, error)
+	FindProductsByCategories(ctx context.Context, req dtorepository.ProductListParam) ([]dtorepository.ProductListResponse, int64, error)
 	FindImages(ctx context.Context, productId int) (dtorepository.FindProductPicturesResponse, error)
 	FindProductVariant(ctx context.Context, req dtorepository.FindProductVariantRequest) (dtorepository.FindProductVariantResponse, error)
 	FindProductVariantByID(ctx context.Context, req dtorepository.ProductCart) (dtorepository.ProductCart, error)
@@ -42,7 +44,7 @@ type ProductRepository interface {
 	FindByIDAndSeller(ctx context.Context, req dtorepository.ProductRequest) (dtorepository.ProductResponse, error)
 	FindSellerProducts(ctx context.Context, req dtorepository.ProductListParam) ([]dtorepository.ProductListSellerResponse, int64, error)
 	FindProductImages(ctx context.Context, req dtorepository.ProductRequest) ([]dtorepository.ProductImages, error)
-	UpdateProduct(ctx context.Context, req dtorepository.AddNewProductRequest) (dtorepository.AddNewProductResponse, error)
+	UpdateProduct(ctx context.Context, req dtorepository.UpdateProductRequest) (dtorepository.AddNewProductResponse, error)
 	FindProductTotalFavorites(ctx context.Context, productId int) (int, error)
 }
 
@@ -56,7 +58,23 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 	res := []dtorepository.ProductListResponse{}
 	var totalItems int64
 
-	q := `
+	redisKey := fmt.Sprintf("%v%v%v%v%v%v%v%v%v%v%v",
+		req.CategoryId,
+		req.SortBy,
+		req.Sort,
+		req.MinRating,
+		req.MinPrice,
+		req.MaxPrice,
+		req.District,
+		req.Limit,
+		req.StartDate,
+		req.EndDate,
+		req.Search,
+	)
+
+	cachedData, err := util.GetRedis().Get(ctx, redisKey).Result()
+	if err != nil {
+		q := `
 		select
 			p.id,
 			p.name,
@@ -66,31 +84,13 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 			product_price.lowest_price as "price", 
 			coalesce(product_rating.rating, 0) as rating,
 			product_image.picture_url, 
-			case
-				when 0 in $1 then
-					case 
-						when category_level_2.level_2_id is not null then category_level_2.level_2_id
-						when category_level_3.level_2_id is not null then category_level_3.level_2_id
-					end
-				else 
-					case 
-						when category_level_1.level_1_id is not null then category_level_1.level_1_id
-						when category_level_2.level_2_id is not null then category_level_2.level_2_id
-						when category_level_3.level_3_id is not null then category_level_3.level_3_id
-					end
+			case 
+				when category_level_2.level_2_id is not null then category_level_2.level_2_id
+				when category_level_3.level_2_id is not null then category_level_3.level_2_id
 			end as "category_id",
 			case
-				when 0 in $2 then
-					case
-						when category_level_2.level_2_name is not null then category_level_2.level_2_name
-						when category_level_3.level_2_name is not null then category_level_3.level_2_name
-					end
-				else
-					case
-						when category_level_1.level_1_name is not null then category_level_1.level_1_name
-						when category_level_2.level_2_name is not null then category_level_2.level_2_name
-						when category_level_3.level_3_name is not null then category_level_3.level_3_name
-					end
+				when category_level_2.level_2_name is not null then category_level_2.level_2_name
+				when category_level_3.level_2_name is not null then category_level_3.level_2_name
 			end as "category_name",
 			p.created_at,
 			p.updated_at,
@@ -178,6 +178,308 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 				where c."level" = 3
 			) as category_level_3 on category_level_3.level_3_id = p.category_id
 			left join (
+				select
+					pod.product_id,
+					sum(pod.quantity) as quantity
+				from product_order_details pod
+				group by pod.product_id 
+			) as product_sold on product_sold.product_id = p.id
+			left join (
+				select
+					por.product_id,
+					round(avg(por.rating), 1) as rating
+				from product_order_reviews por
+				group by por.product_id 
+			) as product_rating on product_rating.product_id = p.id
+			where (
+					'start_date_not_used' = ?
+					or p.created_at >= ?
+				)
+				and (
+					'end_date_not_used' = ?
+					or p.created_at >= ?
+				)
+				and (
+					'rating_not_used' = ?
+					or coalesce(product_rating.rating, 0) >= ?
+				)
+				and (
+					'search_not_used' = ?
+					or (
+						p.name ilike ?
+					)
+				)
+				and (
+					'min_price_not_used' = ?
+					or product_price.lowest_price >= ?
+				)
+				and (
+					'max_price_not_used' = ?
+					or product_price.lowest_price <= ?
+				)
+				and p.is_active = true
+				and p.deleted_at is null
+	`
+
+		starDateUsed := "start_date_not_used"
+		if req.StartDate != "" {
+			starDateUsed = "used"
+		} else {
+			req.StartDate = "1900-01-01"
+		}
+
+		endDateUsed := "end_date_not_used"
+		if req.EndDate != "" {
+			endDateUsed = "used"
+		} else {
+			req.EndDate = "2100-01-01"
+
+		}
+
+		ratingUsed := "rating_not_used"
+		if req.MinRating > 0 && req.MinRating <= 5 {
+			ratingUsed = "used"
+		}
+
+		searchUsed := "search_not_used"
+		find := ""
+		if req.Search != "" {
+			searchUsed = "used"
+			find = "%" + req.Search + "%"
+		}
+
+		minPriceUsed := "min_price_not_used"
+		if req.MinPrice > 0 {
+			minPriceUsed = "used"
+		}
+
+		maxPriceUsed := "max_price_not_used"
+		if req.MaxPrice > 0 {
+			maxPriceUsed = "used"
+		}
+
+		lim := 600
+		if req.Limit == 18 {
+			lim = 18
+		}
+
+		if req.CategoryId == "" &&
+			req.SortBy == "coalesce(product_sold.quantity, 0)" &&
+			req.Search == "" &&
+			req.Sort == "desc" &&
+			req.MinRating == 0 &&
+			req.MinPrice == 0 &&
+			req.MaxPrice == 0 &&
+			req.District == "" &&
+			req.StartDate == "1900-01-01" &&
+			req.EndDate == "2100-01-01" {
+			req.SortBy = "coalesce(product_sold.quantity, 0)"
+			req.Sort = "desc"
+			lim = 5000
+		}
+
+		sortBy := " order by " + req.SortBy + " " + req.Sort
+
+		query := r.db.WithContext(ctx).Table("(?) as t", r.db.WithContext(ctx).Raw(q+sortBy+fmt.Sprint(" limit ", lim, " "),
+			starDateUsed,
+			req.StartDate,
+			endDateUsed,
+			req.EndDate,
+			ratingUsed,
+			req.MinRating,
+			searchUsed,
+			find,
+			minPriceUsed,
+			req.MinPrice,
+			maxPriceUsed,
+			req.MaxPrice,
+		))
+
+		if req.District != "" && !strings.Contains(req.District, "#") {
+			query = query.Where("district ilike ?", req.District)
+		} else if req.District != "" && strings.Contains(req.District, "#") {
+			districts := strings.Split(req.District, "#")
+			query = query.Where("district IN ?", districts)
+		}
+
+		if err := query.Count(&totalItems).Error; err != nil {
+			return nil, 0, err
+		}
+
+		if req.Limit == 0 {
+			req.Limit = 20
+		}
+
+		if err := query.Find(&res).Error; err != nil {
+			return nil, 0, err
+		}
+
+		jsonBytes, err := json.Marshal(res)
+		if err != nil {
+			log.Fatalf("Error occurred during marshaling. Error: %s", err.Error())
+		}
+		jsonString := string(jsonBytes)
+
+		err = util.GetRedis().Set(ctx, redisKey, jsonString, 10*time.Second).Err()
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		json.Unmarshal([]byte(cachedData), &res)
+		totalItems = int64(len(res))
+	}
+
+	arrLim := 0
+	arrOffset := (req.Page - 1) * req.Limit
+	if arrOffset+req.Limit > len(res) {
+		arrLim = len(res)
+	} else {
+		arrLim = arrOffset + req.Limit
+	}
+
+	res = append([]dtorepository.ProductListResponse{}, res[arrOffset:arrLim]...)
+
+	return res, totalItems, nil
+}
+
+func (r *productRepository) FindProductsByCategories(ctx context.Context, req dtorepository.ProductListParam) ([]dtorepository.ProductListResponse, int64, error) {
+	res := []dtorepository.ProductListResponse{}
+	var totalItems int64
+
+	redisKey := fmt.Sprintf("%v%v%v%v%v%v%v%v%v%v%v",
+		req.CategoryId,
+		req.SortBy,
+		req.Sort,
+		req.MinRating,
+		req.MinPrice,
+		req.MaxPrice,
+		req.District,
+		req.Limit,
+		req.StartDate,
+		req.EndDate,
+		req.Search,
+	)
+
+	cachedData, err := util.GetRedis().Get(ctx, redisKey).Result()
+	if err != nil {
+		q := `
+		select
+			p.id,
+			p.name,
+			p.description,
+			seller_address.district,
+			coalesce(product_sold.quantity, 0) as total_sold, 
+			product_price.lowest_price as "price", 
+			coalesce(product_rating.rating, 0) as rating,
+			product_image.picture_url, 
+			case 
+				when category_level_2.level_2_id is not null then category_level_2.level_2_id
+				when category_level_3.level_2_id is not null then category_level_3.level_2_id
+			end as "category_id",
+			case
+				when category_level_2.level_2_name is not null then category_level_2.level_2_name
+				when category_level_3.level_2_name is not null then category_level_3.level_2_name
+			end as "category_name",
+			p.created_at,
+			p.updated_at,
+			p.deleted_at,
+			seller.shop_name,
+			TRIM(BOTH '-' FROM 
+				REGEXP_REPLACE(
+					REGEXP_REPLACE(
+						LOWER(p."name"), 
+						'[^a-z0-9]+', '-', 'g'
+					), 
+					'-+', '-', 'g'
+				)
+			) AS "ProductNameSlug",
+			TRIM(BOTH '-' FROM 
+				REGEXP_REPLACE(
+					REGEXP_REPLACE(
+						LOWER(seller.shop_name), 
+						'[^a-z0-9]+', '-', 'g'
+					), 
+					'-+', '-', 'g'
+				)
+			) AS "ShopNameSlug"
+		from products p
+			inner join lateral (
+					select	
+						pi2.product_id,
+						pi2.url as picture_url
+					from product_images pi2 
+					where pi2.product_id = p.id 
+					order by pi2.id asc
+					limit 1
+				) product_image on product_image.product_id = p.id 
+			inner join lateral (
+					select
+						pvsc2.product_id,
+						min(pvsc2.price) as lowest_price
+					from product_variant_selection_combinations pvsc2
+					where pvsc2.product_id = p.id
+					group by pvsc2.product_id 
+					limit 1
+				) product_price on product_price.product_id = p.id
+			left join lateral (
+				select 
+					aa.account_id,
+					aa.district
+				from account_addresses aa 
+				where aa.is_seller_default is true
+					and aa.account_id = p.seller_id
+				limit 1
+			) seller_address on seller_address.account_id = p.seller_id
+			left join accounts as seller
+				on seller.id = p.seller_id
+			left join (
+				select
+					c.id as level_1_id,
+					c."name" as level_1_name
+				from categories c
+				where c."level" = 1
+			) as category_level_1 on category_level_1.level_1_id = p.category_id 
+			left join (
+				select
+					c.id as level_2_id,
+					c."name" level_2_name,
+					c2.id as level_1_id,
+					c2."name" as level_1_name
+				from categories c
+				inner join categories c2 
+					on c2.id = c.parent 
+				where c."level" = 2
+			) as category_level_2 on category_level_2.level_2_id = p.category_id 
+			left join (
+				select
+					c.id as level_3_id,
+					c."name" level_3_name,
+					c2.id as level_2_id,
+					c2."name" level_2_name,
+					c3.id as level_1_id,
+					c3."name" as level_1_name
+				from categories c
+				inner join categories c2 
+					on c2.id = c.parent 
+				inner join categories c3
+					on c3.id = c2.parent 
+				where c."level" = 3
+			) as category_level_3 on category_level_3.level_3_id = p.category_id
+			left join (
+				select
+					pod.product_id,
+					sum(pod.quantity) as quantity
+				from product_order_details pod
+				group by pod.product_id 
+			) as product_sold on product_sold.product_id = p.id
+			left join (
+				select
+					por.product_id,
+					round(avg(por.rating), 1) as rating
+				from product_order_reviews por
+				group by por.product_id 
+			) as product_rating on product_rating.product_id = p.id
+			left join (
 				select 
 					distinct(a.id) as id
 				from (
@@ -193,9 +495,9 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 							and level_1."level" = 1
 						where level_3."level" = 3
 							and (
-								level_3.id in $3
-								or level_2.id in $4
-								or level_1.id in $5
+								level_3.id in ?
+								or level_2.id in ?
+								or level_1.id in ?
 							)
 					) union all (
 						select
@@ -206,106 +508,169 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 							and level_1."level" = 1
 						where level_2."level" = 2
 							and (
-								level_2.id in $6
-								or level_1.id in $7
+								level_2.id in ?
+								or level_1.id in ?
 							) 
 					) union all (
 						select
 							level_1.id 
 						from categories level_1
 						where level_1."level" = 1
-							and level_1.id in $8
+							and level_1.id in ?
 					)
 				) a
 			) as child on child.id = p.category_id
-			left join (
-				select
-					pod.product_id,
-					sum(pod.quantity) as quantity
-				from product_order_details pod
-				group by pod.product_id 
-			) as product_sold on product_sold.product_id = p.id
-			left join (
-				select
-					por.product_id,
-					round(avg(por.rating), 1) as rating
-				from product_order_reviews por
-				group by por.product_id 
-			) as product_rating on product_rating.product_id = p.id
 			where 
 				(
-					0 in $9
+					0 in ?
 					or child.id is not null
-				) and p.is_active = true
+				)
+				and (
+					'start_date_not_used' = ?
+					or p.created_at >= ?
+				)
+				and (
+					'end_date_not_used' = ?
+					or p.created_at >= ?
+				)
+				and (
+					'rating_not_used' = ?
+					or coalesce(product_rating.rating, 0) >= ?
+				)
+				and (
+					'search_not_used' = ?
+					or (
+						p.name ilike ?
+					)
+				)
+				and (
+					'min_price_not_used' = ?
+					or product_price.lowest_price >= ?
+				)
+				and (
+					'max_price_not_used' = ?
+					or product_price.lowest_price <= ?
+				)
+				and p.is_active = true
+				and p.deleted_at is null
 	`
 
-	categoriesId := []string{"0"}
-	if req.CategoryId != "" && !strings.Contains(req.CategoryId, "#") {
-		categoriesId = []string{req.CategoryId}
-	} else if req.CategoryId != "" && strings.Contains(req.CategoryId, "#") {
-		categoriesId = strings.Split(req.CategoryId, "#")
+		starDateUsed := "start_date_not_used"
+		if req.StartDate != "" {
+			starDateUsed = "used"
+		} else {
+			req.StartDate = "1900-01-01"
+		}
+
+		endDateUsed := "end_date_not_used"
+		if req.EndDate != "" {
+			endDateUsed = "used"
+		} else {
+			req.EndDate = "2100-01-01"
+
+		}
+
+		ratingUsed := "rating_not_used"
+		if req.MinRating > 0 && req.MinRating <= 5 {
+			ratingUsed = "used"
+		}
+
+		searchUsed := "search_not_used"
+		find := ""
+		if req.Search != "" {
+			searchUsed = "used"
+			find = "%" + req.Search + "%"
+		}
+
+		minPriceUsed := "min_price_not_used"
+		if req.MinPrice > 0 {
+			minPriceUsed = "used"
+		}
+
+		maxPriceUsed := "max_price_not_used"
+		if req.MaxPrice > 0 {
+			maxPriceUsed = "used"
+		}
+
+		categoriesId := []string{"0"}
+		if req.CategoryId != "" && !strings.Contains(req.CategoryId, "#") {
+			categoriesId = []string{req.CategoryId}
+		} else if req.CategoryId != "" && strings.Contains(req.CategoryId, "#") {
+			categoriesId = strings.Split(req.CategoryId, "#")
+		}
+
+		sortBy := " order by " + req.SortBy + " " + req.Sort
+
+		lim := 600
+		if req.Limit == 18 {
+			lim = 18
+		}
+
+		query := r.db.WithContext(ctx).Table("(?) as t", r.db.WithContext(ctx).Raw(q+sortBy+fmt.Sprint(" limit ", lim, " "),
+			categoriesId,
+			categoriesId,
+			categoriesId,
+			categoriesId,
+			categoriesId,
+			categoriesId,
+			categoriesId,
+			starDateUsed,
+			req.StartDate,
+			endDateUsed,
+			req.EndDate,
+			ratingUsed,
+			req.MinRating,
+			searchUsed,
+			find,
+			minPriceUsed,
+			req.MinPrice,
+			maxPriceUsed,
+			req.MaxPrice,
+		))
+
+		if req.District != "" && !strings.Contains(req.District, "#") {
+			query = query.Where("district ilike ?", req.District)
+		} else if req.District != "" && strings.Contains(req.District, "#") {
+			districts := strings.Split(req.District, "#")
+			query = query.Where("district IN ?", districts)
+		}
+
+		if err := query.Count(&totalItems).Error; err != nil {
+			return nil, 0, err
+		}
+
+		if req.Limit == 0 {
+			req.Limit = 20
+		}
+
+		if err := query.Find(&res).Error; err != nil {
+			return nil, 0, err
+		}
+
+		jsonBytes, err := json.Marshal(res)
+		if err != nil {
+			log.Fatalf("Error occurred during marshaling. Error: %s", err.Error())
+		}
+		jsonString := string(jsonBytes)
+
+		err = util.GetRedis().Set(ctx, redisKey, jsonString, 10*time.Second).Err()
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		json.Unmarshal([]byte(cachedData), &res)
+		totalItems = int64(len(res))
 	}
 
-	query := r.db.WithContext(ctx).Table("(?) as t", r.db.WithContext(ctx).Raw(q,
-		categoriesId,
-		categoriesId,
-		categoriesId,
-		categoriesId,
-		categoriesId,
-		categoriesId,
-		categoriesId,
-		categoriesId,
-		categoriesId,
-	))
-	if req.StartDate != "" {
-		query = query.Where("created_at >= ?", req.StartDate)
+	arrLim := 0
+	arrOffset := (req.Page - 1) * req.Limit
+	if arrOffset+req.Limit > len(res) {
+		arrLim = len(res)
+	} else {
+		arrLim = arrOffset + req.Limit
 	}
 
-	if req.EndDate != "" {
-		req.EndDate += " 23:59:59"
-		query = query.Where("created_at <= ?", req.EndDate)
-	}
-
-	if req.MinRating > 0 && req.MinRating <= 5 {
-		query = query.Where("rating >= ?", req.MinRating)
-	}
-
-	if req.MinPrice > 0 {
-		query = query.Where("price >= ?", req.MinPrice)
-	}
-
-	if req.MaxPrice > 0 {
-		query = query.Where("price <= ?", req.MaxPrice)
-	}
-
-	if req.District != "" && !strings.Contains(req.District, "#") {
-		query = query.Where("district ilike ?", req.District)
-	} else if req.District != "" && strings.Contains(req.District, "#") {
-		districts := strings.Split(req.District, "#")
-		query = query.Where("district IN ?", districts)
-	}
-
-	if req.Search != "" {
-		find := "%" + req.Search + "%"
-		query = query.
-			Where(
-				"name ilike ? or description ilike ?",
-				find,
-				find,
-			)
-	}
-
-	if err := query.Count(&totalItems).Error; err != nil {
-		return nil, 0, err
-	}
-
-	query = query.Order(req.SortBy + " " + req.Sort)
-	offset := (req.Page - 1) * req.Limit
-	query = query.Offset(offset).Limit(req.Limit)
-
-	if err := query.Find(&res).Error; err != nil {
-		return nil, 0, err
-	}
+	res = append([]dtorepository.ProductListResponse{}, res[arrOffset:arrLim]...)
 
 	return res, totalItems, nil
 }
@@ -963,7 +1328,7 @@ func (r *productRepository) AddNewProduct(ctx context.Context, req dtorepository
 			imageUrl, err = util.GetVariantImageURL(v.ImageID)
 			if err != nil {
 				tx.Rollback()
-				return res, err
+				return res, util.ErrVariantPhotoFailed
 			}
 		}
 
@@ -995,7 +1360,7 @@ func (r *productRepository) AddNewProduct(ctx context.Context, req dtorepository
 	return res, err
 }
 
-func (r *productRepository) UpdateProduct(ctx context.Context, req dtorepository.AddNewProductRequest) (dtorepository.AddNewProductResponse, error) {
+func (r *productRepository) UpdateProduct(ctx context.Context, req dtorepository.UpdateProductRequest) (dtorepository.AddNewProductResponse, error) {
 	res := dtorepository.AddNewProductResponse{}
 
 	product := model.Products{
@@ -1157,7 +1522,7 @@ func (r *productRepository) UpdateProduct(ctx context.Context, req dtorepository
 			imageUrl, err = util.GetVariantImageURL(v.ImageID)
 			if err != nil {
 				tx.Rollback()
-				return res, err
+				return res, util.ErrVariantPhotoFailed
 			}
 		}
 
