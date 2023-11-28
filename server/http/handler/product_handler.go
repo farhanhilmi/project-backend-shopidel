@@ -1,9 +1,13 @@
 package handler
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	dtogeneral "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/general"
 	dtohttp "git.garena.com/sea-labs-id/bootcamp/batch-01/group-project/pejuang-rupiah/backend/dto/http"
@@ -36,7 +40,7 @@ func (h *ProductHandler) ListProduct(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	sortBy := c.DefaultQuery("sortBy", "date")
+	sortBy := c.DefaultQuery("sortBy", "coalesce(product_sold.quantity, 0)")
 	sort := c.DefaultQuery("sort", "desc")
 	startDate := c.DefaultQuery("startDate", "")
 	endDate := c.DefaultQuery("endDate", "")
@@ -56,7 +60,7 @@ func (h *ProductHandler) ListProduct(c *gin.Context) {
 		return
 	}
 
-	if !slices.Contains([]string{"date", "price"}, sortBy) {
+	if !slices.Contains([]string{"date", "price", "coalesce(product_sold.quantity, 0)"}, sortBy) {
 		c.Error(util.ErrProductFavoriteSortBy)
 		return
 	}
@@ -64,6 +68,10 @@ func (h *ProductHandler) ListProduct(c *gin.Context) {
 	switch sortBy {
 	case "date":
 		sortBy = "created_at"
+	case "recommended":
+		sortBy = "coalesce(product_sold.quantity, 0)"
+	case "most_by":
+		sortBy = "coalesce(product_sold.quantity, 0)"
 	}
 
 	uReq := dtousecase.ProductListParam{
@@ -82,20 +90,42 @@ func (h *ProductHandler) ListProduct(c *gin.Context) {
 		Search:     s,
 	}
 
-	uRes, pagination, err := h.productUsecase.GetProducts(c.Request.Context(), uReq)
-	if err != nil {
-		c.Error(err)
-		return
-	}
+	redisKey := fmt.Sprintf("%v", uReq)
 
-	c.JSON(http.StatusOK, dtogeneral.JSONPagination{Data: uRes, Pagination: *pagination})
+	cachedData, err := util.GetRedis().Get(c.Request.Context(), redisKey).Result()
+	if err != nil {
+		uRes, pagination, err := h.productUsecase.GetProducts(c.Request.Context(), uReq)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		res := dtogeneral.JSONPagination{Data: uRes, Pagination: *pagination}
+
+		jsonBytes, err := json.Marshal(res)
+		if err != nil {
+			log.Fatalf("Error occurred during marshaling. Error: %s", err.Error())
+		}
+		jsonString := string(jsonBytes)
+
+		err = util.GetRedis().Set(c.Request.Context(), redisKey, jsonString, 24*time.Hour).Err()
+		if err != nil {
+			panic(err)
+		}
+
+		c.JSON(http.StatusOK, dtogeneral.JSONPagination{Data: uRes, Pagination: *pagination})
+	} else {
+		res := dtogeneral.JSONPagination{}
+		json.Unmarshal([]byte(cachedData), &res)
+		c.JSON(http.StatusOK, res)
+	}
 }
 
 func (h *ProductHandler) GetTopCategories(c *gin.Context) {
 
 	topCategories := []dtorepository.TopCategoriesResponse{
 		{
-			CategoryID: 504,
+			CategoryID: 538,
 			Name:       "Fashion Anak & Bayi",
 			PictureURL: "https://down-id.img.susercontent.com/file/9251edd6d6dd98855ff5a99497835d9c_tn",
 		},
@@ -253,7 +283,7 @@ func (h *ProductHandler) GetProductPictures(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	uRes.PicturesUrl = append([]string{"https://www.youtube.com/watch?v=lOi4qgF_4MM"}, uRes.PicturesUrl...)
+
 	res := dtogeneral.JSONResponse{
 		Data: uRes.PicturesUrl,
 	}

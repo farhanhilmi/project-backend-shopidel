@@ -330,8 +330,17 @@ type AddNewProductVariantType struct {
 type AddNewProductVariant struct {
 	Variant1 AddNewProductVariantType `form:"variant1"`
 	Variant2 AddNewProductVariantType `form:"variant2"`
-	Stock    int                      `form:"stock"`
-	Price    decimal.Decimal          `form:"price"`
+	Stock    int                      `form:"stock" binding:"required"`
+	Price    decimal.Decimal          `form:"price" binding:"required"`
+	ImageID  string                   `form:"image_id" binding:"required"`
+	ImageURL string                   `form:"image_url"`
+}
+
+type UpdateProductVariant struct {
+	Variant1 AddNewProductVariantType `form:"variant1"`
+	Variant2 AddNewProductVariantType `form:"variant2"`
+	Stock    int                      `form:"stock" binding:"required"`
+	Price    decimal.Decimal          `form:"price" binding:"required"`
 	ImageID  string                   `form:"image_id"`
 	ImageURL string                   `form:"image_url"`
 }
@@ -350,6 +359,24 @@ type AddNewProductRequest struct {
 	Size              decimal.Decimal
 	IsActive          *bool
 	Variants          []AddNewProductVariant
+	Images            []*multipart.FileHeader
+	VideoURL          string
+}
+
+type UpdateProductRequest struct {
+	ProductID         int
+	SellerID          int
+	ProductName       string
+	Description       string
+	DeletedImages     []string
+	CategoryID        int
+	HazardousMaterial *bool
+	IsNew             *bool
+	InternalSKU       string
+	Weight            decimal.Decimal
+	Size              decimal.Decimal
+	IsActive          *bool
+	Variants          []UpdateProductVariant
 	Images            []*multipart.FileHeader
 	VideoURL          string
 }

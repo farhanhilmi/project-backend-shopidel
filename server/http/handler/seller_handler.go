@@ -247,7 +247,7 @@ func (h *SellerHandler) AddNewProduct(c *gin.Context) {
 }
 
 func (h *SellerHandler) UpdateProduct(c *gin.Context) {
-	var req dtohttp.AddNewProductRequest
+	var req dtohttp.UpdateProductRequest
 
 	err := c.ShouldBind(&req)
 	if err != nil {
@@ -262,7 +262,7 @@ func (h *SellerHandler) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	productReq := dtousecase.AddNewProductRequest{
+	productReq := dtousecase.UpdateProductRequest{
 		ProductID:         productId,
 		SellerID:          c.GetInt("userId"),
 		ProductName:       req.ProductName,

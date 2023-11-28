@@ -21,14 +21,13 @@ type CreateAccountResponse struct {
 }
 
 type EditAccountRequest struct {
-	UserId         int
-	FullName       string
-	Username       string
-	Email          string
-	PhoneNumber    string
-	Gender         string
-	Birthdate      time.Time
-	ProfilePicture string
+	UserId      int
+	FullName    string
+	Username    string
+	Email       string
+	PhoneNumber string
+	Gender      string
+	Birthdate   time.Time
 }
 
 type AccountResponse struct {

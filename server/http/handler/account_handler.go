@@ -371,14 +371,13 @@ func (h *AccountHandler) EditProfile(c *gin.Context) {
 	}
 
 	uReq := dtousecase.EditAccountRequest{
-		UserId:         c.GetInt("userId"),
-		FullName:       req.FullName,
-		Username:       req.Username,
-		Email:          req.Email,
-		PhoneNumber:    req.PhoneNumber,
-		Gender:         req.Gender,
-		Birthdate:      req.Birthdate,
-		ProfilePicture: req.ProfilePicture,
+		UserId:      c.GetInt("userId"),
+		FullName:    req.FullName,
+		Username:    req.Username,
+		Email:       req.Email,
+		PhoneNumber: req.PhoneNumber,
+		Gender:      req.Gender,
+		Birthdate:   req.Birthdate,
 	}
 
 	uRes, err := h.accountUsecase.EditProfile(c.Request.Context(), uReq)

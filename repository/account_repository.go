@@ -295,7 +295,6 @@ func (r *accountRepository) UpdateAccount(ctx context.Context, req dtorepository
 	a.PhoneNumber = req.PhoneNumber
 	a.Gender = req.Gender
 	a.Birthdate = req.Birthdate
-	a.ProfilePicture = req.ProfilePicture
 
 	err = tx.WithContext(ctx).Save(&a).Error
 
@@ -324,7 +323,6 @@ func (r *accountRepository) UpdateAccount(ctx context.Context, req dtorepository
 	res.PhoneNumber = a.PhoneNumber
 	res.Gender = a.Gender
 	res.Birthdate = a.Birthdate
-	res.ProfilePicture = a.ProfilePicture
 
 	return res, nil
 }
@@ -345,7 +343,6 @@ func (r *accountRepository) UpdateAccountWithoutEmail(ctx context.Context, req d
 	a.PhoneNumber = req.PhoneNumber
 	a.Gender = req.Gender
 	a.Birthdate = req.Birthdate
-	a.ProfilePicture = req.ProfilePicture
 
 	err = r.db.WithContext(ctx).Save(&a).Error
 
@@ -773,13 +770,16 @@ func (r *accountRepository) FindAccountCartItems(ctx context.Context, req dtorep
 			seller.id as "ShopId",
 			seller.shop_name as "ShopName",
 			pvsc.id as "ProductId",
-			product_image.url as "ProductUrl",
+			case 
+				when pvs.name = 'default_reserved_keyword' then product_image.url
+				else pvsc.picture_url
+			end as "ProductUrl",
 			case 
 				when pvs."name" = 'default_reserved_keyword' then p."name"
 				when pvs2."name" is null then concat(p."name", ' - ', pvs."name")
 				when pvs2."name" is not null then concat(p."name", ' - ', pvs."name", ', ', pvs2."name")
 			end as "ProductName",
-			product_lowest_price.lowest_price as "ProductPrice",
+			pvsc.price as "ProductPrice",
 			ac.quantity as "Quantity"
 		from account_carts ac 
 			left join product_variant_selection_combinations pvsc 
@@ -790,18 +790,6 @@ func (r *accountRepository) FindAccountCartItems(ctx context.Context, req dtorep
 				on pvs2.id = pvsc.product_variant_selection_id2 
 			left join products p 
 				on p.id = pvsc.product_id 
-			left join (
-					select
-						pvsc.product_id,
-						min (
-							case
-								when pvsc.price > 0 then pvsc.price 
-								else null
-							end
-						) as lowest_price
-					from product_variant_selection_combinations pvsc 
-					group by pvsc.product_id
-				) product_lowest_price on product_lowest_price.product_id = p.id 
 			left join lateral (
 					select
 						pi2.product_id,
@@ -837,6 +825,17 @@ func (r *accountRepository) AddProductToCart(ctx context.Context, req dtoreposit
 
 	if pvc.ID == 0 {
 		return res, errors.New("product not found")
+	}
+
+	product := model.Products{}
+
+	err = r.db.WithContext(ctx).Model(&model.Products{}).Where("id", pvc.ProductID).First(&product).Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return res, err
+	}
+
+	if product.SellerID == req.AccountId {
+		return res, util.ErrSameShop
 	}
 
 	c := model.AccountCarts{}
@@ -1163,7 +1162,7 @@ func (r *accountRepository) FirstSeller(ctx context.Context, req dtorepository.S
 		left join (
 			select
 				p.seller_id,
-				avg(por.rating) as stars_average
+				round(avg(por.rating), 1) as stars_average
 			from product_orders po 
 			left join product_order_details pod 
 				on pod.product_order_id = po.id 
@@ -1188,7 +1187,7 @@ func (r *accountRepository) FirstSeller(ctx context.Context, req dtorepository.S
 	if err := r.db.WithContext(ctx).Raw(q, req.ShopName, req.ShopId).Find(&res).Error; err != nil {
 		return res, err
 	}
-	fmt.Println(res)
+
 	return res, nil
 }
 
@@ -1346,7 +1345,6 @@ func (r *accountRepository) FindSellerShowcaseProduct(ctx context.Context, req d
 			p."name" as  "Name",
 			product_lowest_price.lowest_price as "Price",
 			product_image.url as "PictureUrl",
-			4.8 as stars,
 			coalesce(product_sold.quantity, 0) as "TotalSold",
 			coalesce(product_rating.rating, 0) as "Stars",
 			p.created_at as "CreatedAt",
@@ -1369,9 +1367,7 @@ func (r *accountRepository) FindSellerShowcaseProduct(ctx context.Context, req d
 					'-+', '-', 'g'
 				)
 			) AS "ShopNameSlug"
-		from seller_showcase_products ssp
-			inner join products p
-				on p.id = ssp.product_id
+		from products p
 			left join (
 				select
 					pvsc.product_id,
@@ -1408,6 +1404,8 @@ func (r *accountRepository) FindSellerShowcaseProduct(ctx context.Context, req d
 			) as product_rating on product_rating.product_id = p.id
 			left join accounts seller
 				on seller.id = p.seller_id
+			left join seller_showcase_products ssp
+				on ssp.product_id = p.id
 	`
 
 	q += fmt.Sprint(`

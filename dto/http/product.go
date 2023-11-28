@@ -58,6 +58,21 @@ type AddNewProductRequest struct {
 	VideoURL          string                            `form:"video_url"`
 }
 
+type UpdateProductRequest struct {
+	ProductName       string                            `form:"product_name" binding:"required"`
+	Description       string                            `form:"description"`
+	DeletedImages     []string                          `form:"deleted_images[]"`
+	CategoryID        int                               `form:"category_id" binding:"required"`
+	HazardousMaterial *bool                             `form:"hazardous_material" binding:"required"`
+	IsNew             *bool                             `form:"is_new" binding:"required"`
+	InternalSKU       string                            `form:"internal_sku"`
+	Weight            decimal.Decimal                   `form:"weight" binding:"required"`
+	Size              decimal.Decimal                   `form:"size" binding:"required"`
+	IsActive          *bool                             `form:"is_active" binding:"required"`
+	Variants          []dtousecase.UpdateProductVariant `form:"variants[]" binding:"required"`
+	VideoURL          string                            `form:"video_url"`
+}
+
 type UploadNewPhoto struct {
 	ImageID string `form:"image_id" binding:"required"`
 }

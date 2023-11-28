@@ -29,7 +29,7 @@ type SellerUsecase interface {
 	GetProducts(ctx context.Context, req dtousecase.ProductListParam) (*[]dtorepository.ProductListSellerResponse, *dtogeneral.PaginationData, error)
 	GetProductByID(ctx context.Context, req dtousecase.GetProductDetailRequest) (*dtousecase.GetProductSellerResponse, error)
 	WithdrawSalesBalance(ctx context.Context, req dtousecase.WithdrawBalance) (dtousecase.WithdrawBalance, error)
-	UpdateProduct(ctx context.Context, req dtousecase.AddNewProductRequest) (dtousecase.AddNewProductResponse, error)
+	UpdateProduct(ctx context.Context, req dtousecase.UpdateProductRequest) (dtousecase.UpdateProductRequest, error)
 	UpdateShopProfile(ctx context.Context, req dtousecase.UpdateShopProfileRequest) (dtousecase.UpdateShopProfileResponse, error)
 }
 
@@ -275,8 +275,8 @@ func (u *sellerUsecase) AddNewProduct(ctx context.Context, req dtousecase.AddNew
 	return res, nil
 }
 
-func (u *sellerUsecase) UpdateProduct(ctx context.Context, req dtousecase.AddNewProductRequest) (dtousecase.AddNewProductResponse, error) {
-	res := dtousecase.AddNewProductResponse{}
+func (u *sellerUsecase) UpdateProduct(ctx context.Context, req dtousecase.UpdateProductRequest) (dtousecase.UpdateProductRequest, error) {
+	res := dtousecase.UpdateProductRequest{}
 
 	_, err := u.productRepository.FindByIDAndSeller(ctx, dtorepository.ProductRequest{ProductID: req.ProductID, AccountId: req.SellerID})
 	if err != nil && !errors.Is(err, util.ErrNoRecordFound) {
@@ -356,7 +356,7 @@ func (u *sellerUsecase) UpdateProduct(ctx context.Context, req dtousecase.AddNew
 		imageLinks = append(imageLinks, imageUrl)
 	}
 
-	product, err := u.productRepository.UpdateProduct(ctx, dtorepository.AddNewProductRequest{
+	product, err := u.productRepository.UpdateProduct(ctx, dtorepository.UpdateProductRequest{
 		ProductID:         req.ProductID,
 		SellerID:          req.SellerID,
 		ProductName:       req.ProductName,

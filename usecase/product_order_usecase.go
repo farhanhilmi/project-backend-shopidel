@@ -80,6 +80,10 @@ func NewProductOrderUsecase(config ProductOrderUsecaseConfig) ProductOrderUsecas
 }
 
 func (u *productOrderUsecase) CheckoutOrder(ctx context.Context, req dtousecase.CheckoutOrderRequest) (*dtousecase.CheckoutOrderResponse, error) {
+	if req.SellerID == req.UserID {
+		return nil, util.ErrSameShop
+	}
+
 	id, err := strconv.Atoi(req.DestinationAddressID)
 	if err != nil {
 		return nil, err
