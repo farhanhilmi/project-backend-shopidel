@@ -330,7 +330,7 @@ func (h *AccountHandler) Login(c *gin.Context) {
 		RefreshToken: uRes.RefreshToken,
 	}
 
-	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Login success", Data: res})
+	c.JSON(http.StatusOK, dtogeneral.JSONResponse{Message: "Loogin success", Data: res})
 }
 
 func (h *AccountHandler) RefreshToken(c *gin.Context) {

@@ -52,7 +52,7 @@ func (r *showcaseRepository) DeleteShowcase(ctx context.Context, showcaseId int,
 
 		sp.DeletedAt = time.Now()
 
-		if err := tx.Save(&sp).Error; err != nil {
+		if err := tx.Updates(&sp).Error; err != nil {
 			return err
 		}
 

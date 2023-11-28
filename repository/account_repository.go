@@ -268,7 +268,7 @@ func (r *accountRepository) DeleteAddress(ctx context.Context, req dtorepository
 
 	ad.DeletedAt = time.Now()
 
-	err = r.db.WithContext(ctx).Save(&ad).Error
+	err = r.db.WithContext(ctx).Updates(&ad).Error
 	if err != nil {
 		return err
 	}
@@ -296,7 +296,7 @@ func (r *accountRepository) UpdateAccount(ctx context.Context, req dtorepository
 	a.Gender = req.Gender
 	a.Birthdate = req.Birthdate
 
-	err = tx.WithContext(ctx).Save(&a).Error
+	err = tx.WithContext(ctx).Updates(&a).Error
 
 	if err != nil {
 		tx.Rollback()
@@ -344,7 +344,7 @@ func (r *accountRepository) UpdateAccountWithoutEmail(ctx context.Context, req d
 	a.Gender = req.Gender
 	a.Birthdate = req.Birthdate
 
-	err = r.db.WithContext(ctx).Save(&a).Error
+	err = r.db.WithContext(ctx).Updates(&a).Error
 
 	if err != nil {
 		return res, err
@@ -861,7 +861,7 @@ func (r *accountRepository) AddProductToCart(ctx context.Context, req dtoreposit
 	} else {
 		c.Quantity += req.Quantity
 
-		err = r.db.WithContext(ctx).Save(&c).Error
+		err = r.db.WithContext(ctx).Updates(&c).Error
 		if err != nil {
 			return res, err
 		}
