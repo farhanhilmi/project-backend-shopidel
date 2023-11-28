@@ -320,7 +320,7 @@ func (r *productRepository) FindProducts(ctx context.Context, req dtorepository.
 		}
 		jsonString := string(jsonBytes)
 
-		err = util.GetRedis().Set(ctx, redisKey, jsonString, 10*time.Second).Err()
+		err = util.GetRedis().Set(ctx, redisKey, jsonString, 24*time.Hour).Err()
 		if err != nil {
 			panic(err)
 		}
@@ -653,7 +653,7 @@ func (r *productRepository) FindProductsByCategories(ctx context.Context, req dt
 		}
 		jsonString := string(jsonBytes)
 
-		err = util.GetRedis().Set(ctx, redisKey, jsonString, 10*time.Second).Err()
+		err = util.GetRedis().Set(ctx, redisKey, jsonString, 24*time.Hour).Err()
 		if err != nil {
 			panic(err)
 		}

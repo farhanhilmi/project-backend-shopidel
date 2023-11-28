@@ -108,7 +108,7 @@ func (h *ProductHandler) ListProduct(c *gin.Context) {
 		}
 		jsonString := string(jsonBytes)
 
-		err = util.GetRedis().Set(c.Request.Context(), redisKey, jsonString, 10*time.Second).Err()
+		err = util.GetRedis().Set(c.Request.Context(), redisKey, jsonString, 24*time.Hour).Err()
 		if err != nil {
 			panic(err)
 		}
